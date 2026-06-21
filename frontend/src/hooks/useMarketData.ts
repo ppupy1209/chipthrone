@@ -19,7 +19,9 @@ type BackendStock = {
   sharesOutstanding: number
   marketCap: number
   regularClose: number | null
+  regularCloseDate: string | null
   nxtClose: number | null
+  nxtCloseDate: string | null
 }
 
 type BackendSnapshot = {
@@ -38,7 +40,9 @@ function toCompany(s: BackendStock): Company {
     price: s.priceKrw,
     changePct: s.changePct,
     regularClose: s.regularClose,
+    regularCloseDate: s.regularCloseDate,
     nxtClose: s.nxtClose,
+    nxtCloseDate: s.nxtCloseDate,
     sharesOutstanding: s.sharesOutstanding,
   }
 }

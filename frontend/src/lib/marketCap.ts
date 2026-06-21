@@ -21,6 +21,14 @@ export function formatPct(pct: number): string {
   return `${sign}${pct.toFixed(1)}%`
 }
 
+/** "yyyy-MM-dd" → "MM/DD" (null이면 빈 문자열) */
+export function formatDateMMDD(date: string | null): string {
+  if (!date) return ''
+  const parts = date.split('-')
+  if (parts.length !== 3) return ''
+  return `${parts[1]}/${parts[2]}`
+}
+
 /** 원화가를 달러 환산해 "$66.91" 형식으로 */
 export function formatUsd(priceKrw: number, fxRate: number): string {
   return `$${(priceKrw / fxRate).toLocaleString('en-US', {

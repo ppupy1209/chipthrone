@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +15,7 @@ import dev.yeonwoo.chipthrone.quote.client.ExchangeRateClient;
 import dev.yeonwoo.chipthrone.quote.client.KisMarketDataClient;
 import dev.yeonwoo.chipthrone.quote.client.MarketDataClient;
 import dev.yeonwoo.chipthrone.quote.config.QuoteProperties;
+import dev.yeonwoo.chipthrone.quote.model.KisClosingPrice;
 import dev.yeonwoo.chipthrone.quote.model.KisStockQuote;
 import dev.yeonwoo.chipthrone.quote.model.MarketAssetPrice;
 import dev.yeonwoo.chipthrone.quote.model.QuoteSnapshot;
@@ -37,7 +40,8 @@ class QuoteServiceTest {
         assertThat(first).isPresent();
         assertThat(second).containsSame(first.orElseThrow());
         assertThat(marketDataClient.calls).isEqualTo(2);
-        assertThat(kisMarketDataClient.calls).isZero();
+        assertThat(kisMarketDataClient.currentCalls).isZero();
+        assertThat(kisMarketDataClient.closeCalls).isZero();
     }
 
     @Test
@@ -53,14 +57,15 @@ class QuoteServiceTest {
 
         assertThat(first.fxRate()).isEqualTo(1476.8);
         assertThat(second.fxRate()).isEqualTo(1476.8);
-        assertThat(kisMarketDataClient.calls).isZero();
+        assertThat(kisMarketDataClient.currentCalls).isZero();
+        assertThat(kisMarketDataClient.closeCalls).isZero();
     }
 
     @Test
     void refreshFallsBackPerStockWhenKisFetchFails() {
         StubMarketDataClient marketDataClient = new StubMarketDataClient();
         StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
-        kisMarketDataClient.failCode = "005930";
+        kisMarketDataClient.failCurrentCode = "005930";
         StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
         QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient);
 
@@ -68,12 +73,108 @@ class QuoteServiceTest {
 
         StockQuote samsung = snapshot.stocks().getFirst();
         StockQuote hynix = snapshot.stocks().get(1);
-        assertThat(kisMarketDataClient.calls).isEqualTo(2);
+        assertThat(kisMarketDataClient.currentCalls).isEqualTo(2);
+        assertThat(kisMarketDataClient.closeCalls).isEqualTo(2);
         assertThat(samsung.priceKrw()).isEqualTo(356174.624);
-        assertThat(samsung.regularClose()).isNull();
+        assertThat(samsung.regularClose()).isEqualTo(71500.0);
+        assertThat(samsung.regularCloseDate()).isEqualTo("2026-06-19");
         assertThat(hynix.priceKrw()).isEqualTo(210000.0);
         assertThat(hynix.regularClose()).isEqualTo(205000.0);
         assertThat(hynix.nxtClose()).isEqualTo(212000.0);
+    }
+
+    @Test
+    void refreshFetchesClosingPriceOnceAndReusesCache() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient);
+
+        QuoteSnapshot first = service.refresh().orElseThrow();
+        QuoteSnapshot second = service.refresh().orElseThrow();
+
+        assertThat(kisMarketDataClient.closeCalls).isEqualTo(2);
+        assertThat(kisMarketDataClient.currentCalls).isEqualTo(4);
+        assertThat(first.stocks().getFirst().regularClose()).isEqualTo(71500.0);
+        assertThat(second.stocks().getFirst().regularClose()).isEqualTo(71500.0);
+        assertThat(second.stocks().getFirst().regularCloseDate()).isEqualTo("2026-06-19");
+    }
+
+    @Test
+    void refreshesClosingPriceWhenNewClosedTradingDayExists() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        MutableClock clock = new MutableClock(Instant.parse("2026-06-22T01:00:00Z"));
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient, clock);
+
+        service.refresh();
+        kisMarketDataClient.closeByCode = code -> new KisClosingPrice(
+                code,
+                new BigDecimal("73000"),
+                "2026-06-22",
+                new BigDecimal("73500"),
+                "2026-06-22"
+        );
+        clock.advance(Duration.ofHours(6));
+        QuoteSnapshot snapshot = service.refresh().orElseThrow();
+
+        assertThat(kisMarketDataClient.closeCalls).isEqualTo(4);
+        assertThat(snapshot.stocks().getFirst().regularClose()).isEqualTo(73000.0);
+        assertThat(snapshot.stocks().getFirst().regularCloseDate()).isEqualTo("2026-06-22");
+    }
+
+    @Test
+    void keepsCachedClosingPriceOnFailureAndRetriesAfterBackoff() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        MutableClock clock = new MutableClock(Instant.parse("2026-06-22T01:00:00Z"));
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient, clock);
+
+        service.refresh();
+        clock.advance(Duration.ofHours(6));
+        kisMarketDataClient.failCloseCode = "005930";
+        kisMarketDataClient.closeByCode = code -> new KisClosingPrice(
+                code,
+                new BigDecimal("73000"),
+                "2026-06-22",
+                new BigDecimal("73500"),
+                "2026-06-22"
+        );
+        QuoteSnapshot failed = service.refresh().orElseThrow();
+        int callsAfterFailure = kisMarketDataClient.closeCalls;
+        QuoteSnapshot backoff = service.refresh().orElseThrow();
+        int callsAfterBackoff = kisMarketDataClient.closeCalls;
+        clock.advance(Duration.ofSeconds(31));
+        kisMarketDataClient.failCloseCode = null;
+        QuoteSnapshot retried = service.refresh().orElseThrow();
+
+        assertThat(failed.stocks().getFirst().regularClose()).isEqualTo(71500.0);
+        assertThat(backoff.stocks().getFirst().regularClose()).isEqualTo(71500.0);
+        assertThat(retried.stocks().getFirst().regularClose()).isEqualTo(73000.0);
+        assertThat(callsAfterBackoff).isEqualTo(callsAfterFailure);
+        assertThat(kisMarketDataClient.closeCalls).isEqualTo(callsAfterBackoff + 1);
+    }
+
+    @Test
+    void estimateModeDoesNotFetchKisCurrentPrice() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        QuoteService service = newService(
+                marketDataClient,
+                kisMarketDataClient,
+                exchangeRateClient,
+                new MutableClock(Instant.parse("2026-06-22T13:00:00Z"))
+        );
+
+        QuoteSnapshot snapshot = service.refresh().orElseThrow();
+
+        assertThat(kisMarketDataClient.currentCalls).isZero();
+        assertThat(kisMarketDataClient.closeCalls).isEqualTo(2);
+        assertThat(snapshot.stocks().getFirst().priceKrw()).isEqualTo(356174.624);
+        assertThat(snapshot.stocks().getFirst().regularCloseDate()).isEqualTo("2026-06-19");
     }
 
     private QuoteService newService(
@@ -87,13 +188,42 @@ class QuoteServiceTest {
                 new MarketModeService(),
                 Clock.fixed(Instant.parse("2026-06-22T01:00:00Z"), ZoneOffset.UTC)
         );
+        return newService(marketDataClient, kisMarketDataClient, exchangeRateClient,
+                Clock.fixed(Instant.parse("2026-06-22T01:00:00Z"), ZoneOffset.UTC), factory);
+    }
+
+    private QuoteService newService(
+            StubMarketDataClient marketDataClient,
+            StubKisMarketDataClient kisMarketDataClient,
+            StubExchangeRateClient exchangeRateClient,
+            Clock clock
+    ) {
+        QuoteProperties properties = properties();
+        QuoteSnapshotFactory factory = new QuoteSnapshotFactory(
+                properties,
+                new MarketModeService(),
+                clock
+        );
+        return newService(marketDataClient, kisMarketDataClient, exchangeRateClient, clock, factory);
+    }
+
+    private QuoteService newService(
+            StubMarketDataClient marketDataClient,
+            StubKisMarketDataClient kisMarketDataClient,
+            StubExchangeRateClient exchangeRateClient,
+            Clock clock,
+            QuoteSnapshotFactory factory
+    ) {
+        QuoteProperties properties = properties();
         return new QuoteService(
                 marketDataClient,
                 kisMarketDataClient,
                 exchangeRateClient,
                 properties,
                 factory,
-                new QuoteBroadcaster()
+                new QuoteBroadcaster(),
+                new MarketModeService(),
+                clock
         );
     }
 
@@ -141,8 +271,28 @@ class QuoteServiceTest {
 
     private static class StubKisMarketDataClient implements KisMarketDataClient {
         private final boolean enabled;
-        private int calls;
-        private String failCode;
+        private int currentCalls;
+        private int closeCalls;
+        private String failCurrentCode;
+        private String failCloseCode;
+        private CloseFactory closeByCode = code -> {
+            if ("000660".equals(code)) {
+                return new KisClosingPrice(
+                        code,
+                        new BigDecimal("205000"),
+                        "2026-06-19",
+                        new BigDecimal("212000"),
+                        "2026-06-19"
+                );
+            }
+            return new KisClosingPrice(
+                    code,
+                    new BigDecimal("71500"),
+                    "2026-06-19",
+                    new BigDecimal("72500"),
+                    "2026-06-19"
+            );
+        };
 
         private StubKisMarketDataClient(boolean enabled) {
             this.enabled = enabled;
@@ -154,9 +304,9 @@ class QuoteServiceTest {
         }
 
         @Override
-        public Optional<KisStockQuote> fetchStockQuote(String code) {
-            calls++;
-            if (code.equals(failCode)) {
+        public Optional<KisStockQuote> fetchCurrentStockQuote(String code) {
+            currentCalls++;
+            if (code.equals(failCurrentCode)) {
                 throw new IllegalStateException("kis unavailable");
             }
             if ("000660".equals(code)) {
@@ -165,10 +315,53 @@ class QuoteServiceTest {
                         new BigDecimal("210000"),
                         new BigDecimal("2.40"),
                         new BigDecimal("205000"),
-                        new BigDecimal("212000")
+                        null,
+                        null,
+                        null,
+                        null
                 ));
             }
             return Optional.empty();
+        }
+
+        @Override
+        public Optional<KisClosingPrice> fetchClosingPrice(String code) {
+            closeCalls++;
+            if (code.equals(failCloseCode)) {
+                throw new IllegalStateException("kis close unavailable");
+            }
+            return Optional.of(closeByCode.create(code));
+        }
+    }
+
+    private interface CloseFactory {
+        KisClosingPrice create(String code);
+    }
+
+    private static class MutableClock extends Clock {
+        private Instant instant;
+
+        private MutableClock(Instant instant) {
+            this.instant = instant;
+        }
+
+        void advance(Duration duration) {
+            instant = instant.plus(duration);
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return Clock.fixed(instant, zone);
+        }
+
+        @Override
+        public Instant instant() {
+            return instant;
         }
     }
 }

@@ -53,7 +53,9 @@ class QuoteControllerTest {
                 .andExpect(jsonPath("$.stocks[0].sharesOutstanding").value(5_919_637_922L))
                 .andExpect(jsonPath("$.stocks[0].marketCap").value(2.108E15))
                 .andExpect(jsonPath("$.stocks[0].regularClose").value(nullValue()))
-                .andExpect(jsonPath("$.stocks[0].nxtClose").value(nullValue()));
+                .andExpect(jsonPath("$.stocks[0].regularCloseDate").value(nullValue()))
+                .andExpect(jsonPath("$.stocks[0].nxtClose").value(nullValue()))
+                .andExpect(jsonPath("$.stocks[0].nxtCloseDate").value(nullValue()));
     }
 
     @Test
@@ -92,6 +94,8 @@ class QuoteControllerTest {
                         1.04,
                         5_919_637_922L,
                         2.108E15,
+                        null,
+                        null,
                         null,
                         null
                 ))

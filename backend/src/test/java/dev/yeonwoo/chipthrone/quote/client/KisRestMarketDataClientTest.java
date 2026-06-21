@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.queryParam;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import java.math.BigDecimal;
@@ -16,6 +15,7 @@ import java.util.Optional;
 
 import dev.yeonwoo.chipthrone.quote.config.KisProperties;
 import dev.yeonwoo.chipthrone.quote.model.KisAccessToken;
+import dev.yeonwoo.chipthrone.quote.model.KisClosingPrice;
 import dev.yeonwoo.chipthrone.quote.model.KisStockQuote;
 
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import org.springframework.web.client.RestClient;
 class KisRestMarketDataClientTest {
 
     @Test
-    void mapsKisPriceResponse() {
+    void mapsKisCurrentPriceResponse() {
         RestClient.Builder builder = RestClient.builder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         KisProperties properties = new KisProperties("https://example.test", "app-key", "app-secret");
@@ -54,34 +54,19 @@ class KisRestMarketDataClientTest {
                           }
                         }
                         """, MediaType.APPLICATION_JSON));
-        server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-price"
-                        + "?FID_COND_MRKT_DIV_CODE=NX&FID_INPUT_ISCD=005930"))
-                .andExpect(queryParam("FID_COND_MRKT_DIV_CODE", "NX"))
-                .andExpect(queryParam("FID_INPUT_ISCD", "005930"))
-                .andExpect(header("authorization", "Bearer access-token"))
-                .andExpect(header("appkey", "app-key"))
-                .andExpect(header("appsecret", "app-secret"))
-                .andExpect(header("tr_id", "FHKST01010100"))
-                .andRespond(withSuccess("""
-                        {
-                          "output": {
-                            "stck_prpr": "72500"
-                          }
-                        }
-                        """, MediaType.APPLICATION_JSON));
-
-        Optional<KisStockQuote> quote = client.fetchStockQuote("005930");
+        Optional<KisStockQuote> quote = client.fetchCurrentStockQuote("005930");
 
         assertThat(quote).isPresent();
         assertThat(quote.orElseThrow().priceKrw()).isEqualByComparingTo(new BigDecimal("72000"));
         assertThat(quote.orElseThrow().changePct()).isEqualByComparingTo(new BigDecimal("1.25"));
         assertThat(quote.orElseThrow().previousRegularClose()).isEqualByComparingTo(new BigDecimal("71100"));
-        assertThat(quote.orElseThrow().nxtClose()).isEqualByComparingTo(new BigDecimal("72500"));
+        assertThat(quote.orElseThrow().regularClose()).isNull();
+        assertThat(quote.orElseThrow().nxtClose()).isNull();
         server.verify(Duration.ofSeconds(1));
     }
 
     @Test
-    void keepsNxtCloseNullWhenNxtPriceRequestFails() {
+    void mapsKisDailyCloseResponseDates() {
         RestClient.Builder builder = RestClient.builder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
         KisProperties properties = new KisProperties("https://example.test", "app-key", "app-secret");
@@ -92,27 +77,46 @@ class KisRestMarketDataClientTest {
         );
         KisRestMarketDataClient client = new KisRestMarketDataClient(builder, properties, tokenProvider);
 
-        server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-price"
-                        + "?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=005930"))
+        server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-daily-price"
+                        + "?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=005930&FID_PERIOD_DIV_CODE=D&FID_ORG_ADJ_PRC=0"))
+                .andExpect(queryParam("FID_COND_MRKT_DIV_CODE", "J"))
+                .andExpect(queryParam("FID_INPUT_ISCD", "005930"))
+                .andExpect(queryParam("FID_PERIOD_DIV_CODE", "D"))
+                .andExpect(queryParam("FID_ORG_ADJ_PRC", "0"))
+                .andExpect(header("authorization", "Bearer access-token"))
+                .andExpect(header("tr_id", "FHKST01010400"))
                 .andRespond(withSuccess("""
                         {
-                          "output": {
-                            "stck_prpr": "72000",
-                            "prdy_ctrt": "1.25",
-                            "stck_prdy_clpr": "71100"
-                          }
+                          "output": [
+                            {
+                              "stck_bsop_date": "20260619",
+                              "stck_clpr": "71100"
+                            }
+                          ]
                         }
                         """, MediaType.APPLICATION_JSON));
-        server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-price"
-                        + "?FID_COND_MRKT_DIV_CODE=NX&FID_INPUT_ISCD=005930"))
+        server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-daily-price"
+                        + "?FID_COND_MRKT_DIV_CODE=NX&FID_INPUT_ISCD=005930&FID_PERIOD_DIV_CODE=D&FID_ORG_ADJ_PRC=0"))
                 .andExpect(queryParam("FID_COND_MRKT_DIV_CODE", "NX"))
-                .andRespond(withServerError());
+                .andExpect(header("tr_id", "FHKST01010400"))
+                .andRespond(withSuccess("""
+                        {
+                          "output": [
+                            {
+                              "stck_bsop_date": "20260619",
+                              "stck_clpr": "72500"
+                            }
+                          ]
+                        }
+                        """, MediaType.APPLICATION_JSON));
 
-        Optional<KisStockQuote> quote = client.fetchStockQuote("005930");
+        Optional<KisClosingPrice> quote = client.fetchClosingPrice("005930");
 
         assertThat(quote).isPresent();
-        assertThat(quote.orElseThrow().priceKrw()).isEqualByComparingTo(new BigDecimal("72000"));
-        assertThat(quote.orElseThrow().nxtClose()).isNull();
+        assertThat(quote.orElseThrow().regularClose()).isEqualByComparingTo(new BigDecimal("71100"));
+        assertThat(quote.orElseThrow().regularCloseDate()).isEqualTo("2026-06-19");
+        assertThat(quote.orElseThrow().nxtClose()).isEqualByComparingTo(new BigDecimal("72500"));
+        assertThat(quote.orElseThrow().nxtCloseDate()).isEqualTo("2026-06-19");
         server.verify(Duration.ofSeconds(1));
     }
 }

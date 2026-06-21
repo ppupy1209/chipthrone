@@ -13,8 +13,12 @@ export type Company = {
   changePct: number
   /** 정규장 종가(원) — KIS 미연동 시 null */
   regularClose: number | null
+  /** 정규장 종가 기준일(yyyy-MM-dd) — KIS 미연동 시 null */
+  regularCloseDate: string | null
   /** NXT 애프터마켓 종가(원) — KIS 미연동 시 null */
   nxtClose: number | null
+  /** NXT 애프터마켓 종가 기준일(yyyy-MM-dd) — KIS 미연동 시 null */
+  nxtCloseDate: string | null
   /** 상장주식수(보통주) */
   sharesOutstanding: number
 }

@@ -2,11 +2,8 @@ package dev.yeonwoo.chipthrone.quote.model;
 
 import java.math.BigDecimal;
 
-public record KisStockQuote(
+public record KisClosingPrice(
         String code,
-        BigDecimal priceKrw,
-        BigDecimal changePct,
-        BigDecimal previousRegularClose,
         BigDecimal regularClose,
         String regularCloseDate,
         BigDecimal nxtClose,
