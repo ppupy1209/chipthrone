@@ -63,6 +63,7 @@ class QuoteServiceTest {
         assertThat(samsung.regularClose()).isNull();
         assertThat(hynix.priceKrw()).isEqualTo(210000.0);
         assertThat(hynix.regularClose()).isEqualTo(205000.0);
+        assertThat(hynix.nxtClose()).isEqualTo(212000.0);
     }
 
     private QuoteService newService(
@@ -153,7 +154,8 @@ class QuoteServiceTest {
                         code,
                         new BigDecimal("210000"),
                         new BigDecimal("2.40"),
-                        new BigDecimal("205000")
+                        new BigDecimal("205000"),
+                        new BigDecimal("212000")
                 ));
             }
             return Optional.empty();

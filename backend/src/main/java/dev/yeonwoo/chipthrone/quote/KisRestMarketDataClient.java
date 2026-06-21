@@ -41,13 +41,45 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
             return Optional.empty();
         }
 
-        JsonNode output = restClient.get()
+        String accessToken = tokenProvider.accessToken();
+        JsonNode output = fetchPriceOutput("J", code, accessToken);
+
+        if (output == null) {
+            log.warn("Unexpected KIS price response for code {}", code);
+            return Optional.empty();
+        }
+
+        return Optional.of(new KisStockQuote(
+                code,
+                decimal(output, "stck_prpr"),
+                decimal(output, "prdy_ctrt"),
+                decimal(output, "stck_prdy_clpr"),
+                fetchNxtCloseOrNull(code, accessToken)
+        ));
+    }
+
+    private BigDecimal fetchNxtCloseOrNull(String code, String accessToken) {
+        try {
+            JsonNode output = fetchPriceOutput("NX", code, accessToken);
+            if (output == null) {
+                log.warn("Unexpected KIS NXT price response for code {}", code);
+                return null;
+            }
+            return decimal(output, "stck_prpr");
+        } catch (RuntimeException ex) {
+            log.warn("Failed to fetch KIS NXT quote for code {}. Keeping nxtClose null.", code, ex);
+            return null;
+        }
+    }
+
+    private JsonNode fetchPriceOutput(String marketDivisionCode, String code, String accessToken) {
+        JsonNode response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/uapi/domestic-stock/v1/quotations/inquire-price")
-                        .queryParam("FID_COND_MRKT_DIV_CODE", "J")
+                        .queryParam("FID_COND_MRKT_DIV_CODE", marketDivisionCode)
                         .queryParam("FID_INPUT_ISCD", code)
                         .build())
-                .header("authorization", "Bearer " + tokenProvider.accessToken())
+                .header("authorization", "Bearer " + accessToken)
                 .header("appkey", properties.appKey())
                 .header("appsecret", properties.appSecret())
                 .header("tr_id", INQUIRE_PRICE_TR_ID)
@@ -55,18 +87,10 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
                 .retrieve()
                 .body(JsonNode.class);
 
-        if (output == null || output.path("output").isMissingNode()) {
-            log.warn("Unexpected KIS price response for code {}", code);
-            return Optional.empty();
+        if (response == null || response.path("output").isMissingNode()) {
+            return null;
         }
-
-        JsonNode price = output.path("output");
-        return Optional.of(new KisStockQuote(
-                code,
-                decimal(price, "stck_prpr"),
-                decimal(price, "prdy_ctrt"),
-                decimal(price, "stck_prdy_clpr")
-        ));
+        return response.path("output");
     }
 
     private BigDecimal decimal(JsonNode output, String field) {

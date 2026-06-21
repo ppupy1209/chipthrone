@@ -6,6 +6,7 @@ public record StockQuote(
         double priceKrw,
         double priceUsd,
         double changePct,
+        String changeBasis,
         long sharesOutstanding,
         double marketCap,
         Double regularClose,
