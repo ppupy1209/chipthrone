@@ -24,3 +24,6 @@ application-secret.yml
 
 # OS
 Thumbs.db
+
+# 첨부/임시 이미지
+*.avif
