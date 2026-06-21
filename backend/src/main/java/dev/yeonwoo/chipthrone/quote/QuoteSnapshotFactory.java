@@ -25,15 +25,30 @@ public class QuoteSnapshotFactory {
     }
 
     public QuoteSnapshot create(List<MarketAssetPrice> prices, BigDecimal fxRate) {
+        return create(prices, fxRate, Map.of());
+    }
+
+    public QuoteSnapshot create(
+            List<MarketAssetPrice> prices,
+            BigDecimal fxRate,
+            Map<String, KisStockQuote> kisQuoteByCode
+    ) {
         Instant at = clock.instant();
+        MarketMode mode = marketModeService.determine(at);
         Map<String, MarketAssetPrice> priceBySymbol = prices.stream()
                 .collect(Collectors.toMap(MarketAssetPrice::symbol, Function.identity(), (left, right) -> left));
 
         List<StockQuote> stocks = properties.assets().stream()
-                .map(asset -> toStockQuote(asset, requirePrice(priceBySymbol, asset.symbol()), fxRate))
+                .map(asset -> toStockQuote(
+                        asset,
+                        requirePrice(priceBySymbol, asset.symbol()),
+                        kisQuoteByCode.get(asset.code()),
+                        fxRate,
+                        mode
+                ))
                 .toList();
 
-        return new QuoteSnapshot(marketModeService.determine(at), at, fxRate.doubleValue(), stocks);
+        return new QuoteSnapshot(mode, at, fxRate.doubleValue(), stocks);
     }
 
     private MarketAssetPrice requirePrice(Map<String, MarketAssetPrice> priceBySymbol, String symbol) {
@@ -44,25 +59,52 @@ public class QuoteSnapshotFactory {
         return price;
     }
 
-    private StockQuote toStockQuote(QuoteProperties.Asset asset, MarketAssetPrice price, BigDecimal fxRate) {
-        BigDecimal priceKrw = price.markPx().multiply(fxRate);
-        BigDecimal changePct = price.markPx()
+    private StockQuote toStockQuote(
+            QuoteProperties.Asset asset,
+            MarketAssetPrice price,
+            KisStockQuote kisQuote,
+            BigDecimal fxRate,
+            MarketMode mode
+    ) {
+        BigDecimal hyperliquidPriceKrw = price.markPx().multiply(fxRate);
+        BigDecimal hyperliquidChangePct = price.markPx()
                 .divide(price.prevDayPx(), 12, RoundingMode.HALF_UP)
                 .subtract(BigDecimal.ONE)
                 .multiply(BigDecimal.valueOf(100));
+        boolean useKisCurrentPrice = kisQuote != null
+                && (mode == MarketMode.REGULAR || mode == MarketMode.NXT)
+                && kisQuote.priceKrw() != null;
+        BigDecimal priceKrw = useKisCurrentPrice ? kisQuote.priceKrw() : hyperliquidPriceKrw;
+        BigDecimal priceUsd = useKisCurrentPrice
+                ? kisQuote.priceKrw().divide(fxRate, 12, RoundingMode.HALF_UP)
+                : price.markPx();
+        BigDecimal changePct = useKisCurrentPrice && kisQuote.changePct() != null
+                ? kisQuote.changePct()
+                : hyperliquidChangePct;
+        BigDecimal regularClose = regularClose(kisQuote, mode);
         BigDecimal marketCap = priceKrw.multiply(BigDecimal.valueOf(asset.sharesOutstanding()));
 
-        // TODO: Wire KIS regular/NXT close data here. Until then every mode uses Hyperliquid estimate prices.
+        // TODO: KIS NXT close is not exposed reliably through this endpoint; keep nxtClose null until a stable source exists.
         return new StockQuote(
                 asset.code(),
                 asset.name(),
                 priceKrw.doubleValue(),
-                price.markPx().doubleValue(),
+                priceUsd.doubleValue(),
                 changePct.doubleValue(),
                 asset.sharesOutstanding(),
                 marketCap.doubleValue(),
-                null,
+                regularClose == null ? null : regularClose.doubleValue(),
                 null
         );
+    }
+
+    private BigDecimal regularClose(KisStockQuote kisQuote, MarketMode mode) {
+        if (kisQuote == null) {
+            return null;
+        }
+        if (mode == MarketMode.REGULAR && kisQuote.previousRegularClose() != null) {
+            return kisQuote.previousRegularClose();
+        }
+        return kisQuote.priceKrw() != null ? kisQuote.priceKrw() : kisQuote.previousRegularClose();
     }
 }

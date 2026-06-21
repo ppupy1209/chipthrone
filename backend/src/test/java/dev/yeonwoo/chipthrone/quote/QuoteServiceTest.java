@@ -16,8 +16,9 @@ class QuoteServiceTest {
     @Test
     void refreshStoresSnapshotAndKeepsItWhenMarketFetchFails() {
         StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(false);
         StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
-        QuoteService service = newService(marketDataClient, exchangeRateClient);
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient);
 
         Optional<QuoteSnapshot> first = service.refresh();
         marketDataClient.fail = true;
@@ -26,13 +27,15 @@ class QuoteServiceTest {
         assertThat(first).isPresent();
         assertThat(second).containsSame(first.orElseThrow());
         assertThat(marketDataClient.calls).isEqualTo(2);
+        assertThat(kisMarketDataClient.calls).isZero();
     }
 
     @Test
     void refreshUsesLastFxRateWhenExchangeRateFetchFails() {
         StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(false);
         StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
-        QuoteService service = newService(marketDataClient, exchangeRateClient);
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient);
 
         QuoteSnapshot first = service.refresh().orElseThrow();
         exchangeRateClient.fail = true;
@@ -40,16 +43,47 @@ class QuoteServiceTest {
 
         assertThat(first.fxRate()).isEqualTo(1476.8);
         assertThat(second.fxRate()).isEqualTo(1476.8);
+        assertThat(kisMarketDataClient.calls).isZero();
     }
 
-    private QuoteService newService(StubMarketDataClient marketDataClient, StubExchangeRateClient exchangeRateClient) {
+    @Test
+    void refreshFallsBackPerStockWhenKisFetchFails() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        kisMarketDataClient.failCode = "005930";
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient);
+
+        QuoteSnapshot snapshot = service.refresh().orElseThrow();
+
+        StockQuote samsung = snapshot.stocks().getFirst();
+        StockQuote hynix = snapshot.stocks().get(1);
+        assertThat(kisMarketDataClient.calls).isEqualTo(2);
+        assertThat(samsung.priceKrw()).isEqualTo(356174.624);
+        assertThat(samsung.regularClose()).isNull();
+        assertThat(hynix.priceKrw()).isEqualTo(210000.0);
+        assertThat(hynix.regularClose()).isEqualTo(205000.0);
+    }
+
+    private QuoteService newService(
+            StubMarketDataClient marketDataClient,
+            StubKisMarketDataClient kisMarketDataClient,
+            StubExchangeRateClient exchangeRateClient
+    ) {
         QuoteProperties properties = properties();
         QuoteSnapshotFactory factory = new QuoteSnapshotFactory(
                 properties,
                 new MarketModeService(),
                 Clock.fixed(Instant.parse("2026-06-22T01:00:00Z"), ZoneOffset.UTC)
         );
-        return new QuoteService(marketDataClient, exchangeRateClient, properties, factory, new QuoteBroadcaster());
+        return new QuoteService(
+                marketDataClient,
+                kisMarketDataClient,
+                exchangeRateClient,
+                properties,
+                factory,
+                new QuoteBroadcaster()
+        );
     }
 
     private QuoteProperties properties() {
@@ -91,6 +125,38 @@ class QuoteServiceTest {
                 throw new IllegalStateException("fx unavailable");
             }
             return new BigDecimal("1476.8");
+        }
+    }
+
+    private static class StubKisMarketDataClient implements KisMarketDataClient {
+        private final boolean enabled;
+        private int calls;
+        private String failCode;
+
+        private StubKisMarketDataClient(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        @Override
+        public boolean enabled() {
+            return enabled;
+        }
+
+        @Override
+        public Optional<KisStockQuote> fetchStockQuote(String code) {
+            calls++;
+            if (code.equals(failCode)) {
+                throw new IllegalStateException("kis unavailable");
+            }
+            if ("000660".equals(code)) {
+                return Optional.of(new KisStockQuote(
+                        code,
+                        new BigDecimal("210000"),
+                        new BigDecimal("2.40"),
+                        new BigDecimal("205000")
+                ));
+            }
+            return Optional.empty();
         }
     }
 }

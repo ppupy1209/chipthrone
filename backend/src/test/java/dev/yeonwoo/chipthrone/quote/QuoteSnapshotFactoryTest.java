@@ -8,6 +8,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +46,66 @@ class QuoteSnapshotFactoryTest {
         assertThat(samsung.marketCap()).isCloseTo(2.1084248110844915E15, within(1.0E6));
         assertThat(samsung.regularClose()).isNull();
         assertThat(samsung.nxtClose()).isNull();
+    }
+
+    @Test
+    void usesKisCurrentPriceDuringRegularMarketAndKeepsNxtCloseNull() {
+        QuoteSnapshotFactory factory = new QuoteSnapshotFactory(
+                properties(),
+                new MarketModeService(),
+                Clock.fixed(Instant.parse("2026-06-22T01:00:00Z"), ZoneOffset.UTC)
+        );
+
+        QuoteSnapshot snapshot = factory.create(
+                List.of(
+                        new MarketAssetPrice("xyz:SMSN", new BigDecimal("241.18"), new BigDecimal("238.70")),
+                        new MarketAssetPrice("xyz:SKHX", new BigDecimal("1913.95"), new BigDecimal("1869.28"))
+                ),
+                new BigDecimal("1476.8"),
+                Map.of("005930", new KisStockQuote(
+                        "005930",
+                        new BigDecimal("72000"),
+                        new BigDecimal("1.25"),
+                        new BigDecimal("71100")
+                ))
+        );
+
+        StockQuote samsung = snapshot.stocks().getFirst();
+        assertThat(snapshot.mode()).isEqualTo(MarketMode.REGULAR);
+        assertThat(samsung.priceKrw()).isEqualTo(72000.0);
+        assertThat(samsung.priceUsd()).isCloseTo(48.75406, within(0.00001));
+        assertThat(samsung.changePct()).isEqualTo(1.25);
+        assertThat(samsung.regularClose()).isEqualTo(71100.0);
+        assertThat(samsung.nxtClose()).isNull();
+    }
+
+    @Test
+    void keepsHyperliquidEstimatePriceOutsideMarketHoursButStillMapsKisRegularClose() {
+        QuoteSnapshotFactory factory = new QuoteSnapshotFactory(
+                properties(),
+                new MarketModeService(),
+                Clock.fixed(Instant.parse("2026-06-22T13:00:00Z"), ZoneOffset.UTC)
+        );
+
+        QuoteSnapshot snapshot = factory.create(
+                List.of(
+                        new MarketAssetPrice("xyz:SMSN", new BigDecimal("241.18"), new BigDecimal("238.70")),
+                        new MarketAssetPrice("xyz:SKHX", new BigDecimal("1913.95"), new BigDecimal("1869.28"))
+                ),
+                new BigDecimal("1476.8"),
+                Map.of("005930", new KisStockQuote(
+                        "005930",
+                        new BigDecimal("72000"),
+                        new BigDecimal("1.25"),
+                        new BigDecimal("71100")
+                ))
+        );
+
+        StockQuote samsung = snapshot.stocks().getFirst();
+        assertThat(snapshot.mode()).isEqualTo(MarketMode.ESTIMATE);
+        assertThat(samsung.priceKrw()).isEqualTo(356174.624);
+        assertThat(samsung.priceUsd()).isEqualTo(241.18);
+        assertThat(samsung.regularClose()).isEqualTo(72000.0);
     }
 
     private QuoteProperties properties() {
