@@ -8,7 +8,7 @@
 - **야간 · 주말** — Hyperliquid HIP-3 perp(무기한 선물) 기반 **추정 시세**
 - **시총 실시간 비교** + **역전 계산기 / D-게이지** — "하이닉스가 +X% 오르면 왕좌 교체"
 
-🔗 https://chipthrone.yeonwoo.dev (예정)
+🔗 https://chipthrone.com (예정)
 
 ## 왜 만들었나
 
@@ -20,7 +20,7 @@
 ```
 GitHub(public) ──Actions(build/test)──▶ EC2 t3.micro (Spring Boot · Nginx)
                                               └▶ RDS MySQL db.t3.micro
-프론트엔드 ──▶ Vercel(무료, 정적) ──▶ chipthrone.yeonwoo.dev
+프론트엔드 ──▶ Vercel(무료, 정적) ──▶ chipthrone.com
 외부 데이터  정규장: 한국투자증권 KIS API · 야간: Hyperliquid perp × USD/KRW
 ```
 
