@@ -2,7 +2,7 @@ import type { MarketMode } from '../types'
 
 const MODE_LABEL: Record<MarketMode, { text: string; cls: string }> = {
   REGULAR: { text: '정규장 · 실제가', cls: 'bg-green-100 text-green-700' },
-  NXT: { text: 'NXT · 실제가', cls: 'bg-green-100 text-green-700' },
+  NXT: { text: '애프터마켓 · 실제가', cls: 'bg-green-100 text-green-700' },
   ESTIMATE: { text: '추정 시세', cls: 'bg-amber-100 text-amber-700' },
 }
 

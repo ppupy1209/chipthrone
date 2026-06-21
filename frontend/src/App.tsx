@@ -20,11 +20,13 @@ function App() {
             company={snapshot.samsung}
             isLeader={samsungLeads}
             mode={snapshot.mode}
+            fxRate={snapshot.fxRate}
           />
           <CompanyCard
             company={snapshot.hynix}
             isLeader={!samsungLeads}
             mode={snapshot.mode}
+            fxRate={snapshot.fxRate}
           />
         </div>
 
