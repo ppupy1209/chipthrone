@@ -60,11 +60,17 @@ class QuoteControllerTest {
 
     @Test
     void corsAllowsConfiguredApiOrigins() throws Exception {
+        assertCorsAllowsOrigin("https://chipthrone.com");
+        assertCorsAllowsOrigin("https://www.chipthrone.com");
+        assertCorsAllowsOrigin("https://preview.vercel.app");
+    }
+
+    private void assertCorsAllowsOrigin(String origin) throws Exception {
         mockMvc.perform(options("/api/quotes")
-                        .header(HttpHeaders.ORIGIN, "https://preview.vercel.app")
+                        .header(HttpHeaders.ORIGIN, origin)
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
                 .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "https://preview.vercel.app"));
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
     }
 
     private QuoteSnapshot snapshot() {
