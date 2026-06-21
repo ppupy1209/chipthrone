@@ -11,10 +11,10 @@ export type Company = {
   price: number
   /** 전일 대비 등락률(%) */
   changePct: number
-  /** 정규장 종가(원) */
-  regularClose: number
-  /** NXT 애프터마켓 종가(원) */
-  nxtClose: number
+  /** 정규장 종가(원) — KIS 미연동 시 null */
+  regularClose: number | null
+  /** NXT 애프터마켓 종가(원) — KIS 미연동 시 null */
+  nxtClose: number | null
   /** 상장주식수(보통주) */
   sharesOutstanding: number
 }
