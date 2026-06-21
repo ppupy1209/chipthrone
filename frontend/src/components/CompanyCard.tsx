@@ -26,20 +26,18 @@ export function CompanyCard({
   const c = COLOR[company.color]
   const up = company.changePct >= 0
   const isEstimate = mode === 'ESTIMATE'
+  // 국장 관례: 상승=빨강, 하락=파랑
+  const changeColor = up ? 'text-red-600' : 'text-blue-600'
 
   return (
     <div
       className={`relative rounded-xl border border-neutral-200 dark:border-neutral-800 border-t-[3px] ${c.top} bg-white dark:bg-neutral-900 p-5`}
     >
-      <span
-        className={`absolute -top-2.5 right-3.5 rounded-md px-2 py-0.5 text-[11px] font-medium ${
-          isLeader
-            ? 'bg-amber-100 text-amber-700'
-            : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400'
-        }`}
-      >
-        {isLeader ? '👑 현재 왕좌' : '도전자 · 2위'}
-      </span>
+      {isLeader && (
+        <span className="absolute -top-2.5 right-3.5 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+          👑 현재 왕좌
+        </span>
+      )}
 
       <div className="flex items-center gap-2">
         <img
@@ -59,19 +57,16 @@ export function CompanyCard({
           {formatPrice(company.price)}
         </span>
         <span className="text-xs text-neutral-400">원</span>
-        {isEstimate && (
-          <span className="text-[11px] text-neutral-400 tabular-nums">
-            ≈ {formatUsd(company.price, fxRate)}
-          </span>
-        )}
-        <span
-          className={`ml-auto text-sm font-medium tabular-nums ${
-            up ? 'text-green-600' : 'text-red-600'
-          }`}
-        >
+        <span className={`ml-auto text-sm font-medium tabular-nums ${changeColor}`}>
           {up ? '▲' : '▼'} {formatPct(company.changePct)}
         </span>
       </div>
+
+      {isEstimate && (
+        <div className="mt-0.5 text-[12px] text-neutral-400 tabular-nums">
+          ≈ {formatUsd(company.price, fxRate)}
+        </div>
+      )}
 
       <div className="mt-3 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-2.5 text-[13px]">
         <span className="text-neutral-500">시가총액</span>
