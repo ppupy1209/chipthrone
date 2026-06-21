@@ -85,7 +85,7 @@ public class QuoteSnapshotFactory {
         BigDecimal priceUsd = useKisCurrentPrice
                 ? kisQuote.priceKrw().divide(fxRate, 12, RoundingMode.HALF_UP)
                 : price.markPx();
-        BigDecimal regularClose = regularClose(kisQuote, mode);
+        BigDecimal regularClose = kisQuote == null ? null : kisQuote.regularClose();
         BigDecimal nxtClose = kisQuote == null ? null : kisQuote.nxtClose();
         BigDecimal changePct = changePct(
                 mode,
@@ -107,7 +107,9 @@ public class QuoteSnapshotFactory {
                 asset.sharesOutstanding(),
                 marketCap.doubleValue(),
                 regularClose == null ? null : regularClose.doubleValue(),
-                nxtClose == null ? null : nxtClose.doubleValue()
+                kisQuote == null ? null : kisQuote.regularCloseDate(),
+                nxtClose == null ? null : nxtClose.doubleValue(),
+                kisQuote == null ? null : kisQuote.nxtCloseDate()
         );
     }
 
@@ -143,15 +145,5 @@ public class QuoteSnapshotFactory {
 
     private boolean isPositive(BigDecimal value) {
         return value != null && value.compareTo(BigDecimal.ZERO) > 0;
-    }
-
-    private BigDecimal regularClose(KisStockQuote kisQuote, MarketMode mode) {
-        if (kisQuote == null) {
-            return null;
-        }
-        if (mode == MarketMode.REGULAR && kisQuote.previousRegularClose() != null) {
-            return kisQuote.previousRegularClose();
-        }
-        return kisQuote.priceKrw() != null ? kisQuote.priceKrw() : kisQuote.previousRegularClose();
     }
 }

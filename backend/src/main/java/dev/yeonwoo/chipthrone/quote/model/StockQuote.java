@@ -9,6 +9,8 @@ public record StockQuote(
         long sharesOutstanding,
         double marketCap,
         Double regularClose,
-        Double nxtClose
+        String regularCloseDate,
+        Double nxtClose,
+        String nxtCloseDate
 ) {
 }

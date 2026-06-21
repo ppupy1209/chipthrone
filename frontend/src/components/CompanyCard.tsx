@@ -1,6 +1,7 @@
 import type { Company, MarketMode } from '../types'
 import {
   formatCap,
+  formatDateMMDD,
   formatPct,
   formatPrice,
   formatUsd,
@@ -82,11 +83,17 @@ export function CompanyCard({
 
       <div className="mt-2 space-y-0.5 text-right text-[11px] text-neutral-400 tabular-nums">
         <div>
-          정규장 종가{' '}
+          정규장 종가
+          {company.regularCloseDate && (
+            <span className="text-neutral-500"> ({formatDateMMDD(company.regularCloseDate)})</span>
+          )}{' '}
           {company.regularClose != null ? formatPrice(company.regularClose) : '—'}
         </div>
         <div>
-          애프터마켓 종가{' '}
+          애프터마켓 종가
+          {company.nxtCloseDate && (
+            <span className="text-neutral-500"> ({formatDateMMDD(company.nxtCloseDate)})</span>
+          )}{' '}
           {company.nxtClose != null ? formatPrice(company.nxtClose) : '—'}
         </div>
       </div>
