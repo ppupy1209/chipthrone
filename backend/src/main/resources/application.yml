@@ -1,6 +1,24 @@
 server:
   port: 8080
 
+chipthrone:
+  quote:
+    poll-delay-ms: 3000
+    polling-enabled: true
+    dex: xyz
+    initial-fx-rate: 1450
+    assets:
+      # KRX 기준 재검증 필요
+      - code: "005930"
+        name: "삼성전자"
+        symbol: "xyz:SMSN"
+        shares-outstanding: 5919637922
+      # KRX 기준 재검증 필요
+      - code: "000660"
+        name: "SK하이닉스"
+        symbol: "xyz:SKHX"
+        shares-outstanding: 728002365
+
 management:
   endpoints:
     web:
