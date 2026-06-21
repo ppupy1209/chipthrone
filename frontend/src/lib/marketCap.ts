@@ -21,6 +21,14 @@ export function formatPct(pct: number): string {
   return `${sign}${pct.toFixed(1)}%`
 }
 
+/** 원화가를 달러 환산해 "$66.91" 형식으로 */
+export function formatUsd(priceKrw: number, fxRate: number): string {
+  return `$${(priceKrw / fxRate).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+}
+
 export type Comparison = {
   leader: Company
   challenger: Company

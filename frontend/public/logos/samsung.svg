@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 44" role="img" aria-label="삼성전자">
+  <g transform="rotate(-9 100 22)">
+    <ellipse cx="100" cy="22" rx="98" ry="19" fill="#1428A0"/>
+    <text x="100" y="29" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-style="italic" font-size="19" letter-spacing="1.5" fill="#ffffff">SAMSUNG</text>
+  </g>
+</svg>

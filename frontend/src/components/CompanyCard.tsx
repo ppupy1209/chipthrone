@@ -1,30 +1,31 @@
 import type { Company, MarketMode } from '../types'
-import { formatCap, formatPct, formatPrice, marketCap } from '../lib/marketCap'
+import {
+  formatCap,
+  formatPct,
+  formatPrice,
+  formatUsd,
+  marketCap,
+} from '../lib/marketCap'
 
 const COLOR = {
-  blue: {
-    top: 'border-t-blue-500',
-    badge: 'bg-blue-100 text-blue-700',
-    cap: 'text-blue-600',
-  },
-  red: {
-    top: 'border-t-red-500',
-    badge: 'bg-red-100 text-red-700',
-    cap: 'text-red-600',
-  },
+  blue: { top: 'border-t-blue-500', cap: 'text-blue-600' },
+  red: { top: 'border-t-red-500', cap: 'text-red-600' },
 } as const
 
 export function CompanyCard({
   company,
   isLeader,
   mode,
+  fxRate,
 }: {
   company: Company
   isLeader: boolean
   mode: MarketMode
+  fxRate: number
 }) {
   const c = COLOR[company.color]
   const up = company.changePct >= 0
+  const isEstimate = mode === 'ESTIMATE'
 
   return (
     <div
@@ -41,14 +42,14 @@ export function CompanyCard({
       </span>
 
       <div className="flex items-center gap-2.5">
-        <div className={`grid h-8 w-8 place-items-center rounded-lg ${c.badge}`}>
-          <span className="text-sm font-semibold">{company.name[0]}</span>
-        </div>
-        <div>
-          <div className="text-[15px] font-medium leading-tight">{company.name}</div>
-          <div className="text-[11px] text-neutral-400">{company.code}</div>
-        </div>
-        {mode === 'ESTIMATE' && (
+        <img
+          src={company.logo}
+          alt={company.name}
+          className="h-5 w-auto"
+          draggable={false}
+        />
+        <span className="text-[11px] text-neutral-400">{company.code}</span>
+        {isEstimate && (
           <span className="ml-auto text-[11px] text-neutral-400">추정</span>
         )}
       </div>
@@ -58,6 +59,11 @@ export function CompanyCard({
           {formatPrice(company.price)}
         </span>
         <span className="text-xs text-neutral-400">원</span>
+        {isEstimate && (
+          <span className="text-[11px] text-neutral-400 tabular-nums">
+            ≈ {formatUsd(company.price, fxRate)}
+          </span>
+        )}
         <span
           className={`ml-auto text-sm font-medium tabular-nums ${
             up ? 'text-green-600' : 'text-red-600'
@@ -72,6 +78,11 @@ export function CompanyCard({
         <span className={`font-medium tabular-nums ${c.cap}`}>
           {formatCap(marketCap(company))}
         </span>
+      </div>
+
+      <div className="mt-2 flex justify-between text-[11px] text-neutral-400 tabular-nums">
+        <span>정규장 종가 {formatPrice(company.regularClose)}</span>
+        <span>NXT 종가 {formatPrice(company.nxtClose)}</span>
       </div>
     </div>
   )
