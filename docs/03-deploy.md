@@ -17,13 +17,12 @@
 ### EC2
 1. **t3.micro**(프리티어), Amazon Linux 2023, 키페어 생성.
 2. 보안 그룹 인바운드: 22(SSH, 내 IP), 80(HTTP), 443(HTTPS).
-3. Docker 설치:
+3. 부트스트랩 스크립트 실행 (Docker·Nginx·Certbot 설치 + 리버스 프록시 설정 + 컨테이너 최초 실행):
    ```bash
-   sudo dnf install -y docker
-   sudo systemctl enable --now docker
-   sudo usermod -aG docker ec2-user
+   curl -fsSL https://raw.githubusercontent.com/ppupy1209/chipthrone/main/infra/ec2-bootstrap.sh | bash
    ```
-4. (퍼블릭 GHCR 이미지는 로그인 없이 pull 가능)
+   (또는 `infra/ec2-bootstrap.sh` 내용을 복사해 실행)
+4. GHCR 이미지가 private면 pull 전에 로그인 필요. **public 권장**(아래 3번 참고).
 
 ### RDS (이후 단계)
 - MySQL 8, **db.t3.micro**(프리티어), 20GB. EC2 보안 그룹에서만 3306 접근 허용.
@@ -40,7 +39,13 @@
 - `EC2_USER` = `ec2-user`
 - `EC2_SSH_KEY` = 키페어 개인키(.pem 전체 내용)
 
+**GHCR 패키지 공개** (EC2가 로그인 없이 pull 가능하게)
+- GitHub → 프로필 → Packages → `chipthrone-api` → Package settings → Change visibility → Public.
+- (비공개 유지 시 EC2에서 `docker login ghcr.io` 필요)
+
 설정 후 main 푸시 시 자동 배포된다.
+
+> 참고: 현재 백엔드는 인메모리라 **RDS 없이 EC2 단독 배포로 충분**하다. 영속화(DB) 도입 시 RDS를 연결한다.
 
 ## 4. Vercel (프론트엔드)
 
