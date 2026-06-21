@@ -6,6 +6,7 @@ import {
   formatUsd,
   marketCap,
 } from '../lib/marketCap'
+import { AnimatedNumber } from './AnimatedNumber'
 
 const COLOR = {
   blue: { top: 'border-t-blue-500', cap: 'text-blue-600' },
@@ -53,9 +54,11 @@ export function CompanyCard({
       </div>
 
       <div className="mt-3 flex items-baseline gap-2">
-        <span className="text-2xl font-semibold tabular-nums">
-          {formatPrice(company.price)}
-        </span>
+        <AnimatedNumber
+          value={company.price}
+          format={formatPrice}
+          className="text-2xl font-semibold tabular-nums"
+        />
         <span className="text-xs text-neutral-400">원</span>
         <span className={`ml-auto text-sm font-medium tabular-nums ${changeColor}`}>
           {up ? '▲' : '▼'} {formatPct(company.changePct)}
@@ -70,9 +73,11 @@ export function CompanyCard({
 
       <div className="mt-3 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-2.5 text-[13px]">
         <span className="text-neutral-500">시가총액</span>
-        <span className={`font-medium tabular-nums ${c.cap}`}>
-          {formatCap(marketCap(company))}
-        </span>
+        <AnimatedNumber
+          value={marketCap(company)}
+          format={formatCap}
+          className={`font-medium tabular-nums ${c.cap}`}
+        />
       </div>
 
       <div className="mt-2 space-y-0.5 text-right text-[11px] text-neutral-400 tabular-nums">
