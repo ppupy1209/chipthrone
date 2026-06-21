@@ -10,9 +10,9 @@ export function formatCap(cap: number): string {
   return `${(cap / 1e12).toFixed(1)}조`
 }
 
-/** 가격을 "92,500" 형식으로 */
+/** 가격을 정수 원 단위 "92,500" 형식으로 */
 export function formatPrice(price: number): string {
-  return price.toLocaleString('ko-KR')
+  return Math.round(price).toLocaleString('ko-KR')
 }
 
 /** 등락률을 "+1.4%" / "-0.8%" 형식으로 */

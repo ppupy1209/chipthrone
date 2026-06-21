@@ -81,8 +81,14 @@ export function CompanyCard({
       </div>
 
       <div className="mt-2 space-y-0.5 text-right text-[11px] text-neutral-400 tabular-nums">
-        <div>정규장 종가 {formatPrice(company.regularClose)}</div>
-        <div>애프터마켓 종가 {formatPrice(company.nxtClose)}</div>
+        <div>
+          정규장 종가{' '}
+          {company.regularClose != null ? formatPrice(company.regularClose) : '—'}
+        </div>
+        <div>
+          애프터마켓 종가{' '}
+          {company.nxtClose != null ? formatPrice(company.nxtClose) : '—'}
+        </div>
       </div>
     </div>
   )
