@@ -31,7 +31,7 @@ function App() {
         </div>
 
         <div className="mt-3">
-          <MarketCapBar cmp={cmp} />
+          <MarketCapBar samsung={snapshot.samsung} hynix={snapshot.hynix} />
         </div>
 
         <div className="mt-3">

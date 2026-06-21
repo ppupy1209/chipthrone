@@ -18,7 +18,7 @@ export function ReversalCalculator({ cmp }: { cmp: Comparison }) {
   return (
     <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5">
       <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-        <span>🧮</span> 역전 계산기 &amp; D-게이지
+        <span>🧮</span> 역전 계산기
       </div>
 
       <p className="mb-3 text-sm leading-relaxed">
