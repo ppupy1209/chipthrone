@@ -45,16 +45,13 @@ export function CompanyCard({
         <img
           src={company.logo}
           alt=""
-          className="h-5 w-auto shrink-0"
+          className="h-7 w-7 shrink-0 rounded-full"
           draggable={false}
         />
         <span className="text-[15px] font-medium leading-tight">
           {company.name}
         </span>
         <span className="text-[11px] text-neutral-400">{company.code}</span>
-        {isEstimate && (
-          <span className="ml-auto text-[11px] text-neutral-400">추정</span>
-        )}
       </div>
 
       <div className="mt-3 flex items-baseline gap-2">
@@ -77,10 +74,7 @@ export function CompanyCard({
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-2.5 text-[13px]">
-        <span className="text-neutral-500">
-          시가총액
-          {isEstimate && <span className="ml-1 text-neutral-400">(추정)</span>}
-        </span>
+        <span className="text-neutral-500">시가총액</span>
         <span className={`font-medium tabular-nums ${c.cap}`}>
           {formatCap(marketCap(company))}
         </span>
@@ -88,7 +82,7 @@ export function CompanyCard({
 
       <div className="mt-2 space-y-0.5 text-right text-[11px] text-neutral-400 tabular-nums">
         <div>정규장 종가 {formatPrice(company.regularClose)}</div>
-        <div>애프터마켓 {formatPrice(company.nxtClose)}</div>
+        <div>애프터마켓 종가 {formatPrice(company.nxtClose)}</div>
       </div>
     </div>
   )
