@@ -30,6 +30,7 @@ public class AppConfig {
                         .allowedOriginPatterns(
                                 "http://localhost:5173",
                                 "https://chipthrone.com",
+                                "https://*.chipthrone.com",
                                 "https://*.vercel.app"
                         )
                         .allowedMethods("GET", "OPTIONS")
