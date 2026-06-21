@@ -60,11 +60,8 @@ export function CompanyCard({
           className="text-2xl font-semibold tabular-nums"
         />
         <span className="text-xs text-neutral-400">원</span>
-        <span className="ml-auto flex flex-col items-end leading-tight">
-          <span className="text-[10px] text-neutral-400">{company.changeBasis}</span>
-          <span className={`text-sm font-medium tabular-nums ${changeColor}`}>
-            {up ? '▲' : '▼'} {formatPct(company.changePct)}
-          </span>
+        <span className={`ml-auto text-sm font-medium tabular-nums ${changeColor}`}>
+          {up ? '▲' : '▼'} {formatPct(company.changePct)}
         </span>
       </div>
 
