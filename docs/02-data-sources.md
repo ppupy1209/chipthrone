@@ -16,14 +16,19 @@ chipthrone은 시간대에 따라 서로 다른 소스에서 시세를 가져온
 
 ## 2. 야간 / 주말 — 추정가
 
-### Hyperliquid HIP-3 perp (공개 info API, 무료)
-- 삼성전자·SK하이닉스·KOSPI200을 추종하는 24시간 무기한 선물(perp)이 상장되어 있다.
-- 티커 형식 예: `xyz:SKHX` (정확한 심볼은 구현 시 info API로 확인).
-- USD 표시 가격을 **USD/KRW 환율**로 원화 환산하여 추정가로 사용한다.
-- 공식 거래소 시세가 아니므로 UI에 항상 "추정" 라벨을 붙인다.
+### Hyperliquid HIP-3 perp (공개 info API, 무료) — ✅ 검증 완료
+- builder dex `xyz`에 주식/지수 perp 다수 상장. 24시간 거래.
+- 검증된 심볼: **삼성전자 = `xyz:SMSN`**, **SK하이닉스 = `xyz:SKHX`** (코스피200 = `xyz:KR200`).
+- 조회: `POST https://api.hyperliquid.xyz/info`, body `{"type":"metaAndAssetCtxs","dex":"xyz"}`
+  - 응답 `[meta, assetCtxs]`. `meta.universe[i].name` ↔ `assetCtxs[i]` 인덱스 매칭.
+  - `markPx`(현재가 USD), `prevDayPx`(전일가, 등락률용) 사용.
+- 원화 추정 = `markPx(USD) × USD/KRW`. (GDR 비율 1:1로 계산 시 실제 1·2위 초접전 시총과 일치 확인)
 
-### 환율 소스
-- 무료 환율 API(예: exchangerate.host 등) 또는 KIS 환율. 구현 시 확정.
+### 환율 소스 — ✅ 검증 완료
+- `GET https://open.er-api.com/v6/latest/USD` (무료·키 불필요), `rates.KRW` 사용. 갱신은 하루 1회.
+- 주의: Hyperliquid `xyz:KRW`는 거래량 0이라 환율로 부적합.
+- 참고: **순위·격차·역전% 계산은 두 종목에 같은 FX가 곱해져 약분 → 환율과 무관**. FX는 절대 원화가/시총 표시값에만 영향.
+- 인트라데이가 필요하면 Yahoo `KRW=X`(비공식)로 교체 가능(클라이언트 인터페이스 분리됨).
 
 ## 3. 시장 상태 판별 로직
 
@@ -44,11 +49,11 @@ now(KST) 기준:
 | REGULAR / NXT | 2~5초 | KIS 쿼터 고려 |
 | ESTIMATE | 3~10초 | perp 변동성 고려 |
 
-## 5. 검증 필요 항목 (구현 전 확인)
+## 5. 검증 현황
 
-- [ ] KIS 현재가 API가 실시간/지연 어느 쪽인지, 무료 쿼터 정확한 수치
-- [ ] Hyperliquid 삼성전자/하이닉스 perp 정확한 심볼명
-- [ ] 상장주식수 데이터 소스 (KRX / 공시) 및 갱신 주기
-- [ ] 환율 API 무료 한도
+- [x] Hyperliquid 삼성전자/하이닉스 perp 심볼명 → `xyz:SMSN`, `xyz:SKHX` (라이브 응답 확인)
+- [x] 환율 API → open.er-api.com (무료·키 불필요, 하루 1회)
+- [ ] 상장주식수 데이터 소스 (KRX / 공시) 및 갱신 주기 — 현재 설정값으로 하드코딩, 재검증 필요
+- [ ] KIS 현재가 API 실시간/지연 여부, 무료 쿼터 — 정규장 연동 단계에서 확인
 
 > ⚠️ 본 서비스의 추정 시세는 투자 참고용이며, 공식 거래소 가격이 아니다.
