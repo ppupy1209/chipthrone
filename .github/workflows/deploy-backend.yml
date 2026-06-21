@@ -1,0 +1,54 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-image:
+    name: Docker 이미지 빌드·푸시(GHCR)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/chipthrone-api:latest
+            ghcr.io/${{ github.repository_owner }}/chipthrone-api:${{ github.sha }}
+
+  deploy:
+    name: EC2 배포
+    needs: build-image
+    runs-on: ubuntu-latest
+    # AWS 프로비저닝 후 레포 변수 DEPLOY_ENABLED=true 로 설정하면 활성화됩니다.
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    steps:
+      - name: SSH 배포
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            IMAGE=ghcr.io/${{ github.repository_owner }}/chipthrone-api:latest
+            docker pull "$IMAGE"
+            docker stop chipthrone-api || true
+            docker rm chipthrone-api || true
+            docker run -d --name chipthrone-api --restart unless-stopped \
+              -p 8080:8080 -e JAVA_OPTS="-Xms128m -Xmx512m" "$IMAGE"
+            docker image prune -f
