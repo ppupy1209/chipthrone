@@ -9,8 +9,10 @@ export type Company = {
   logo: string
   /** 현재가(원) — 모드에 따라 실제가 또는 추정가 */
   price: number
-  /** 전일 대비 등락률(%) */
+  /** 등락률(%) — 기준은 changeBasis 참고 */
   changePct: number
+  /** 등락률 기준 라벨 (예: "애프터마켓 대비", "전일 대비") */
+  changeBasis: string
   /** 정규장 종가(원) — KIS 미연동 시 null */
   regularClose: number | null
   /** NXT 애프터마켓 종가(원) — KIS 미연동 시 null */

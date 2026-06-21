@@ -6,6 +6,7 @@ public record KisStockQuote(
         String code,
         BigDecimal priceKrw,
         BigDecimal changePct,
-        BigDecimal previousRegularClose
+        BigDecimal previousRegularClose,
+        BigDecimal nxtClose
 ) {
 }

@@ -44,6 +44,7 @@ class QuoteControllerTest {
                 .andExpect(jsonPath("$.stocks[0].priceKrw").value(356208.0))
                 .andExpect(jsonPath("$.stocks[0].priceUsd").value(241.18))
                 .andExpect(jsonPath("$.stocks[0].changePct").value(1.04))
+                .andExpect(jsonPath("$.stocks[0].changeBasis").value("전일 대비"))
                 .andExpect(jsonPath("$.stocks[0].sharesOutstanding").value(5_919_637_922L))
                 .andExpect(jsonPath("$.stocks[0].marketCap").value(2.108E15))
                 .andExpect(jsonPath("$.stocks[0].regularClose").value(nullValue()))
@@ -84,6 +85,7 @@ class QuoteControllerTest {
                         356208.0,
                         241.18,
                         1.04,
+                        "전일 대비",
                         5_919_637_922L,
                         2.108E15,
                         null,

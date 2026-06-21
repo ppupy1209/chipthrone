@@ -16,6 +16,7 @@ type BackendStock = {
   priceKrw: number
   priceUsd: number
   changePct: number
+  changeBasis: string
   sharesOutstanding: number
   marketCap: number
   regularClose: number | null
@@ -37,6 +38,7 @@ function toCompany(s: BackendStock): Company {
     logo: META[s.code]?.logo ?? '',
     price: s.priceKrw,
     changePct: s.changePct,
+    changeBasis: s.changeBasis,
     regularClose: s.regularClose,
     nxtClose: s.nxtClose,
     sharesOutstanding: s.sharesOutstanding,
