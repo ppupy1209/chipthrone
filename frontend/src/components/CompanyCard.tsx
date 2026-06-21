@@ -1,6 +1,8 @@
 import type { Company, MarketMode } from '../types'
 import {
+  computeChange,
   formatCap,
+  formatChangeAmount,
   formatDateMMDD,
   formatPct,
   formatPrice,
@@ -26,8 +28,9 @@ export function CompanyCard({
   fxRate: number
 }) {
   const c = COLOR[company.color]
-  const up = company.changePct >= 0
   const isEstimate = mode === 'ESTIMATE'
+  const change = computeChange(company, mode)
+  const up = change.pct >= 0
   // 국장 관례: 상승=빨강, 하락=파랑
   const changeColor = up ? 'text-red-600' : 'text-blue-600'
 
@@ -61,8 +64,18 @@ export function CompanyCard({
           className="text-2xl font-semibold tabular-nums"
         />
         <span className="text-xs text-neutral-400">원</span>
-        <span className={`ml-auto text-sm font-medium tabular-nums ${changeColor}`}>
-          {up ? '▲' : '▼'} {formatPct(company.changePct)}
+        <span className="ml-auto flex flex-col items-end leading-tight">
+          {change.label && (
+            <span className="text-[10px] text-neutral-400">{change.label}</span>
+          )}
+          <span className={`text-sm font-medium tabular-nums ${changeColor}`}>
+            {up ? '▲' : '▼'} {formatPct(change.pct)}
+            {change.hasBasis && (
+              <span className="ml-1 text-[11px]">
+                ({formatChangeAmount(change.amount)})
+              </span>
+            )}
+          </span>
         </span>
       </div>
 

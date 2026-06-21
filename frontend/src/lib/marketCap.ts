@@ -1,4 +1,4 @@
-import type { Company } from '../types'
+import type { Company, MarketMode } from '../types'
 
 /** 시가총액(원) = 현재가 × 상장주식수 */
 export function marketCap(c: Company): number {
@@ -21,12 +21,53 @@ export function formatPct(pct: number): string {
   return `${sign}${pct.toFixed(1)}%`
 }
 
-/** "yyyy-MM-dd" → "MM/DD" (null이면 빈 문자열) */
+/** "yyyy-MM-dd" → "M/D" (null이면 빈 문자열) */
 export function formatDateMMDD(date: string | null): string {
   if (!date) return ''
   const parts = date.split('-')
   if (parts.length !== 3) return ''
-  return `${parts[1]}/${parts[2]}`
+  return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`
+}
+
+export type DisplayChange = {
+  /** 등락률(%) */
+  pct: number
+  /** 등락 금액(원) */
+  amount: number
+  /** 기준 문구 (예: "6/19 애프터마켓 종가 대비"). 기준값 없으면 '' */
+  label: string
+  /** 기준 종가가 있어 금액/문구를 표시할 수 있는지 */
+  hasBasis: boolean
+}
+
+/**
+ * 시장 상황별 등락 기준:
+ * - 애프터마켓(NXT) 시간 → 정규장 종가 대비
+ * - 정규장 / 야간 / 주말 → 애프터마켓 종가 대비
+ */
+export function computeChange(company: Company, mode: MarketMode): DisplayChange {
+  const useRegular = mode === 'NXT'
+  const close = useRegular ? company.regularClose : company.nxtClose
+  const date = useRegular ? company.regularCloseDate : company.nxtCloseDate
+  const basisName = useRegular ? '정규장 종가 대비' : '애프터마켓 종가 대비'
+
+  if (close != null && close !== 0) {
+    const datePart = date ? `${formatDateMMDD(date)} ` : ''
+    return {
+      pct: ((company.price - close) / close) * 100,
+      amount: company.price - close,
+      label: `${datePart}${basisName}`,
+      hasBasis: true,
+    }
+  }
+  // 기준 종가가 없으면 백엔드 등락률로 폴백, 문구/금액 생략
+  return { pct: company.changePct, amount: 0, label: '', hasBasis: false }
+}
+
+/** 등락 금액을 "+18,855원" / "-3,200원" 형식으로 */
+export function formatChangeAmount(amount: number): string {
+  const sign = amount > 0 ? '+' : amount < 0 ? '-' : ''
+  return `${sign}${Math.abs(Math.round(amount)).toLocaleString('ko-KR')}원`
 }
 
 /** 원화가를 달러 환산해 "$66.91" 형식으로 */
