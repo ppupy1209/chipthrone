@@ -56,6 +56,12 @@ else
   echo "!! 이미지 pull 실패 — GHCR 패키지를 public으로 바꾸거나 docker login 후 재시도하세요."
 fi
 
+echo "==> watchtower 실행 (새 이미지 자동 반영, 60초 주기)"
+sudo docker rm -f watchtower 2>/dev/null || true
+sudo docker run -d --name watchtower --restart unless-stopped \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  containrrr/watchtower --cleanup --interval 60 chipthrone-api
+
 cat <<DONE
 
 ==================================================

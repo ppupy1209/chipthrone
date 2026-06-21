@@ -7,10 +7,10 @@
 | 워크플로 | 트리거 | 동작 | 필요 조건 |
 |---|---|---|---|
 | `ci.yml` | PR · main 푸시 | 백엔드 `gradle build` + 프론트 `npm build` | 없음(즉시 동작) |
-| `deploy-backend.yml` (build-image) | main 푸시 | Docker 이미지 → GHCR 푸시 | 없음(GITHUB_TOKEN) |
-| `deploy-backend.yml` (deploy) | main 푸시 | EC2 SSH 배포 | `DEPLOY_ENABLED=true` + 시크릿 |
+| `deploy-backend.yml` | main 푸시 | Docker 이미지 → GHCR 푸시 | 없음(GITHUB_TOKEN) |
+| EC2 watchtower | 60초 주기 | GHCR 새 이미지 감지 → 자동 pull/재시작 | 없음(SSH 불필요) |
 
-프론트엔드 배포는 Vercel의 GitHub 연동이 담당한다(아래 4번).
+배포는 **이미지 푸시 + watchtower 자동 반영** 방식이다. GitHub Actions가 EC2에 SSH로 접속하지 않으므로 보안그룹 22를 열 필요가 없다. 프론트엔드 배포는 Vercel의 GitHub 연동이 담당한다(아래 4번).
 
 ## 2. AWS 인프라 프로비저닝 (프리티어)
 
@@ -27,19 +27,12 @@
 ### RDS (이후 단계)
 - MySQL 8, **db.t3.micro**(프리티어), 20GB. EC2 보안 그룹에서만 3306 접근 허용.
 
-## 3. GitHub 설정 (EC2 배포 활성화)
+## 3. GitHub 설정 (배포)
 
-레포 → Settings → Secrets and variables → Actions
+SSH 배포를 쓰지 않으므로 `EC2_HOST/USER/SSH_KEY`, `DEPLOY_ENABLED` 시크릿은 **불필요**하다.
+이미지 푸시는 `GITHUB_TOKEN`으로 동작하고, EC2의 watchtower가 GHCR에서 새 이미지를 polling해 자동 반영한다.
 
-**Variables**
-- `DEPLOY_ENABLED` = `true`
-
-**Secrets**
-- `EC2_HOST` = EC2 퍼블릭 IP/도메인
-- `EC2_USER` = `ec2-user`
-- `EC2_SSH_KEY` = 키페어 개인키(.pem 전체 내용)
-
-**GHCR 패키지 공개** (EC2가 로그인 없이 pull 가능하게)
+**GHCR 패키지 공개** (EC2/watchtower가 로그인 없이 pull 가능하게)
 - GitHub → 프로필 → Packages → `chipthrone-api` → Package settings → Change visibility → Public.
 - (비공개 유지 시 EC2에서 `docker login ghcr.io` 필요)
 
