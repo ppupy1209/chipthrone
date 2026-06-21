@@ -41,13 +41,16 @@ export function CompanyCard({
         {isLeader ? '👑 현재 왕좌' : '도전자 · 2위'}
       </span>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
         <img
           src={company.logo}
-          alt={company.name}
-          className="h-5 w-auto"
+          alt=""
+          className="h-5 w-auto shrink-0"
           draggable={false}
         />
+        <span className="text-[15px] font-medium leading-tight">
+          {company.name}
+        </span>
         <span className="text-[11px] text-neutral-400">{company.code}</span>
         {isEstimate && (
           <span className="ml-auto text-[11px] text-neutral-400">추정</span>
@@ -74,15 +77,18 @@ export function CompanyCard({
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-2.5 text-[13px]">
-        <span className="text-neutral-500">시가총액</span>
+        <span className="text-neutral-500">
+          시가총액
+          {isEstimate && <span className="ml-1 text-neutral-400">(추정)</span>}
+        </span>
         <span className={`font-medium tabular-nums ${c.cap}`}>
           {formatCap(marketCap(company))}
         </span>
       </div>
 
-      <div className="mt-2 flex justify-between text-[11px] text-neutral-400 tabular-nums">
-        <span>정규장 종가 {formatPrice(company.regularClose)}</span>
-        <span>NXT 종가 {formatPrice(company.nxtClose)}</span>
+      <div className="mt-2 space-y-0.5 text-right text-[11px] text-neutral-400 tabular-nums">
+        <div>정규장 종가 {formatPrice(company.regularClose)}</div>
+        <div>애프터마켓 {formatPrice(company.nxtClose)}</div>
       </div>
     </div>
   )

@@ -31,7 +31,7 @@ function App() {
         </div>
 
         <div className="mt-3">
-          <MarketCapBar cmp={cmp} />
+          <MarketCapBar cmp={cmp} mode={snapshot.mode} />
         </div>
 
         <div className="mt-3">

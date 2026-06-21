@@ -1,7 +1,8 @@
+import type { MarketMode } from '../types'
 import type { Comparison } from '../lib/marketCap'
 import { formatCap } from '../lib/marketCap'
 
-export function MarketCapBar({ cmp }: { cmp: Comparison }) {
+export function MarketCapBar({ cmp, mode }: { cmp: Comparison; mode: MarketMode }) {
   const total = cmp.leaderCap + cmp.challengerCap
   const leaderW = (cmp.leaderCap / total) * 100
   const leaderColor = cmp.leader.color === 'blue' ? 'bg-blue-500' : 'bg-red-500'
@@ -17,7 +18,9 @@ export function MarketCapBar({ cmp }: { cmp: Comparison }) {
         <span className={`font-medium ${leaderText}`}>
           {cmp.leader.name} {formatCap(cmp.leaderCap)}
         </span>
-        <span className="text-neutral-400">시총 비교</span>
+        <span className="text-neutral-400">
+          시총 비교{mode === 'ESTIMATE' && ' (추정)'}
+        </span>
         <span className={`font-medium ${challengerText}`}>
           {formatCap(cmp.challengerCap)} {cmp.challenger.name}
         </span>
