@@ -58,14 +58,8 @@ export function CompanyCard({
         </span>
       )}
 
-      {/* 헤더줄: 로고 + 종목명 + 코드 + (오른쪽) 세션 태그(작은 원 + 멘트, nowrap) */}
+      {/* 헤더줄: 종목명 + 코드 + (오른쪽) 세션 태그(작은 원 + 멘트, nowrap) */}
       <div className="flex items-center gap-2">
-        <img
-          src={company.logo}
-          alt=""
-          className="h-7 w-7 shrink-0 rounded-full"
-          draggable={false}
-        />
         <span className="text-[15px] font-medium leading-tight">
           {company.name}
         </span>

@@ -18,7 +18,6 @@ export function Header({ mode, at }: { mode: MarketMode; at: string }) {
   return (
     <header className="flex items-center justify-between">
       <div className="flex items-center gap-2.5">
-        <span className="text-2xl">👑</span>
         <div>
           <div className="text-xl font-semibold tracking-tight">chipthrone</div>
           <div className="text-xs text-neutral-400">국장 반도체 왕좌 대결</div>
