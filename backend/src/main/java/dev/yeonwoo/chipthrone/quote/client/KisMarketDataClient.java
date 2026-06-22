@@ -9,7 +9,11 @@ public interface KisMarketDataClient {
 
     boolean enabled();
 
-    Optional<KisStockQuote> fetchCurrentStockQuote(String code);
+    default Optional<KisStockQuote> fetchCurrentStockQuote(String code) {
+        return fetchCurrentStockQuote(code, "J");
+    }
+
+    Optional<KisStockQuote> fetchCurrentStockQuote(String code, String marketDivisionCode);
 
     Optional<KisClosingPrice> fetchClosingPrice(String code);
 }

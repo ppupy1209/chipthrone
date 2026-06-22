@@ -36,6 +36,8 @@ public class QuoteService {
 
     private static final Logger log = LoggerFactory.getLogger(QuoteService.class);
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final String KRX_MARKET_DIVISION_CODE = "J";
+    private static final String NXT_MARKET_DIVISION_CODE = "NX";
     private static final LocalTime REGULAR_CLOSE = LocalTime.of(15, 30);
     private static final Duration CLOSE_RETRY_BACKOFF = Duration.ofSeconds(30);
 
@@ -148,12 +150,14 @@ public class QuoteService {
         if (mode == MarketMode.ESTIMATE) {
             return Optional.empty();
         }
+        String marketDivisionCode = currentMarketDivisionCode(mode);
         try {
-            Optional<KisStockQuote> quote = kisMarketDataClient.fetchCurrentStockQuote(asset.code());
+            Optional<KisStockQuote> quote = kisMarketDataClient.fetchCurrentStockQuote(asset.code(), marketDivisionCode)
+                    .filter(value -> isPositive(value.priceKrw()));
             quote.ifPresent(value -> latestCurrentQuoteByCode.put(asset.code(), value));
-            return quote.or(() -> Optional.ofNullable(latestCurrentQuoteByCode.get(asset.code())));
+            return quote.or(() -> currentQuoteFallback(asset.code(), mode));
         } catch (RuntimeException ex) {
-            KisStockQuote fallback = latestCurrentQuoteByCode.get(asset.code());
+            KisStockQuote fallback = currentQuoteFallback(asset.code(), mode).orElse(null);
             if (fallback == null) {
                 log.warn("Failed to fetch KIS current quote for code {}. Falling back for this stock.", asset.code(), ex);
             } else {
@@ -161,6 +165,20 @@ public class QuoteService {
             }
             return Optional.ofNullable(fallback);
         }
+    }
+
+    private Optional<KisStockQuote> currentQuoteFallback(String code, MarketMode mode) {
+        if (mode == MarketMode.PREMARKET) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(latestCurrentQuoteByCode.get(code));
+    }
+
+    private String currentMarketDivisionCode(MarketMode mode) {
+        if (mode == MarketMode.PREMARKET || mode == MarketMode.NXT) {
+            return NXT_MARKET_DIVISION_CODE;
+        }
+        return KRX_MARKET_DIVISION_CODE;
     }
 
     private Optional<KisClosingPrice> refreshClosingPriceIfNeeded(String code) {
@@ -232,5 +250,9 @@ public class QuoteService {
     private boolean isWeekday(LocalDate date) {
         DayOfWeek day = date.getDayOfWeek();
         return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;
+    }
+
+    private boolean isPositive(BigDecimal value) {
+        return value != null && value.compareTo(BigDecimal.ZERO) > 0;
     }
 }

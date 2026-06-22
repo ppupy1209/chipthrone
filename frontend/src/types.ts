@@ -1,4 +1,4 @@
-export type MarketMode = 'REGULAR' | 'NXT' | 'ESTIMATE'
+export type MarketMode = 'REGULAR' | 'NXT' | 'PREMARKET' | 'ESTIMATE'
 
 export type Company = {
   code: string

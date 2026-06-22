@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -177,6 +178,73 @@ class QuoteServiceTest {
         assertThat(snapshot.stocks().getFirst().regularCloseDate()).isEqualTo("2026-06-19");
     }
 
+    @Test
+    void regularModeFetchesKisCurrentPriceFromKrxMarket() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        QuoteService service = newService(
+                marketDataClient,
+                kisMarketDataClient,
+                exchangeRateClient,
+                new MutableClock(Instant.parse("2026-06-22T01:00:00Z"))
+        );
+
+        service.refresh();
+
+        assertThat(kisMarketDataClient.currentMarketDivisionCodes).containsExactly("J", "J");
+    }
+
+    @Test
+    void premarketAndNxtFetchKisCurrentPriceFromNxtMarket() {
+        StubMarketDataClient premarketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient premarketKisClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient premarketExchangeRateClient = new StubExchangeRateClient();
+        QuoteService premarketService = newService(
+                premarketDataClient,
+                premarketKisClient,
+                premarketExchangeRateClient,
+                new MutableClock(Instant.parse("2026-06-21T23:30:00Z"))
+        );
+
+        premarketService.refresh();
+
+        StubMarketDataClient nxtMarketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient nxtKisClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient nxtExchangeRateClient = new StubExchangeRateClient();
+        QuoteService nxtService = newService(
+                nxtMarketDataClient,
+                nxtKisClient,
+                nxtExchangeRateClient,
+                new MutableClock(Instant.parse("2026-06-22T07:00:00Z"))
+        );
+
+        nxtService.refresh();
+
+        assertThat(premarketKisClient.currentMarketDivisionCodes).containsExactly("NX", "NX");
+        assertThat(nxtKisClient.currentMarketDivisionCodes).containsExactly("NX", "NX");
+    }
+
+    @Test
+    void premarketZeroKisCurrentPriceFallsBackToHyperliquidEstimate() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        kisMarketDataClient.zeroCurrentCode = "000660";
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        QuoteService service = newService(
+                marketDataClient,
+                kisMarketDataClient,
+                exchangeRateClient,
+                new MutableClock(Instant.parse("2026-06-21T23:30:00Z"))
+        );
+
+        QuoteSnapshot snapshot = service.refresh().orElseThrow();
+
+        assertThat(kisMarketDataClient.currentMarketDivisionCodes).containsExactly("NX", "NX");
+        assertThat(snapshot.stocks().get(1).priceKrw()).isEqualTo(2826521.36);
+        assertThat(snapshot.stocks().get(1).priceUsd()).isEqualTo(1913.95);
+    }
+
     private QuoteService newService(
             StubMarketDataClient marketDataClient,
             StubKisMarketDataClient kisMarketDataClient,
@@ -273,7 +341,9 @@ class QuoteServiceTest {
         private final boolean enabled;
         private int currentCalls;
         private int closeCalls;
+        private final List<String> currentMarketDivisionCodes = new ArrayList<>();
         private String failCurrentCode;
+        private String zeroCurrentCode;
         private String failCloseCode;
         private CloseFactory closeByCode = code -> {
             if ("000660".equals(code)) {
@@ -304,10 +374,23 @@ class QuoteServiceTest {
         }
 
         @Override
-        public Optional<KisStockQuote> fetchCurrentStockQuote(String code) {
+        public Optional<KisStockQuote> fetchCurrentStockQuote(String code, String marketDivisionCode) {
             currentCalls++;
+            currentMarketDivisionCodes.add(marketDivisionCode);
             if (code.equals(failCurrentCode)) {
                 throw new IllegalStateException("kis unavailable");
+            }
+            if (code.equals(zeroCurrentCode)) {
+                return Optional.of(new KisStockQuote(
+                        code,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        null,
+                        null,
+                        null,
+                        null
+                ));
             }
             if ("000660".equals(code)) {
                 return Optional.of(new KisStockQuote(
