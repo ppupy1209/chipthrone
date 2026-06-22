@@ -1,4 +1,4 @@
-import type { Company, MarketMode } from '../types'
+import type { Company } from '../types'
 
 /** 시가총액(원) = 현재가 × 상장주식수 */
 export function marketCap(c: Company): number {
@@ -56,26 +56,23 @@ export type DisplayChange = {
 }
 
 /**
- * 시장 상황별 등락 기준:
- * - 애프터마켓(NXT) / 프리장(PREMARKET) → 정규장 종가 대비
- * - 정규장 / 야간 / 주말 → 애프터마켓 종가 대비
+ * 등락 기준: 정규장 종가(전일 종가) 대비 — 모든 장 상황 공통.
+ * 정규장 종가가 없으면 백엔드 등락률로 폴백(금액/문구 생략).
  */
-export function computeChange(company: Company, mode: MarketMode): DisplayChange {
-  const useRegular = mode === 'NXT' || mode === 'PREMARKET'
-  const close = useRegular ? company.regularClose : company.nxtClose
-  const date = useRegular ? company.regularCloseDate : company.nxtCloseDate
-  const basisName = useRegular ? '정규장 종가 대비' : '애프터마켓 종가 대비'
+export function computeChange(company: Company): DisplayChange {
+  const close = company.regularClose
+  const date = company.regularCloseDate
 
   if (close != null && close !== 0) {
     const datePart = date ? `${formatDateMMDD(date)} ` : ''
     return {
       pct: ((company.price - close) / close) * 100,
       amount: company.price - close,
-      label: `${datePart}${basisName}`,
+      label: `${datePart}정규장 종가 대비`,
       hasBasis: true,
     }
   }
-  // 기준 종가가 없으면 백엔드 등락률로 폴백, 문구/금액 생략
+  // 정규장 종가가 없으면 백엔드 등락률로 폴백, 문구/금액 생략
   return { pct: company.changePct, amount: 0, label: '', hasBasis: false }
 }
 

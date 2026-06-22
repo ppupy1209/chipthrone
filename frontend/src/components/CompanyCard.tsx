@@ -38,7 +38,7 @@ export function CompanyCard({
   const c = COLOR[company.color]
   // 야간(추정)·프리장은 해외 파생 기반 추정가 → 달러 환산 노출
   const showUsd = mode === 'ESTIMATE' || mode === 'PREMARKET'
-  const change = computeChange(company, mode)
+  const change = computeChange(company)
   const up = change.pct >= 0
   // 국장 관례: 상승=빨강, 하락=파랑
   const changeColor = up ? 'text-red-600' : 'text-blue-600'
