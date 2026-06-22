@@ -19,17 +19,29 @@ export function MarketCapBar({
   const gapPct = (gap / Math.min(capS, capH)) * 100
 
   return (
-    <div className="rounded-xl bg-neutral-50 dark:bg-neutral-900 p-5">
-      <div className="mb-2 flex justify-between text-[13px]">
+    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5">
+      <div className="mb-2.5 text-center text-[10px] tracking-[0.14em] text-neutral-400">
+        시총 비교
+      </div>
+      <div className="flex items-baseline justify-between text-[13px]">
         <span className="font-medium text-blue-600">
-          삼성전자 <AnimatedNumber value={capS} format={formatCap} className="tabular-nums" />
+          삼성전자{' '}
+          <AnimatedNumber
+            value={capS}
+            format={formatCap}
+            className="font-normal text-neutral-500 tabular-nums"
+          />
         </span>
-        <span className="text-neutral-400">시총 비교</span>
         <span className="font-medium text-red-600">
-          <AnimatedNumber value={capH} format={formatCap} className="tabular-nums" /> SK하이닉스
+          <AnimatedNumber
+            value={capH}
+            format={formatCap}
+            className="font-normal text-neutral-500 tabular-nums"
+          />{' '}
+          SK하이닉스
         </span>
       </div>
-      <div className="flex h-3.5 overflow-hidden rounded-md">
+      <div className="my-2 flex h-1.5 overflow-hidden rounded-full">
         <div
           className="bg-blue-500"
           style={{ width: `${samsungW}%`, transition: 'width 0.5s ease-out' }}
@@ -39,17 +51,14 @@ export function MarketCapBar({
           style={{ width: `${100 - samsungW}%`, transition: 'width 0.5s ease-out' }}
         />
       </div>
-      <div className="mt-2 text-center text-xs text-neutral-400">
+      <div className="text-center text-[11px] text-neutral-400 tabular-nums">
         격차{' '}
         <AnimatedNumber
           value={gap}
           format={formatCap}
-          className="font-medium text-neutral-700 dark:text-neutral-200 tabular-nums"
+          className="font-medium text-neutral-600 dark:text-neutral-300"
         />{' '}
-        <span className="font-medium text-neutral-700 dark:text-neutral-200 tabular-nums">
-          ({gapPct.toFixed(1)}%)
-        </span>{' '}
-        · 역전 초읽기
+        · {gapPct.toFixed(1)}%
       </div>
     </div>
   )

@@ -15,17 +15,17 @@ export function ReversalCalculator({ cmp }: { cmp: Comparison }) {
 
   return (
     <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5">
-      <p className="mb-3 text-sm leading-relaxed">
+      <p className="text-sm leading-relaxed">
         <span className={`font-medium ${challengerText}`}>{cmp.challenger.name}</span>
         가 <span className={`font-medium ${challengerText}`}>+{needPct.toFixed(1)}%</span>{' '}
-        (약 +{formatPrice(needPrice)}원) 오르면{' '}
+        <span className="text-neutral-400">(약 +{formatPrice(needPrice)}원)</span> 오르면{' '}
         <span className={`font-medium ${leaderText}`}>{cmp.leader.name}</span>를 제치고
         왕좌 교체
       </p>
 
-      <div className="flex items-center gap-2.5">
-        <span className="text-xs text-neutral-400">근접도</span>
-        <div className="h-2.5 flex-1 overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-800">
+      <div className="mt-3.5 flex items-center gap-2.5">
+        <span className="text-[10px] tracking-[0.1em] text-neutral-400">역전까지</span>
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
           <div
             className={`h-full ${gaugeColor}`}
             style={{ width: `${proximity}%`, transition: 'width 0.5s ease-out' }}
