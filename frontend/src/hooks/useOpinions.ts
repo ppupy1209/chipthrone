@@ -21,7 +21,8 @@ export function useOpinions(): OpinionsResponse | null {
         })
     }
     load()
-    const id = setInterval(load, 10 * 60 * 1000)
+    // 의견은 하루 단위로만 바뀌므로 1시간 주기 재조회로 충분(서버 캐시라 KIS 호출은 하루 1회).
+    const id = setInterval(load, 60 * 60 * 1000)
     return () => {
       alive = false
       clearInterval(id)
