@@ -41,6 +41,20 @@ class MarketModeServiceTest {
         assertThat(service.determine(kstInstant("2026-06-21", "10:00"))).isEqualTo(MarketMode.ESTIMATE);
     }
 
+    @Test
+    void determinesEstimateOnWeekdayPublicHolidays() {
+        // 평일 공휴일은 정규장 시간이라도 휴장 → ESTIMATE
+        assertThat(service.determine(kstInstant("2026-01-01", "10:00"))).isEqualTo(MarketMode.ESTIMATE); // 신정(목)
+        assertThat(service.determine(kstInstant("2026-12-25", "10:00"))).isEqualTo(MarketMode.ESTIMATE); // 성탄절(금)
+        assertThat(service.determine(kstInstant("2026-09-28", "10:00"))).isEqualTo(MarketMode.ESTIMATE); // 추석 대체(월)
+        assertThat(service.determine(kstInstant("2026-12-31", "10:00"))).isEqualTo(MarketMode.ESTIMATE); // 연말 폐장(목)
+    }
+
+    @Test
+    void keepsRegularOnNormalTradingDay() {
+        assertThat(service.determine(kstInstant("2026-06-22", "10:00"))).isEqualTo(MarketMode.REGULAR); // 일반 거래일(월)
+    }
+
     private Instant kstInstant(String date, String time) {
         return LocalDate.parse(date)
                 .atTime(LocalTime.parse(time))

@@ -20,7 +20,7 @@ const COLOR = {
 const SESSION: Record<MarketMode, { dot: string; text: string; pulse?: boolean }> = {
   REGULAR: { dot: 'bg-emerald-500', text: '정규장' },
   NXT: { dot: 'bg-sky-500', text: '애프터마켓' },
-  PREMARKET: { dot: 'bg-amber-500', text: '프리장', pulse: true },
+  PREMARKET: { dot: 'bg-amber-500', text: '프리마켓', pulse: true },
   ESTIMATE: { dot: 'bg-emerald-500', text: '해외 실시간 추정가', pulse: true },
 }
 
@@ -36,7 +36,7 @@ export function CompanyCard({
   fxRate: number
 }) {
   const c = COLOR[company.color]
-  // 야간(추정)·프리장은 해외 파생 기반 추정가 → 달러 환산 노출
+  // 야간(추정)·프리마켓은 해외 파생 기반 추정가 → 달러 환산 노출
   const showUsd = mode === 'ESTIMATE' || mode === 'PREMARKET'
   const change = computeChange(company)
   const up = change.pct >= 0
@@ -54,7 +54,7 @@ export function CompanyCard({
     >
       {isLeader && (
         <span className="absolute -top-2.5 right-3.5 inline-flex items-center gap-1.5 rounded-md bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-700">
-          <svg viewBox="0 0 64 64" className="h-[18px] w-[18px]" aria-hidden="true">
+          <svg viewBox="11 17 42 43" className="h-4 w-4" aria-hidden="true">
             <path d="M12 50 L15 23 L24 33 L32 18 L40 33 L49 23 L52 50 Z" fill="#b8924a" />
             <rect x="13" y="52" width="38" height="7" rx="2.5" fill="#b8924a" />
           </svg>
@@ -100,7 +100,7 @@ export function CompanyCard({
         </span>
       </div>
 
-      {/* 달러 환산(추정·프리장 시) */}
+      {/* 달러 환산(추정·프리마켓 시) */}
       {showUsd && (
         <div className="mt-1 text-[12px] text-neutral-400 tabular-nums">
           ≈ {formatUsd(company.price, fxRate)}
