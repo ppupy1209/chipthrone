@@ -34,3 +34,46 @@ export type MarketSnapshot = {
   samsung: Company
   hynix: Company
 }
+
+/** 증권사 1건의 투자의견 리포트 */
+export type OpinionReport = {
+  /** 발표일 (yyyy-MM-dd) */
+  date: string
+  /** 증권사명 */
+  broker: string
+  /** 현재 투자의견 (예: '매수') */
+  opinion: string
+  /** 직전 투자의견 */
+  prevOpinion: string
+  /** 목표가(원) — 없으면 null */
+  targetPrice: number | null
+}
+
+/** 종목 컨센서스 요약 */
+export type OpinionConsensus = {
+  /** 평균 목표가(원) — 없으면 null */
+  avgTargetPrice: number | null
+  /** 추정기관수(증권사 수) */
+  institutionCount: number
+  /** 매수계열 의견 수 */
+  buy: number
+  /** 중립 의견 수 */
+  hold: number
+  /** 매도계열 의견 수 */
+  sell: number
+  /** 컨센서스 점수 1~5 (강력매도 1 … 강력매수 5) — 없으면 null */
+  score: number | null
+}
+
+export type StockOpinion = {
+  code: string
+  name: string
+  consensus: OpinionConsensus
+  reports: OpinionReport[]
+}
+
+export type OpinionsResponse = {
+  /** 기준일 (yyyy-MM-dd) */
+  asOf: string
+  stocks: StockOpinion[]
+}
