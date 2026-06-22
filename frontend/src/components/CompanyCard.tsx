@@ -53,8 +53,12 @@ export function CompanyCard({
       className={`relative rounded-xl border border-neutral-200 dark:border-neutral-800 border-t-[3px] ${c.top} bg-white dark:bg-neutral-900 p-5`}
     >
       {isLeader && (
-        <span className="absolute -top-2.5 right-3.5 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-          👑 현재 왕좌
+        <span className="absolute -top-2.5 right-3.5 inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+          <svg viewBox="0 0 64 64" className="h-3 w-3" aria-hidden="true">
+            <path d="M14 46 L16 29 L24 37 L32 25 L40 37 L48 29 L50 46 Z" fill="#b8924a" />
+            <rect x="15" y="48" width="34" height="6" rx="2" fill="#b8924a" />
+          </svg>
+          현재 왕좌
         </span>
       )}
 
