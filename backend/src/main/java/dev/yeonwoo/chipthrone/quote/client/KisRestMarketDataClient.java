@@ -44,12 +44,17 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
 
     @Override
     public Optional<KisStockQuote> fetchCurrentStockQuote(String code) {
+        return fetchCurrentStockQuote(code, "J");
+    }
+
+    @Override
+    public Optional<KisStockQuote> fetchCurrentStockQuote(String code, String marketDivisionCode) {
         if (!enabled()) {
             return Optional.empty();
         }
 
         String accessToken = tokenProvider.accessToken();
-        JsonNode output = fetchPriceOutput("J", code, accessToken);
+        JsonNode output = fetchPriceOutput(marketDivisionCode, code, accessToken);
 
         if (output == null) {
             log.warn("Unexpected KIS price response for code {}", code);

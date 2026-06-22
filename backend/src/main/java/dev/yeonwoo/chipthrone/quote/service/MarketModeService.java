@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class MarketModeService {
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final LocalTime PREMARKET_OPEN = LocalTime.of(8, 0);
     private static final LocalTime REGULAR_OPEN = LocalTime.of(9, 0);
     private static final LocalTime REGULAR_CLOSE = LocalTime.of(15, 30);
     private static final LocalTime NXT_OPEN = LocalTime.of(15, 40);
@@ -26,6 +27,9 @@ public class MarketModeService {
         }
 
         LocalTime time = kst.toLocalTime();
+        if (!time.isBefore(PREMARKET_OPEN) && time.isBefore(REGULAR_OPEN)) {
+            return MarketMode.PREMARKET;
+        }
         if (!time.isBefore(REGULAR_OPEN) && !time.isAfter(REGULAR_CLOSE)) {
             return MarketMode.REGULAR;
         }

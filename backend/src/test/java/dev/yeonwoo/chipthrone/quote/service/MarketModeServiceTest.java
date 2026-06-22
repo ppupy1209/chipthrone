@@ -17,6 +17,12 @@ class MarketModeServiceTest {
     private final ZoneId kst = ZoneId.of("Asia/Seoul");
 
     @Test
+    void determinesPremarketDuringWeekdayPremarketSession() {
+        assertThat(service.determine(kstInstant("2026-06-22", "08:00"))).isEqualTo(MarketMode.PREMARKET);
+        assertThat(service.determine(kstInstant("2026-06-22", "08:30"))).isEqualTo(MarketMode.PREMARKET);
+    }
+
+    @Test
     void determinesRegularDuringWeekdayRegularSession() {
         assertThat(service.determine(kstInstant("2026-06-22", "09:00"))).isEqualTo(MarketMode.REGULAR);
         assertThat(service.determine(kstInstant("2026-06-22", "15:30"))).isEqualTo(MarketMode.REGULAR);
@@ -30,7 +36,7 @@ class MarketModeServiceTest {
 
     @Test
     void determinesEstimateOutsideSessionsAndOnWeekend() {
-        assertThat(service.determine(kstInstant("2026-06-22", "08:59"))).isEqualTo(MarketMode.ESTIMATE);
+        assertThat(service.determine(kstInstant("2026-06-22", "07:59"))).isEqualTo(MarketMode.ESTIMATE);
         assertThat(service.determine(kstInstant("2026-06-22", "15:35"))).isEqualTo(MarketMode.ESTIMATE);
         assertThat(service.determine(kstInstant("2026-06-21", "10:00"))).isEqualTo(MarketMode.ESTIMATE);
     }

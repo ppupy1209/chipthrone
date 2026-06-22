@@ -79,14 +79,14 @@ public class QuoteSnapshotFactory {
                 .subtract(BigDecimal.ONE)
                 .multiply(BigDecimal.valueOf(100));
         boolean useKisCurrentPrice = kisQuote != null
-                && (mode == MarketMode.REGULAR || mode == MarketMode.NXT)
+                && (mode == MarketMode.REGULAR || mode == MarketMode.NXT || mode == MarketMode.PREMARKET)
                 && kisQuote.priceKrw() != null;
+        BigDecimal regularClose = kisQuote == null ? null : kisQuote.regularClose();
+        BigDecimal nxtClose = kisQuote == null ? null : kisQuote.nxtClose();
         BigDecimal priceKrw = useKisCurrentPrice ? kisQuote.priceKrw() : hyperliquidPriceKrw;
         BigDecimal priceUsd = useKisCurrentPrice
                 ? kisQuote.priceKrw().divide(fxRate, 12, RoundingMode.HALF_UP)
                 : price.markPx();
-        BigDecimal regularClose = kisQuote == null ? null : kisQuote.regularClose();
-        BigDecimal nxtClose = kisQuote == null ? null : kisQuote.nxtClose();
         BigDecimal changePct = changePct(
                 mode,
                 useKisCurrentPrice,
@@ -122,6 +122,12 @@ public class QuoteSnapshotFactory {
             BigDecimal regularClose,
             BigDecimal nxtClose
     ) {
+        if (mode == MarketMode.PREMARKET) {
+            if (isPositive(regularClose)) {
+                return changeFrom(priceKrw, regularClose);
+            }
+            return hyperliquidChangePct;
+        }
         if (useKisCurrentPrice && kisQuote.changePct() != null) {
             return kisQuote.changePct();
         }
