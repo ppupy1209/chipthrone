@@ -42,11 +42,11 @@ export type DisplayChange = {
 
 /**
  * 시장 상황별 등락 기준:
- * - 애프터마켓(NXT) 시간 → 정규장 종가 대비
+ * - 애프터마켓(NXT) / 프리장(PREMARKET) → 정규장 종가 대비
  * - 정규장 / 야간 / 주말 → 애프터마켓 종가 대비
  */
 export function computeChange(company: Company, mode: MarketMode): DisplayChange {
-  const useRegular = mode === 'NXT'
+  const useRegular = mode === 'NXT' || mode === 'PREMARKET'
   const close = useRegular ? company.regularClose : company.nxtClose
   const date = useRegular ? company.regularCloseDate : company.nxtCloseDate
   const basisName = useRegular ? '정규장 종가 대비' : '애프터마켓 종가 대비'

@@ -3,7 +3,6 @@ import {
   computeChange,
   formatCap,
   formatChangeAmount,
-  formatDateMMDD,
   formatPct,
   formatPrice,
   formatUsd,
@@ -15,6 +14,14 @@ const COLOR = {
   blue: { top: 'border-t-blue-500', cap: 'text-blue-600' },
   red: { top: 'border-t-red-500', cap: 'text-red-600' },
 } as const
+
+// 장 상황별 세션 표시(작은 원 + 멘트). 야간(추정)은 녹색 점이 깜빡이며 '실시간' 느낌.
+const SESSION: Record<MarketMode, { dot: string; text: string; pulse?: boolean }> = {
+  REGULAR: { dot: 'bg-emerald-500', text: '정규장' },
+  NXT: { dot: 'bg-sky-500', text: '애프터마켓' },
+  PREMARKET: { dot: 'bg-amber-500', text: '프리장', pulse: true },
+  ESTIMATE: { dot: 'bg-emerald-500', text: '해외 실시간 추정가', pulse: true },
+}
 
 export function CompanyCard({
   company,
@@ -28,11 +35,13 @@ export function CompanyCard({
   fxRate: number
 }) {
   const c = COLOR[company.color]
-  const isEstimate = mode === 'ESTIMATE'
+  // 야간(추정)·프리장은 해외 파생 기반 추정가 → 달러 환산 노출
+  const showUsd = mode === 'ESTIMATE' || mode === 'PREMARKET'
   const change = computeChange(company, mode)
   const up = change.pct >= 0
   // 국장 관례: 상승=빨강, 하락=파랑
   const changeColor = up ? 'text-red-600' : 'text-blue-600'
+  const session = SESSION[mode]
 
   return (
     <div
@@ -57,33 +66,42 @@ export function CompanyCard({
         <span className="text-[11px] text-neutral-400">{company.code}</span>
       </div>
 
+      {/* 가격(원은 가격과 한 묶음으로 nowrap) + 오른쪽에 세션 태그(작은 원 + 멘트) */}
       <div className="mt-3 flex items-baseline gap-2">
-        <AnimatedNumber
-          value={company.price}
-          format={formatPrice}
-          className="text-2xl font-semibold tabular-nums"
-        />
-        <span className="text-xs text-neutral-400">원</span>
-        <span className="ml-auto flex flex-col items-end leading-tight">
-          {change.label && (
-            <span className="text-[10px] text-neutral-400">{change.label}</span>
-          )}
-          <span className={`text-sm font-medium tabular-nums ${changeColor}`}>
-            {up ? '▲' : '▼'} {formatPct(change.pct)}
-            {change.hasBasis && (
-              <span className="ml-1 text-[11px]">
-                ({formatChangeAmount(change.amount)})
-              </span>
-            )}
-          </span>
+        <span className="flex items-baseline gap-1.5 whitespace-nowrap">
+          <AnimatedNumber
+            value={company.price}
+            format={formatPrice}
+            className="text-2xl font-semibold tabular-nums"
+          />
+          <span className="text-xs text-neutral-400">원</span>
+        </span>
+        <span className="ml-auto inline-flex items-center gap-1 whitespace-nowrap text-[11px] text-neutral-400">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${session.dot} ${
+              session.pulse ? 'animate-pulse' : ''
+            }`}
+          />
+          {session.text}
         </span>
       </div>
 
-      {isEstimate && (
-        <div className="mt-0.5 text-[12px] text-neutral-400 tabular-nums">
-          ≈ {formatUsd(company.price, fxRate)}
-        </div>
-      )}
+      {/* 같은 라인: 왼쪽 달러 환산(추정 시) + 오른쪽 등락 */}
+      <div className="mt-1 flex items-baseline gap-2 tabular-nums">
+        {showUsd && (
+          <span className="text-[12px] text-neutral-400">
+            ≈ {formatUsd(company.price, fxRate)}
+          </span>
+        )}
+        <span className={`ml-auto text-sm font-medium ${changeColor}`}>
+          {up ? '▲' : '▼'} {formatPct(change.pct)}
+          {change.hasBasis && (
+            <span className="ml-1 text-[11px]">
+              ({formatChangeAmount(change.amount)})
+            </span>
+          )}
+        </span>
+      </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-2.5 text-[13px]">
         <span className="text-neutral-500">시가총액</span>
@@ -94,20 +112,19 @@ export function CompanyCard({
         />
       </div>
 
-      <div className="mt-2 space-y-0.5 text-right text-[11px] text-neutral-400 tabular-nums">
-        <div>
-          정규장 종가
-          {company.regularCloseDate && (
-            <span className="text-neutral-500"> ({formatDateMMDD(company.regularCloseDate)})</span>
-          )}{' '}
-          {company.regularClose != null ? formatPrice(company.regularClose) : '—'}
+      {/* 종가 — 라벨은 왼쪽(시가총액 정렬), 값은 오른쪽. 날짜 표기 제거 */}
+      <div className="mt-2 space-y-0.5 text-[11px] text-neutral-400 tabular-nums">
+        <div className="flex items-center justify-between">
+          <span>정규장 종가</span>
+          <span>
+            {company.regularClose != null ? formatPrice(company.regularClose) : '—'}
+          </span>
         </div>
-        <div>
-          애프터마켓 종가
-          {company.nxtCloseDate && (
-            <span className="text-neutral-500"> ({formatDateMMDD(company.nxtCloseDate)})</span>
-          )}{' '}
-          {company.nxtClose != null ? formatPrice(company.nxtClose) : '—'}
+        <div className="flex items-center justify-between">
+          <span>애프터마켓 종가</span>
+          <span>
+            {company.nxtClose != null ? formatPrice(company.nxtClose) : '—'}
+          </span>
         </div>
       </div>
     </div>
