@@ -1,11 +1,12 @@
 import type { MarketMode } from '../types'
 import { ThemeToggle } from './ThemeToggle'
 
-const MODE_LABEL: Record<MarketMode, { text: string; cls: string }> = {
-  REGULAR: { text: '정규장', cls: 'bg-green-100 text-green-700' },
-  NXT: { text: '애프터마켓', cls: 'bg-green-100 text-green-700' },
-  PREMARKET: { text: '프리마켓', cls: 'bg-green-100 text-green-700' },
-  ESTIMATE: { text: '추정 시세', cls: 'bg-amber-100 text-amber-700' },
+// 라이브(정규장/애프터마켓/프리마켓)=녹색 점, 추정=앰버 점. 점만 색을 갖고 라벨은 muted.
+const MODE_LABEL: Record<MarketMode, { text: string; dot: string }> = {
+  REGULAR: { text: '정규장', dot: 'bg-[#1d9e75]' },
+  NXT: { text: '애프터마켓', dot: 'bg-[#1d9e75]' },
+  PREMARKET: { text: '프리마켓', dot: 'bg-[#1d9e75]' },
+  ESTIMATE: { text: '추정 시세', dot: 'bg-[#c2912e]' },
 }
 
 export function Header({ mode, at }: { mode: MarketMode; at: string }) {
@@ -29,7 +30,8 @@ export function Header({ mode, at }: { mode: MarketMode; at: string }) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className={`rounded-md px-2.5 py-1 text-xs font-medium ${m.cls}`}>
+        <span className="inline-flex items-center gap-1.5 text-xs tracking-[0.08em] text-neutral-500 dark:text-neutral-400">
+          <span className={`h-1.5 w-1.5 rounded-full ${m.dot}`} />
           {m.text}
         </span>
         <span className="hidden sm:inline text-xs text-neutral-400 tabular-nums">
