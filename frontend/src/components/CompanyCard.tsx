@@ -20,7 +20,7 @@ const COLOR = {
 const SESSION: Record<MarketMode, { dot: string; text: string; pulse?: boolean }> = {
   REGULAR: { dot: 'bg-emerald-500', text: '정규장' },
   NXT: { dot: 'bg-sky-500', text: '애프터마켓' },
-  PREMARKET: { dot: 'bg-amber-500', text: '프리장', pulse: true },
+  PREMARKET: { dot: 'bg-amber-500', text: '프리마켓', pulse: true },
   ESTIMATE: { dot: 'bg-emerald-500', text: '해외 실시간 추정가', pulse: true },
 }
 
@@ -36,7 +36,7 @@ export function CompanyCard({
   fxRate: number
 }) {
   const c = COLOR[company.color]
-  // 야간(추정)·프리장은 해외 파생 기반 추정가 → 달러 환산 노출
+  // 야간(추정)·프리마켓은 해외 파생 기반 추정가 → 달러 환산 노출
   const showUsd = mode === 'ESTIMATE' || mode === 'PREMARKET'
   const change = computeChange(company)
   const up = change.pct >= 0
@@ -100,7 +100,7 @@ export function CompanyCard({
         </span>
       </div>
 
-      {/* 달러 환산(추정·프리장 시) */}
+      {/* 달러 환산(추정·프리마켓 시) */}
       {showUsd && (
         <div className="mt-1 text-[12px] text-neutral-400 tabular-nums">
           ≈ {formatUsd(company.price, fxRate)}
