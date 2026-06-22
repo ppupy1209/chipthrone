@@ -43,10 +43,10 @@ export function CompanyCard({
   // 국장 관례: 상승=빨강, 하락=파랑
   const changeColor = up ? 'text-red-600' : 'text-blue-600'
   const session = SESSION[mode]
-  // 표시 종가: 애프터마켓 종가 우선, 없으면 정규장 종가
-  const closeValue = company.nxtClose ?? company.regularClose
+  // 표시 종가: 정규장 종가(KIS 기준 '종가') 우선, 없으면 애프터마켓 종가
+  const closeValue = company.regularClose ?? company.nxtClose
   const closeDate =
-    company.nxtClose != null ? company.nxtCloseDate : company.regularCloseDate
+    company.regularClose != null ? company.regularCloseDate : company.nxtCloseDate
 
   return (
     <div
