@@ -20,7 +20,7 @@ export function ReversalCalculator({ cmp }: { cmp: Comparison }) {
         가 <span className={`font-medium ${challengerText}`}>+{needPct.toFixed(1)}%</span>{' '}
         (약 +{formatPrice(needPrice)}원) 오르면{' '}
         <span className={`font-medium ${leaderText}`}>{cmp.leader.name}</span>를 제치고
-        왕좌 교체 ⚔️
+        왕좌 교체
       </p>
 
       <div className="flex items-center gap-2.5">

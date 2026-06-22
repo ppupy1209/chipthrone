@@ -19,8 +19,12 @@ export function Header({ mode, at }: { mode: MarketMode; at: string }) {
     <header className="flex items-center justify-between">
       <div className="flex items-center gap-2.5">
         <div>
-          <div className="text-xl font-semibold tracking-tight">chipthrone</div>
-          <div className="text-xs text-neutral-400">국장 반도체 왕좌 대결</div>
+          <div className="text-xl font-medium tracking-[0.22em] text-neutral-900 dark:text-neutral-100">
+            CHIP<span className="mx-0.5 font-normal text-[#b8924a]">·</span>THRONE
+          </div>
+          <div className="mt-0.5 text-[10px] tracking-[0.18em] text-neutral-400">
+            국장 반도체 왕좌 대결
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
