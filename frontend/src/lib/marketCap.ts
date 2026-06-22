@@ -29,6 +29,21 @@ export function formatDateMMDD(date: string | null): string {
   return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`
 }
 
+const KOR_DAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
+
+/** "yyyy-MM-dd" → "06/19 (금)" (null이면 빈 문자열) */
+export function formatDateWithDay(date: string | null): string {
+  if (!date) return ''
+  const parts = date.split('-')
+  if (parts.length !== 3) return ''
+  const [y, m, d] = parts.map((p) => parseInt(p, 10))
+  if (!y || !m || !d) return ''
+  const day = KOR_DAYS[new Date(y, m - 1, d).getDay()]
+  const mm = String(m).padStart(2, '0')
+  const dd = String(d).padStart(2, '0')
+  return `${mm}/${dd} (${day})`
+}
+
 export type DisplayChange = {
   /** 등락률(%) */
   pct: number

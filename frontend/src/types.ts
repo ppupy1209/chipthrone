@@ -19,6 +19,8 @@ export type Company = {
   nxtClose: number | null
   /** NXT 애프터마켓 종가 기준일(yyyy-MM-dd) — KIS 미연동 시 null */
   nxtCloseDate: string | null
+  /** 직전 완료 거래일 정규장 고가(원) — KIS 미연동 시 null */
+  high: number | null
   /** 상장주식수(보통주) */
   sharesOutstanding: number
 }

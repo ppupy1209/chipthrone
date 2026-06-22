@@ -76,6 +76,7 @@ class QuoteSnapshotFactoryTest {
                         new BigDecimal("71100"),
                         new BigDecimal("71100"),
                         "2026-06-19",
+                        new BigDecimal("73000"),
                         new BigDecimal("72500"),
                         "2026-06-19"
                 ))
@@ -88,6 +89,7 @@ class QuoteSnapshotFactoryTest {
         assertThat(samsung.changePct()).isEqualTo(1.25);
         assertThat(samsung.regularClose()).isEqualTo(71100.0);
         assertThat(samsung.regularCloseDate()).isEqualTo("2026-06-19");
+        assertThat(samsung.high()).isEqualTo(73000.0);
         assertThat(samsung.nxtClose()).isEqualTo(72500.0);
         assertThat(samsung.nxtCloseDate()).isEqualTo("2026-06-19");
     }
@@ -113,6 +115,7 @@ class QuoteSnapshotFactoryTest {
                         new BigDecimal("71100"),
                         new BigDecimal("71100"),
                         "2026-06-19",
+                        new BigDecimal("73000"),
                         new BigDecimal("72500"),
                         "2026-06-19"
                 ))
@@ -124,6 +127,7 @@ class QuoteSnapshotFactoryTest {
         assertThat(samsung.priceUsd()).isCloseTo(48.75406, within(0.00001));
         assertThat(samsung.changePct()).isCloseTo(1.26582, within(0.00001));
         assertThat(samsung.regularClose()).isEqualTo(71100.0);
+        assertThat(samsung.high()).isEqualTo(73000.0);
         assertThat(samsung.nxtClose()).isEqualTo(72500.0);
     }
 
@@ -148,6 +152,7 @@ class QuoteSnapshotFactoryTest {
                         new BigDecimal("71100"),
                         new BigDecimal("71100"),
                         "2026-06-19",
+                        new BigDecimal("73000"),
                         new BigDecimal("72500"),
                         "2026-06-19"
                 ))
@@ -159,6 +164,7 @@ class QuoteSnapshotFactoryTest {
         assertThat(samsung.priceUsd()).isEqualTo(241.18);
         assertThat(samsung.changePct()).isCloseTo(400.94884, within(0.00001));
         assertThat(samsung.regularClose()).isEqualTo(71100.0);
+        assertThat(samsung.high()).isEqualTo(73000.0);
     }
 
     @Test
@@ -182,6 +188,7 @@ class QuoteSnapshotFactoryTest {
                         new BigDecimal("71100"),
                         BigDecimal.ZERO,
                         "2026-06-19",
+                        new BigDecimal("73000"),
                         new BigDecimal("72500"),
                         "2026-06-19"
                 ))
@@ -222,6 +229,7 @@ class QuoteSnapshotFactoryTest {
                         new BigDecimal("71100"),
                         new BigDecimal("71100"),
                         "2026-06-19",
+                        new BigDecimal("73000"),
                         new BigDecimal("72500"),
                         "2026-06-19"
                 ))
@@ -233,6 +241,7 @@ class QuoteSnapshotFactoryTest {
         assertThat(samsung.priceUsd()).isEqualTo(241.18);
         assertThat(samsung.changePct()).isCloseTo(391.27534, within(0.00001));
         assertThat(samsung.regularClose()).isEqualTo(71100.0);
+        assertThat(samsung.high()).isEqualTo(73000.0);
         assertThat(samsung.nxtClose()).isEqualTo(72500.0);
     }
 
@@ -257,6 +266,7 @@ class QuoteSnapshotFactoryTest {
                         new BigDecimal("71100"),
                         new BigDecimal("71100"),
                         "2026-06-19",
+                        new BigDecimal("73000"),
                         BigDecimal.ZERO,
                         "2026-06-19"
                 ))
@@ -266,6 +276,7 @@ class QuoteSnapshotFactoryTest {
         assertThat(snapshot.mode()).isEqualTo(MarketMode.ESTIMATE);
         assertThat(samsung.changePct()).isCloseTo(400.9488, within(0.0001));
         assertThat(samsung.regularClose()).isEqualTo(71100.0);
+        assertThat(samsung.high()).isEqualTo(73000.0);
         assertThat(samsung.nxtClose()).isEqualTo(0.0);
     }
 

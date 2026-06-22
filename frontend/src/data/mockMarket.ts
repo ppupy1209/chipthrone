@@ -17,6 +17,7 @@ export const mockSnapshot: MarketSnapshot = {
     regularCloseDate: '2026-06-19',
     nxtClose: 355500,
     nxtCloseDate: '2026-06-19',
+    high: 357000,
     sharesOutstanding: 5_919_637_922,
   },
   hynix: {
@@ -30,6 +31,7 @@ export const mockSnapshot: MarketSnapshot = {
     regularCloseDate: '2026-06-19',
     nxtClose: 2_780_000,
     nxtCloseDate: '2026-06-19',
+    high: 2_799_000,
     sharesOutstanding: 728_002_365,
   },
 }

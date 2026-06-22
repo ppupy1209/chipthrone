@@ -141,6 +141,7 @@ public class QuoteService {
                 current == null ? null : current.previousRegularClose(),
                 close == null ? null : close.regularClose(),
                 close == null ? null : close.regularCloseDate(),
+                close == null ? null : close.regularHigh(),
                 close == null ? null : close.nxtClose(),
                 close == null ? null : close.nxtCloseDate()
         ));

@@ -35,7 +35,12 @@ class KisRestMarketDataClientTest {
                 () -> new KisAccessToken("access-token", Instant.parse("2026-06-23T00:00:00Z")),
                 Clock.fixed(Instant.parse("2026-06-22T00:00:00Z"), ZoneId.of("UTC"))
         );
-        KisRestMarketDataClient client = new KisRestMarketDataClient(builder, properties, tokenProvider);
+        KisRestMarketDataClient client = new KisRestMarketDataClient(
+                builder,
+                properties,
+                tokenProvider,
+                Clock.fixed(Instant.parse("2026-06-22T00:00:00Z"), ZoneId.of("UTC"))
+        );
 
         server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-price"
                         + "?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=005930"))
@@ -75,7 +80,12 @@ class KisRestMarketDataClientTest {
                 () -> new KisAccessToken("access-token", Instant.parse("2026-06-23T00:00:00Z")),
                 Clock.fixed(Instant.parse("2026-06-22T00:00:00Z"), ZoneId.of("UTC"))
         );
-        KisRestMarketDataClient client = new KisRestMarketDataClient(builder, properties, tokenProvider);
+        KisRestMarketDataClient client = new KisRestMarketDataClient(
+                builder,
+                properties,
+                tokenProvider,
+                Clock.fixed(Instant.parse("2026-06-22T00:00:00Z"), ZoneId.of("UTC"))
+        );
 
         server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-price"
                         + "?FID_COND_MRKT_DIV_CODE=NX&FID_INPUT_ISCD=005930"))
@@ -110,7 +120,12 @@ class KisRestMarketDataClientTest {
                 () -> new KisAccessToken("access-token", Instant.parse("2026-06-23T00:00:00Z")),
                 Clock.fixed(Instant.parse("2026-06-22T00:00:00Z"), ZoneId.of("UTC"))
         );
-        KisRestMarketDataClient client = new KisRestMarketDataClient(builder, properties, tokenProvider);
+        KisRestMarketDataClient client = new KisRestMarketDataClient(
+                builder,
+                properties,
+                tokenProvider,
+                Clock.fixed(Instant.parse("2026-06-22T11:00:00Z"), ZoneId.of("UTC"))
+        );
 
         server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-daily-price"
                         + "?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=005930&FID_PERIOD_DIV_CODE=D&FID_ORG_ADJ_PRC=0"))
@@ -125,7 +140,8 @@ class KisRestMarketDataClientTest {
                           "output": [
                             {
                               "stck_bsop_date": "20260619",
-                              "stck_clpr": "71100"
+                              "stck_clpr": "71100",
+                              "stck_hgpr": "73000"
                             }
                           ]
                         }
@@ -150,6 +166,75 @@ class KisRestMarketDataClientTest {
         assertThat(quote).isPresent();
         assertThat(quote.orElseThrow().regularClose()).isEqualByComparingTo(new BigDecimal("71100"));
         assertThat(quote.orElseThrow().regularCloseDate()).isEqualTo("2026-06-19");
+        assertThat(quote.orElseThrow().regularHigh()).isEqualByComparingTo(new BigDecimal("73000"));
+        assertThat(quote.orElseThrow().nxtClose()).isEqualByComparingTo(new BigDecimal("72500"));
+        assertThat(quote.orElseThrow().nxtCloseDate()).isEqualTo("2026-06-19");
+        server.verify(Duration.ofSeconds(1));
+    }
+
+    @Test
+    void skipsRunningTodayDailyPriceRowBeforeRegularCloseAndMapsRegularHigh() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        KisProperties properties = new KisProperties("https://example.test", "app-key", "app-secret");
+        KisAccessTokenProvider tokenProvider = new KisAccessTokenProvider(
+                properties,
+                () -> new KisAccessToken("access-token", Instant.parse("2026-06-23T00:00:00Z")),
+                Clock.fixed(Instant.parse("2026-06-22T00:00:00Z"), ZoneId.of("UTC"))
+        );
+        KisRestMarketDataClient client = new KisRestMarketDataClient(
+                builder,
+                properties,
+                tokenProvider,
+                Clock.fixed(Instant.parse("2026-06-22T01:00:00Z"), ZoneId.of("UTC"))
+        );
+
+        server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-daily-price"
+                        + "?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=005930&FID_PERIOD_DIV_CODE=D&FID_ORG_ADJ_PRC=0"))
+                .andExpect(queryParam("FID_COND_MRKT_DIV_CODE", "J"))
+                .andExpect(header("tr_id", "FHKST01010400"))
+                .andRespond(withSuccess("""
+                        {
+                          "output": [
+                            {
+                              "stck_bsop_date": "20260622",
+                              "stck_clpr": "72000",
+                              "stck_hgpr": "72500"
+                            },
+                            {
+                              "stck_bsop_date": "20260619",
+                              "stck_clpr": "71100",
+                              "stck_hgpr": "73000"
+                            }
+                          ]
+                        }
+                        """, MediaType.APPLICATION_JSON));
+        server.expect(requestTo("https://example.test/uapi/domestic-stock/v1/quotations/inquire-daily-price"
+                        + "?FID_COND_MRKT_DIV_CODE=NX&FID_INPUT_ISCD=005930&FID_PERIOD_DIV_CODE=D&FID_ORG_ADJ_PRC=0"))
+                .andExpect(queryParam("FID_COND_MRKT_DIV_CODE", "NX"))
+                .andRespond(withSuccess("""
+                        {
+                          "output": [
+                            {
+                              "stck_bsop_date": "20260622",
+                              "stck_clpr": "72600",
+                              "stck_hgpr": "72700"
+                            },
+                            {
+                              "stck_bsop_date": "20260619",
+                              "stck_clpr": "72500",
+                              "stck_hgpr": "72800"
+                            }
+                          ]
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        Optional<KisClosingPrice> quote = client.fetchClosingPrice("005930");
+
+        assertThat(quote).isPresent();
+        assertThat(quote.orElseThrow().regularClose()).isEqualByComparingTo(new BigDecimal("71100"));
+        assertThat(quote.orElseThrow().regularCloseDate()).isEqualTo("2026-06-19");
+        assertThat(quote.orElseThrow().regularHigh()).isEqualByComparingTo(new BigDecimal("73000"));
         assertThat(quote.orElseThrow().nxtClose()).isEqualByComparingTo(new BigDecimal("72500"));
         assertThat(quote.orElseThrow().nxtCloseDate()).isEqualTo("2026-06-19");
         server.verify(Duration.ofSeconds(1));
