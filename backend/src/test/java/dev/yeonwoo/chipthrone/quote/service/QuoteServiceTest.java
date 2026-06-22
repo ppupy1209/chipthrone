@@ -79,8 +79,10 @@ class QuoteServiceTest {
         assertThat(samsung.priceKrw()).isEqualTo(356174.624);
         assertThat(samsung.regularClose()).isEqualTo(71500.0);
         assertThat(samsung.regularCloseDate()).isEqualTo("2026-06-19");
+        assertThat(samsung.high()).isEqualTo(74000.0);
         assertThat(hynix.priceKrw()).isEqualTo(210000.0);
         assertThat(hynix.regularClose()).isEqualTo(205000.0);
+        assertThat(hynix.high()).isEqualTo(214000.0);
         assertThat(hynix.nxtClose()).isEqualTo(212000.0);
     }
 
@@ -114,6 +116,7 @@ class QuoteServiceTest {
                 code,
                 new BigDecimal("73000"),
                 "2026-06-22",
+                new BigDecimal("74100"),
                 new BigDecimal("73500"),
                 "2026-06-22"
         );
@@ -140,6 +143,7 @@ class QuoteServiceTest {
                 code,
                 new BigDecimal("73000"),
                 "2026-06-22",
+                new BigDecimal("74100"),
                 new BigDecimal("73500"),
                 "2026-06-22"
         );
@@ -351,6 +355,7 @@ class QuoteServiceTest {
                         code,
                         new BigDecimal("205000"),
                         "2026-06-19",
+                        new BigDecimal("214000"),
                         new BigDecimal("212000"),
                         "2026-06-19"
                 );
@@ -359,6 +364,7 @@ class QuoteServiceTest {
                     code,
                     new BigDecimal("71500"),
                     "2026-06-19",
+                    new BigDecimal("74000"),
                     new BigDecimal("72500"),
                     "2026-06-19"
             );
@@ -389,6 +395,7 @@ class QuoteServiceTest {
                         null,
                         null,
                         null,
+                        null,
                         null
                 ));
             }
@@ -398,6 +405,7 @@ class QuoteServiceTest {
                         new BigDecimal("210000"),
                         new BigDecimal("2.40"),
                         new BigDecimal("205000"),
+                        null,
                         null,
                         null,
                         null,

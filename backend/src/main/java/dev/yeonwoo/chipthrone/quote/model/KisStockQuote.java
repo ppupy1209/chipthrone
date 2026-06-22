@@ -9,6 +9,7 @@ public record KisStockQuote(
         BigDecimal previousRegularClose,
         BigDecimal regularClose,
         String regularCloseDate,
+        BigDecimal regularHigh,
         BigDecimal nxtClose,
         String nxtCloseDate
 ) {

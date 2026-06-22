@@ -10,6 +10,7 @@ public record StockQuote(
         double marketCap,
         Double regularClose,
         String regularCloseDate,
+        Double high,
         Double nxtClose,
         String nxtCloseDate
 ) {

@@ -1,7 +1,12 @@
 package dev.yeonwoo.chipthrone.quote.client;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
@@ -22,19 +27,26 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
     private static final String INQUIRE_PRICE_TR_ID = "FHKST01010100";
     private static final String INQUIRE_DAILY_PRICE_TR_ID = "FHKST01010400";
     private static final DateTimeFormatter KIS_DATE_FORMAT = DateTimeFormatter.BASIC_ISO_DATE;
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final LocalTime REGULAR_CLOSE = LocalTime.of(15, 30);
+    private static final LocalTime NXT_CLOSE = LocalTime.of(20, 0);
+    private static final String NXT_MARKET_DIVISION_CODE = "NX";
 
     private final RestClient restClient;
     private final KisProperties properties;
     private final KisAccessTokenProvider tokenProvider;
+    private final Clock clock;
 
     public KisRestMarketDataClient(
             RestClient.Builder builder,
             KisProperties properties,
-            KisAccessTokenProvider tokenProvider
+            KisAccessTokenProvider tokenProvider,
+            Clock clock
     ) {
         this.restClient = builder.baseUrl(properties.baseUrl()).build();
         this.properties = properties;
         this.tokenProvider = tokenProvider;
+        this.clock = clock;
     }
 
     @Override
@@ -69,6 +81,7 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
                 null,
                 null,
                 null,
+                null,
                 null
         ));
     }
@@ -91,6 +104,7 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
                 code,
                 regularClose.close(),
                 regularClose.date(),
+                regularClose.high(),
                 nxtClose == null ? null : nxtClose.close(),
                 nxtClose == null ? regularClose.date() : nxtClose.date()
         ));
@@ -148,34 +162,76 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
                 .retrieve()
                 .body(JsonNode.class);
 
-        JsonNode row = firstDailyRow(response);
+        JsonNode row = firstDailyRow(response, latestClosedTradingDate(marketDivisionCode));
         if (row == null) {
             return null;
         }
         BigDecimal close = decimal(row, "stck_clpr");
+        BigDecimal high = decimal(row, "stck_hgpr");
         String date = isoDate(row.path("stck_bsop_date").asText("").trim());
         if (close == null || date == null) {
             return null;
         }
-        return new DailyClose(close, date);
+        return new DailyClose(close, date, high);
     }
 
-    private JsonNode firstDailyRow(JsonNode response) {
+    private JsonNode firstDailyRow(JsonNode response, LocalDate latestClosedDate) {
         if (response == null) {
             return null;
         }
         JsonNode output = response.path("output");
         if (output.isArray() && !output.isEmpty()) {
-            return output.get(0);
+            return firstClosedRow(output, latestClosedDate);
         }
         JsonNode output2 = response.path("output2");
         if (output2.isArray() && !output2.isEmpty()) {
-            return output2.get(0);
+            return firstClosedRow(output2, latestClosedDate);
         }
         if (output.isObject()) {
-            return output;
+            return isClosedRow(output, latestClosedDate) ? output : null;
         }
         return null;
+    }
+
+    private JsonNode firstClosedRow(JsonNode rows, LocalDate latestClosedDate) {
+        for (JsonNode row : rows) {
+            if (isClosedRow(row, latestClosedDate)) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    private boolean isClosedRow(JsonNode row, LocalDate latestClosedDate) {
+        String dateText = row.path("stck_bsop_date").asText("").trim();
+        if (dateText.length() != 8) {
+            return false;
+        }
+        LocalDate rowDate = LocalDate.parse(dateText, KIS_DATE_FORMAT);
+        return !rowDate.isAfter(latestClosedDate);
+    }
+
+    private LocalDate latestClosedTradingDate(String marketDivisionCode) {
+        ZonedDateTime now = clock.instant().atZone(KST);
+        LocalDate today = now.toLocalDate();
+        LocalTime closeTime = NXT_MARKET_DIVISION_CODE.equals(marketDivisionCode) ? NXT_CLOSE : REGULAR_CLOSE;
+        if (isWeekday(today) && !now.toLocalTime().isBefore(closeTime)) {
+            return today;
+        }
+        return previousWeekday(today.minusDays(1));
+    }
+
+    private LocalDate previousWeekday(LocalDate date) {
+        LocalDate candidate = date;
+        while (!isWeekday(candidate)) {
+            candidate = candidate.minusDays(1);
+        }
+        return candidate;
+    }
+
+    private boolean isWeekday(LocalDate date) {
+        DayOfWeek day = date.getDayOfWeek();
+        return day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY;
     }
 
     private String isoDate(String value) {
@@ -193,6 +249,6 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
         return new BigDecimal(value.replace(",", ""));
     }
 
-    private record DailyClose(BigDecimal close, String date) {
+    private record DailyClose(BigDecimal close, String date, BigDecimal high) {
     }
 }

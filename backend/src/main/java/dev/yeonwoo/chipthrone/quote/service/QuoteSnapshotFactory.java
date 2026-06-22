@@ -82,6 +82,7 @@ public class QuoteSnapshotFactory {
                 && (mode == MarketMode.REGULAR || mode == MarketMode.NXT || mode == MarketMode.PREMARKET)
                 && kisQuote.priceKrw() != null;
         BigDecimal regularClose = kisQuote == null ? null : kisQuote.regularClose();
+        BigDecimal regularHigh = kisQuote == null ? null : kisQuote.regularHigh();
         BigDecimal nxtClose = kisQuote == null ? null : kisQuote.nxtClose();
         BigDecimal priceKrw = useKisCurrentPrice ? kisQuote.priceKrw() : hyperliquidPriceKrw;
         BigDecimal priceUsd = useKisCurrentPrice
@@ -108,6 +109,7 @@ public class QuoteSnapshotFactory {
                 marketCap.doubleValue(),
                 regularClose == null ? null : regularClose.doubleValue(),
                 kisQuote == null ? null : kisQuote.regularCloseDate(),
+                regularHigh == null ? null : regularHigh.doubleValue(),
                 nxtClose == null ? null : nxtClose.doubleValue(),
                 kisQuote == null ? null : kisQuote.nxtCloseDate()
         );
