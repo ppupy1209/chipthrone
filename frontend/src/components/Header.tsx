@@ -1,16 +1,18 @@
 import type { MarketMode } from '../types'
 import { ThemeToggle } from './ThemeToggle'
+import { MODE_DOT } from '../lib/modeStyle'
 
-// 라이브(정규장/애프터마켓/프리마켓)=녹색 점, 추정=앰버 점. 점만 색을 갖고 라벨은 muted.
-const MODE_LABEL: Record<MarketMode, { text: string; dot: string }> = {
-  REGULAR: { text: '정규장', dot: 'bg-[#1d9e75]' },
-  NXT: { text: '애프터마켓', dot: 'bg-[#1d9e75]' },
-  PREMARKET: { text: '프리마켓', dot: 'bg-[#1d9e75]' },
-  ESTIMATE: { text: '추정 시세', dot: 'bg-[#c2912e]' },
+// 점 색·깜빡임은 공유 MODE_DOT에서(카드 세션 태그와 통일). 여기선 라벨 문구만.
+const MODE_LABEL: Record<MarketMode, string> = {
+  REGULAR: '정규장',
+  NXT: '애프터마켓',
+  PREMARKET: '프리마켓',
+  ESTIMATE: '추정 시세',
 }
 
 export function Header({ mode, at }: { mode: MarketMode; at: string }) {
-  const m = MODE_LABEL[mode]
+  const label = MODE_LABEL[mode]
+  const d = MODE_DOT[mode]
   const time = new Date(at).toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -31,8 +33,12 @@ export function Header({ mode, at }: { mode: MarketMode; at: string }) {
       </div>
       <div className="flex items-center gap-2">
         <span className="inline-flex items-center gap-1.5 text-xs tracking-[0.08em] text-neutral-500 dark:text-neutral-400">
-          <span className={`h-1.5 w-1.5 rounded-full ${m.dot}`} />
-          {m.text}
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${d.dot} ${
+              d.pulse ? 'animate-pulse' : ''
+            }`}
+          />
+          {label}
         </span>
         <span className="hidden sm:inline text-xs text-neutral-400 tabular-nums">
           {time} KST
