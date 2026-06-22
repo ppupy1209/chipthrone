@@ -37,8 +37,8 @@ export function CompanyCard({
   fxRate: number
 }) {
   const c = COLOR[company.color]
-  // 야간(추정)·프리마켓은 해외 파생 기반 추정가 → 달러 환산 노출
-  const showUsd = mode === 'ESTIMATE' || mode === 'PREMARKET'
+  // 달러 환산은 해외 추정치(야간·주말 = ESTIMATE)일 때만. 프리마켓/정규장/애프터마켓은 국내 실거래가.
+  const showUsd = mode === 'ESTIMATE'
   const change = computeChange(company)
   const up = change.pct >= 0
   // 국장 관례: 상승=빨강, 하락=파랑
