@@ -54,7 +54,7 @@ export function CompanyCard({
     >
       {isLeader && (
         <span className="absolute -top-2.5 right-3.5 inline-flex items-center gap-1.5 rounded-md bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-700">
-          <svg viewBox="0 0 64 64" className="h-[18px] w-[18px]" aria-hidden="true">
+          <svg viewBox="11 17 42 43" className="h-4 w-4" aria-hidden="true">
             <path d="M12 50 L15 23 L24 33 L32 18 L40 33 L49 23 L52 50 Z" fill="#b8924a" />
             <rect x="13" y="52" width="38" height="7" rx="2.5" fill="#b8924a" />
           </svg>
