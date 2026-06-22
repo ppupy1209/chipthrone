@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="chipthrone">
   <rect width="64" height="64" rx="14" fill="#0b0b0d"/>
-  <path d="M14 46 L16 29 L24 37 L32 25 L40 37 L48 29 L50 46 Z" fill="#c6a24e"/>
-  <rect x="15" y="48" width="34" height="6" rx="2" fill="#c6a24e"/>
+  <path d="M12 50 L15 23 L24 33 L32 18 L40 33 L49 23 L52 50 Z" fill="#c6a24e"/>
+  <rect x="13" y="52" width="38" height="7" rx="2.5" fill="#c6a24e"/>
 </svg>
