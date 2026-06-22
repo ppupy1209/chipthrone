@@ -1,4 +1,5 @@
 import type { MarketMode } from '../types'
+import { ThemeToggle } from './ThemeToggle'
 
 const MODE_LABEL: Record<MarketMode, { text: string; cls: string }> = {
   REGULAR: { text: '정규장 · 실제가', cls: 'bg-green-100 text-green-700' },
@@ -34,6 +35,7 @@ export function Header({ mode, at }: { mode: MarketMode; at: string }) {
         <span className="hidden sm:inline text-xs text-neutral-400 tabular-nums">
           {time} KST
         </span>
+        <ThemeToggle />
       </div>
     </header>
   )
