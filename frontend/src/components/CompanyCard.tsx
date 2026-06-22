@@ -10,18 +10,19 @@ import {
   marketCap,
 } from '../lib/marketCap'
 import { AnimatedNumber } from './AnimatedNumber'
+import { MODE_DOT } from '../lib/modeStyle'
 
 const COLOR = {
   blue: { top: 'border-t-blue-500', cap: 'text-blue-600' },
   red: { top: 'border-t-red-500', cap: 'text-red-600' },
 } as const
 
-// 장 상황별 세션 표시(작은 원 + 멘트). 야간(추정)은 녹색 점이 깜빡이며 '실시간' 느낌.
-const SESSION: Record<MarketMode, { dot: string; text: string; pulse?: boolean }> = {
-  REGULAR: { dot: 'bg-emerald-500', text: '정규장' },
-  NXT: { dot: 'bg-sky-500', text: '애프터마켓' },
-  PREMARKET: { dot: 'bg-amber-500', text: '프리마켓', pulse: true },
-  ESTIMATE: { dot: 'bg-emerald-500', text: '해외 실시간 추정가', pulse: true },
+// 세션 태그 문구(점 색·깜빡임은 공유 MODE_DOT에서 가져와 헤더와 통일).
+const SESSION_TEXT: Record<MarketMode, string> = {
+  REGULAR: '정규장',
+  NXT: '애프터마켓',
+  PREMARKET: '프리마켓',
+  ESTIMATE: '해외 실시간 추정가',
 }
 
 export function CompanyCard({
@@ -42,7 +43,8 @@ export function CompanyCard({
   const up = change.pct >= 0
   // 국장 관례: 상승=빨강, 하락=파랑
   const changeColor = up ? 'text-red-600' : 'text-blue-600'
-  const session = SESSION[mode]
+  const sessionText = SESSION_TEXT[mode]
+  const sessionDot = MODE_DOT[mode]
   // 표시 종가: 정규장 종가(KIS 기준 '종가') 우선, 없으면 애프터마켓 종가
   const closeValue = company.regularClose ?? company.nxtClose
   const closeDate =
@@ -70,11 +72,11 @@ export function CompanyCard({
         <span className="text-[11px] text-neutral-400">{company.code}</span>
         <span className="ml-auto inline-flex items-center gap-1 whitespace-nowrap text-[11px] text-neutral-400">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${session.dot} ${
-              session.pulse ? 'animate-pulse' : ''
+            className={`h-1.5 w-1.5 rounded-full ${sessionDot.dot} ${
+              sessionDot.pulse ? 'animate-pulse' : ''
             }`}
           />
-          {session.text}
+          {sessionText}
         </span>
       </div>
 
