@@ -8,10 +8,13 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.yeonwoo.chipthrone.quote.config.KisProperties;
+import dev.yeonwoo.chipthrone.quote.model.InvestOpinionReport;
 import dev.yeonwoo.chipthrone.quote.model.KisClosingPrice;
 import dev.yeonwoo.chipthrone.quote.model.KisStockQuote;
 
@@ -26,6 +29,7 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
     private static final Logger log = LoggerFactory.getLogger(KisRestMarketDataClient.class);
     private static final String INQUIRE_PRICE_TR_ID = "FHKST01010100";
     private static final String INQUIRE_DAILY_PRICE_TR_ID = "FHKST01010400";
+    private static final String INVEST_OPINION_TR_ID = "FHKST663300C0";
     private static final DateTimeFormatter KIS_DATE_FORMAT = DateTimeFormatter.BASIC_ISO_DATE;
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final LocalTime REGULAR_CLOSE = LocalTime.of(15, 30);
@@ -122,6 +126,58 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
             log.warn("Failed to fetch KIS NXT close for code {}. Keeping nxtClose null.", code, ex);
             return null;
         }
+    }
+
+    @Override
+    public List<InvestOpinionReport> fetchInvestOpinions(String code) {
+        if (!enabled()) {
+            return List.of();
+        }
+
+        String accessToken = tokenProvider.accessToken();
+        LocalDate today = clock.instant().atZone(KST).toLocalDate();
+        String startDate = today.minusDays(180).format(KIS_DATE_FORMAT);
+        String endDate = today.format(KIS_DATE_FORMAT);
+
+        JsonNode response = restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/uapi/domestic-stock/v1/quotations/invest-opinion")
+                        .queryParam("FID_COND_MRKT_DIV_CODE", "J")
+                        .queryParam("FID_COND_SCR_DIV_CODE", "16633")
+                        .queryParam("FID_INPUT_ISCD", code)
+                        .queryParam("FID_INPUT_DATE_1", startDate)
+                        .queryParam("FID_INPUT_DATE_2", endDate)
+                        .build())
+                .header("authorization", "Bearer " + accessToken)
+                .header("appkey", properties.appKey())
+                .header("appsecret", properties.appSecret())
+                .header("tr_id", INVEST_OPINION_TR_ID)
+                .header("content-type", "application/json; charset=utf-8")
+                .retrieve()
+                .body(JsonNode.class);
+
+        if (response == null || !response.path("output").isArray()) {
+            log.warn("Unexpected KIS invest-opinion response for code {}", code);
+            return List.of();
+        }
+
+        List<InvestOpinionReport> reports = new ArrayList<>();
+        for (JsonNode row : response.path("output")) {
+            String date = isoDate(row.path("stck_bsop_date").asText("").trim());
+            if (date == null) {
+                continue;
+            }
+            reports.add(new InvestOpinionReport(
+                    code,
+                    date,
+                    text(row, "mbcr_name"),
+                    text(row, "invt_opnn"),
+                    text(row, "invt_opnn_cls_code"),
+                    text(row, "rgbf_invt_opnn"),
+                    decimal(row, "hts_goal_prc")
+            ));
+        }
+        return reports;
     }
 
     private JsonNode fetchPriceOutput(String marketDivisionCode, String code, String accessToken) {
@@ -247,6 +303,10 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
             return null;
         }
         return new BigDecimal(value.replace(",", ""));
+    }
+
+    private String text(JsonNode output, String field) {
+        return output.path(field).asText("").trim();
     }
 
     private record DailyClose(BigDecimal close, String date, BigDecimal high) {

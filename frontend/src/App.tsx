@@ -2,6 +2,7 @@ import { Header } from './components/Header'
 import { CompanyCard } from './components/CompanyCard'
 import { MarketCapBar } from './components/MarketCapBar'
 import { ReversalCalculator } from './components/ReversalCalculator'
+import { InvestmentOpinion } from './components/InvestmentOpinion'
 import { useMarketData } from './hooks/useMarketData'
 import { compare } from './lib/marketCap'
 
@@ -37,6 +38,8 @@ function App() {
         <div className="mt-3">
           <ReversalCalculator cmp={cmp} />
         </div>
+
+        <InvestmentOpinion />
 
         <footer className="mt-8 border-t border-neutral-200 dark:border-neutral-800 pt-4 text-[11px] leading-relaxed text-neutral-400">
           <p className="mb-1 font-medium text-neutral-500">면책조항</p>
