@@ -6,6 +6,8 @@
 
 🔗 https://chipthrone.com
 
+![CHIP·THRONE 대시보드 미리보기](docs/images/chipthrone-dashboard.png)
+
 ## 무엇을 보여주나
 
 - **시총 1·2위 실시간 비교** — 두 회사의 주가·시가총액과 격차(조·%)를 나란히
