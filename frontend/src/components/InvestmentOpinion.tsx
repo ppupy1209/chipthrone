@@ -118,26 +118,46 @@ function StockOpinionBlock({ stock }: { stock: StockOpinion }) {
   )
 }
 
+// KIS 미연동(키 없음) 등으로 데이터가 비었을 때, 블록 디자인은 유지한 채 안내 표시.
+function EmptyOpinion() {
+  return (
+    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 text-center">
+      <p className="text-[13px] text-neutral-600 dark:text-neutral-300">
+        한국투자증권(KIS) API 키를 연동하면 표시됩니다.
+      </p>
+      <p className="mt-1 text-[11px] text-neutral-400">
+        KIS_APP_KEY · KIS_APP_SECRET 발급 후 확인할 수 있어요.
+      </p>
+    </div>
+  )
+}
+
 export function InvestmentOpinion() {
   const data = useOpinions()
-  const stocks = (data?.stocks ?? []).filter(
+  if (!data) return null
+
+  const stocks = data.stocks.filter(
     (s) => s.reports.length > 0 || s.consensus.institutionCount > 0,
   )
-  if (stocks.length === 0) return null
+  const hasData = stocks.length > 0
 
   return (
     <section className="mt-3">
       <div className="mb-2 flex items-baseline justify-between">
         <h2 className="text-[13px] font-medium text-neutral-500">증권사 투자의견</h2>
         <span className="text-[10px] text-neutral-400">
-          KIS 제공{data?.asOf ? ` · ${data.asOf} 기준` : ''}
+          {hasData && data.asOf ? `KIS 제공 · ${data.asOf} 기준` : 'KIS 제공'}
         </span>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {stocks.map((s) => (
-          <StockOpinionBlock key={s.code} stock={s} />
-        ))}
-      </div>
+      {hasData ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {stocks.map((s) => (
+            <StockOpinionBlock key={s.code} stock={s} />
+          ))}
+        </div>
+      ) : (
+        <EmptyOpinion />
+      )}
     </section>
   )
 }
