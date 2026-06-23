@@ -1,0 +1,23 @@
+# 로컬에서 백엔드 + 프론트엔드를 한 번에 실행.
+#   docker compose up --build
+# 프론트: http://localhost:5173 · 백엔드: http://localhost:8080
+# KIS 키는 선택(없으면 해외 추정 시세로 폴백):
+#   KIS_APP_KEY=... KIS_APP_SECRET=... docker compose up --build
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      KIS_APP_KEY: ${KIS_APP_KEY:-}
+      KIS_APP_SECRET: ${KIS_APP_SECRET:-}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
