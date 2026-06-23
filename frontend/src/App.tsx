@@ -11,22 +11,37 @@ function App() {
   const cmp = compare(snapshot.samsung, snapshot.hynix)
   const samsungLeads = cmp.leader.code === snapshot.samsung.code
 
+  // KIS 미연동 폴백: 거래 세션 시간인데 KIS 종가가 전혀 없으면, 실거래가 대신 해외 추정으로 폴백된 상태.
+  // 이때는 표시를 추정(ESTIMATE)으로 일관시키고 상단 배너로 알린다.
+  const fallbackEstimate =
+    snapshot.mode !== 'ESTIMATE' &&
+    snapshot.samsung.regularClose == null &&
+    snapshot.hynix.regularClose == null
+  const displayMode = fallbackEstimate ? 'ESTIMATE' : snapshot.mode
+
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
       <div className="mx-auto max-w-2xl px-5 py-8">
-        <Header mode={snapshot.mode} />
+        <Header mode={displayMode} />
+
+        {fallbackEstimate && (
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
+            <span aria-hidden>ⓘ</span>
+            <span>KIS 미연동 — 해외 거래소(Hyperliquid) 추정 시세로 표시 중입니다.</span>
+          </div>
+        )}
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <CompanyCard
             company={snapshot.samsung}
             isLeader={samsungLeads}
-            mode={snapshot.mode}
+            mode={displayMode}
             fxRate={snapshot.fxRate}
           />
           <CompanyCard
             company={snapshot.hynix}
             isLeader={!samsungLeads}
-            mode={snapshot.mode}
+            mode={displayMode}
             fxRate={snapshot.fxRate}
           />
         </div>
