@@ -4,7 +4,7 @@
 
 삼성전자와 SK하이닉스 — 국장 시가총액 1·2위를 두고 늘 엎치락뒤치락하는 두 반도체 거인 중, **지금 이 순간 더 비싼 회사는 누구인가**를 한 화면에서 보여주는 **개미용 실시간 대시보드**입니다.
 
-🔗 https://www.chipthrone.com
+🔗 https://chipthrone.com
 
 ## 무엇을 보여주나
 
@@ -28,28 +28,45 @@
 
 ## 로컬에서 실행하기
 
+### Docker로 한번에 (권장)
+
+도커만 있으면 한 줄로 백엔드·프론트가 함께 뜹니다.
+
+```bash
+docker compose up --build
+```
+
+- 프론트 **http://localhost:5173** · 백엔드 **http://localhost:8080**
+- 종료: `Ctrl+C` (또는 `docker compose down`)
+
+### 직접 실행
+
 필요: **Java 21**, **Node 20 이상**
 
 ```bash
-# 1) 백엔드 — http://localhost:8080
+# 백엔드 — http://localhost:8080
 cd backend
 ./gradlew bootRun           # Windows: gradlew.bat bootRun
 
-# 2) 프론트엔드 — http://localhost:5173
+# 프론트엔드 — http://localhost:5173
 cd frontend
 npm install
 npm run dev
 ```
 
-브라우저에서 **http://localhost:5173** 접속하면 됩니다.
+### KIS 키 (선택)
 
-- **KIS 키가 없어도 동작**합니다 — 실거래가 대신 해외 추정 시세로 폴백.
-- 실거래가·투자의견까지 보려면 백엔드 실행 시 환경변수를 주입하세요(한국투자증권 [KIS Developers](https://apiportal.koreainvestment.com)에서 무료 발급):
-  ```bash
-  KIS_APP_KEY=발급받은_APP_KEY
-  KIS_APP_SECRET=발급받은_APP_SECRET
-  ```
-- 프론트가 다른 주소의 백엔드를 바라보게 하려면 `frontend/.env`에 `VITE_API_URL`을 지정하세요(기본값 `http://localhost:8080`).
+**키가 없어도 동작**합니다 — 실거래가 대신 해외 추정 시세로 폴백. 실거래가·투자의견까지 보려면 환경변수를 주입하세요(한국투자증권 [KIS Developers](https://apiportal.koreainvestment.com) 무료 발급):
+
+```bash
+# Docker
+KIS_APP_KEY=... KIS_APP_SECRET=... docker compose up --build
+
+# 직접 실행(백엔드)
+KIS_APP_KEY=... KIS_APP_SECRET=... ./gradlew bootRun
+```
+
+프론트가 다른 주소의 백엔드를 바라보게 하려면 `frontend/.env`에 `VITE_API_URL`을 지정하세요(기본값 `http://localhost:8080`).
 
 ## 더 보기
 
