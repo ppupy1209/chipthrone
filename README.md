@@ -72,7 +72,6 @@ KIS_APP_KEY=... KIS_APP_SECRET=... ./gradlew bootRun
 
 ## 더 보기
 
-- 설계·데이터 소스·배포 문서: [`docs/`](docs/)
 - 만든 이야기: https://www.yeonwoo.dev/work/chipthrone
 
 ---
