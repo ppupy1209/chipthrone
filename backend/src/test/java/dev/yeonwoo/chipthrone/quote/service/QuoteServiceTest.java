@@ -249,6 +249,30 @@ class QuoteServiceTest {
         assertThat(snapshot.stocks().get(1).priceUsd()).isEqualTo(1913.95);
     }
 
+    @Test
+    void freezesPriceDuringNoTradeBreak() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        MutableClock clock = new MutableClock(Instant.parse("2026-06-22T01:00:00Z")); // 10:00 KST 정규장
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient, clock);
+
+        QuoteSnapshot live = service.refresh().orElseThrow();
+        int marketCallsBefore = marketDataClient.calls;
+        int currentCallsBefore = kisMarketDataClient.currentCalls;
+
+        clock.advance(Duration.ofMinutes(325)); // → 06:25:00Z = 15:25 KST (거래 공백)
+        QuoteSnapshot frozen = service.refresh().orElseThrow();
+
+        // 가격·종목은 마지막 값으로 고정, 시각만 갱신, 추가 외부 호출 없음
+        assertThat(frozen.stocks()).isSameAs(live.stocks());
+        assertThat(frozen.stocks().getFirst().priceKrw())
+                .isEqualTo(live.stocks().getFirst().priceKrw());
+        assertThat(frozen.at()).isEqualTo(clock.instant());
+        assertThat(marketDataClient.calls).isEqualTo(marketCallsBefore);
+        assertThat(kisMarketDataClient.currentCalls).isEqualTo(currentCallsBefore);
+    }
+
     private QuoteService newService(
             StubMarketDataClient marketDataClient,
             StubKisMarketDataClient kisMarketDataClient,
