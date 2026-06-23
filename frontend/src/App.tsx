@@ -14,7 +14,7 @@ function App() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
       <div className="mx-auto max-w-2xl px-5 py-8">
-        <Header mode={snapshot.mode} at={snapshot.at} />
+        <Header mode={snapshot.mode} />
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <CompanyCard

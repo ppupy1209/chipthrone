@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { MarketMode } from '../types'
 import { ThemeToggle } from './ThemeToggle'
 import { MODE_DOT } from '../lib/modeStyle'
@@ -10,13 +11,20 @@ const MODE_LABEL: Record<MarketMode, string> = {
   ESTIMATE: '추정 시세',
 }
 
-export function Header({ mode, at }: { mode: MarketMode; at: string }) {
+export function Header({ mode }: { mode: MarketMode }) {
   const label = MODE_LABEL[mode]
   const d = MODE_DOT[mode]
-  const time = new Date(at).toLocaleTimeString('ko-KR', {
+  // 폴링과 무관하게 1초마다 흐르는 시계. 브라우저 시간대와 무관하게 항상 KST 표시.
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const time = now.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+    timeZone: 'Asia/Seoul',
   })
 
   return (
