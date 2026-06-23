@@ -1,82 +1,61 @@
-# 👑 chipthrone
+# CHIP·THRONE
 
-> 국장 반도체 왕좌 대결 — 삼성전자 vs SK하이닉스, 지금 이 순간 1위는 누구?
+> 투자 조언은 드리지 못합니다. 다만 **오늘 누가 왕좌에 앉아 있는지**는 실시간으로 알려드립니다.
 
-두 반도체 거인의 **주가**와 **시가총액**을 실시간으로 비교하고, "언제 순위가 뒤집히는가"를 보여주는 대시보드입니다.
-
-- **프리마켓(08:00~09:00) · 정규장(09:00~15:30) · 애프터마켓/NXT(15:40~20:00)** — KIS 실시세
-- **야간 · 주말 · 공휴일** — Hyperliquid HIP-3 perp(무기한 선물) × 환율 기반 **추정 시세**
-- **시총 실시간 비교 + 역전 계산기(근접도)** — "하이닉스가 +X% 오르면 왕좌 교체"
-- **증권사 투자의견 컨센서스** · **라이트/다크 테마**
+삼성전자와 SK하이닉스 — 국장 시가총액 1·2위를 두고 늘 엎치락뒤치락하는 두 반도체 거인 중, **지금 이 순간 더 비싼 회사는 누구인가**를 한 화면에서 보여주는 **개미용 실시간 대시보드**입니다.
 
 🔗 https://www.chipthrone.com
 
-## 왜 만들었나
+## 무엇을 보여주나
 
-2026년 상반기, KOSPI 9,000 시대를 맞아 삼성전자와 SK하이닉스의 시가총액 1·2위 자리가 엎치락뒤치락하는 것이 국장 최대 화두다.
-"지금 누가 1위인가"를 한 화면에서, 장이 닫힌 시간에도 추정치로 확인할 수 있게 만들었다.
+- **시총 1·2위 실시간 비교** — 두 회사의 주가·시가총액과 격차(조·%)를 나란히
+- **역전까지 몇 %** — "삼성전자가 +3.1%(약 +11,130원) 오르면 왕좌 교체" + 근접도 게이지
+- **시간대별 실제 시세** — 프리마켓·정규장·애프터마켓은 한국투자증권(KIS) 실거래가
+- **장 마감 후 추정 시세** — 야간·주말·공휴일엔 해외 파생(Hyperliquid)×환율로 다음 날 분위기를 미리
+- **증권사 투자의견** — 평균 목표주가, 추정기관 수, 매수/중립/매도 분포
+- **라이트 / 다크 테마**
 
-## 아키텍처
+## 시세는 시간대별로 이렇게
 
-```
-GitHub(public) ─Actions(build/test)─▶ GHCR(이미지) ─watchtower(60s 자동 pull)─▶ EC2 t3.micro
-                                                                          (Spring Boot · Nginx · SSL)
-프론트엔드 ─▶ Vercel ─▶ www.chipthrone.com        백엔드 ─▶ api.chipthrone.com
-외부데이터: 정규장/NXT=KIS · 야간/주말/공휴일=Hyperliquid perp×환율 · 투자의견=KIS 종목투자의견
-```
+| 시간 (KST, 거래일) | 표시 | 출처 |
+|---|---|---|
+| 08:00 ~ 09:00 | 프리마켓 (실거래가) | KIS · 넥스트레이드(NXT) |
+| 09:00 ~ 15:30 | 정규장 (실거래가) | KIS · KRX |
+| 15:40 ~ 20:00 | 애프터마켓 (실거래가) | KIS · 넥스트레이드(NXT) |
+| 그 외 · 주말 · 공휴일 | 추정 시세 | Hyperliquid 해외 파생 × 환율 |
 
-자세한 내용은 [docs/01-architecture.md](docs/01-architecture.md) 참고.
+> 거래 공백 구간(08:50~09:00, 15:20~15:40)에는 실거래가 없으므로 마지막 가격을 그대로 고정합니다.
 
-## 기술 스택
+## 로컬에서 실행하기
 
-| 영역 | 스택 |
-|---|---|
-| 백엔드 | Java 21, Spring Boot 3 (인메모리 캐시, 외래키·JPA 연관관계 미사용 원칙) |
-| 실시간 | 단일 폴링 → 인메모리 캐시 → SSE fan-out, 외부 실패 시 마지막값 폴백 |
-| 프론트엔드 | React, Vite, TypeScript, Tailwind, 라이트/다크 테마 |
-| 인프라/CICD | AWS EC2(프리티어), GitHub Actions, GHCR, Docker, watchtower, Nginx + certbot |
-
-> 현재 DB는 사용하지 않는다(인메모리). 과거 시총·역전 기록 영속화 시 RDS(MySQL)를 추가할 예정.
-
-## 핵심 엔지니어링 과제
-
-> 프리티어 EC2 1대로, 동시 접속 N명이 붙어도 외부 시세 API는 폴링당 1번만 호출하기
-
-스케줄러 단일 폴링 → 인메모리 캐시 → SSE fan-out → 마지막값 폴백. KIS 종가는 1회 성공 후 캐시 고정(거래일 바뀔 때만 재조회). 자세한 기록은 블로그에 연재 예정.
-
-## API
-
-| 엔드포인트 | 설명 |
-|---|---|
-| `GET /api/health` | 헬스체크 |
-| `GET /api/quotes` | 최신 시세 스냅샷(JSON) 1회 |
-| `GET /api/stream` | SSE — 갱신마다 스냅샷 push(fan-out) |
-| `GET /api/opinions` | 증권사 투자의견 컨센서스(KIS) |
-
-응답 형식은 [docs/04-api.md](docs/04-api.md) 참고.
-
-## 프로젝트 구조
-
-```
-chipthrone/
-├── backend/    Spring Boot API (quote: web/service/client/model/config)
-├── frontend/   React 대시보드
-├── infra/      EC2 부트스트랩, Nginx 설정
-├── docs/       설계 문서
-└── .github/    CI/CD 워크플로
-```
-
-## 로컬 실행
+필요: **Java 21**, **Node 20 이상**
 
 ```bash
-# 백엔드 (KIS 키 없이도 동작 — 야간 추정 모드로 폴백)
-cd backend && ./gradlew bootRun
+# 1) 백엔드 — http://localhost:8080
+cd backend
+./gradlew bootRun           # Windows: gradlew.bat bootRun
 
-# 프론트엔드
-cd frontend && npm install && npm run dev
+# 2) 프론트엔드 — http://localhost:5173
+cd frontend
+npm install
+npm run dev
 ```
 
-KIS 정규장/투자의견 연동은 환경변수 `KIS_APP_KEY`, `KIS_APP_SECRET` 필요(없으면 Hyperliquid 추정만 사용).
+브라우저에서 **http://localhost:5173** 접속하면 됩니다.
+
+- **KIS 키가 없어도 동작**합니다 — 실거래가 대신 해외 추정 시세로 폴백.
+- 실거래가·투자의견까지 보려면 백엔드 실행 시 환경변수를 주입하세요(한국투자증권 [KIS Developers](https://apiportal.koreainvestment.com)에서 무료 발급):
+  ```bash
+  KIS_APP_KEY=발급받은_APP_KEY
+  KIS_APP_SECRET=발급받은_APP_SECRET
+  ```
+- 프론트가 다른 주소의 백엔드를 바라보게 하려면 `frontend/.env`에 `VITE_API_URL`을 지정하세요(기본값 `http://localhost:8080`).
+
+## 더 보기
+
+- 설계·데이터 소스·배포 문서: [`docs/`](docs/)
+- 만든 이야기: https://www.yeonwoo.dev/work/chipthrone
 
 ---
-투자 참고용 서비스이며, 추정 시세는 공식 거래소 가격이 아닙니다.
+
+투자 참고용 서비스이며, 표시되는 추정 시세는 공식 거래소 체결가가 아닙니다. 본 서비스는 투자 자문이 아닙니다.
