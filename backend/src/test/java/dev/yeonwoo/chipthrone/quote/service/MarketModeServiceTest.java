@@ -55,6 +55,21 @@ class MarketModeServiceTest {
         assertThat(service.determine(kstInstant("2026-06-22", "10:00"))).isEqualTo(MarketMode.REGULAR); // 일반 거래일(월)
     }
 
+    @Test
+    void detectsNoTradeBreakWindows() {
+        // 거래 공백: 08:50~09:00, 15:20~15:40
+        assertThat(service.isNoTradeBreak(kstInstant("2026-06-22", "08:55"))).isTrue();
+        assertThat(service.isNoTradeBreak(kstInstant("2026-06-22", "15:25"))).isTrue();
+        assertThat(service.isNoTradeBreak(kstInstant("2026-06-22", "15:35"))).isTrue();
+        // 경계 밖
+        assertThat(service.isNoTradeBreak(kstInstant("2026-06-22", "08:49"))).isFalse();
+        assertThat(service.isNoTradeBreak(kstInstant("2026-06-22", "09:00"))).isFalse();
+        assertThat(service.isNoTradeBreak(kstInstant("2026-06-22", "15:40"))).isFalse();
+        // 주말·공휴일엔 공백 개념 없음
+        assertThat(service.isNoTradeBreak(kstInstant("2026-06-21", "08:55"))).isFalse();
+        assertThat(service.isNoTradeBreak(kstInstant("2026-01-01", "15:25"))).isFalse();
+    }
+
     private Instant kstInstant(String date, String time) {
         return LocalDate.parse(date)
                 .atTime(LocalTime.parse(time))

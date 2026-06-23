@@ -82,6 +82,16 @@ public class QuoteService {
     }
 
     public synchronized Optional<QuoteSnapshot> refresh() {
+        Instant now = clock.instant();
+        QuoteSnapshot last = latestSnapshot.get();
+        if (last != null && marketModeService.isNoTradeBreak(now)) {
+            // 거래 공백(08:50~09:00, 15:20~15:40): 가격은 마지막 값으로 고정하고 시각만 갱신
+            QuoteSnapshot frozen = new QuoteSnapshot(last.mode(), now, last.fxRate(), last.stocks());
+            latestSnapshot.set(frozen);
+            broadcaster.publish(frozen);
+            return Optional.of(frozen);
+        }
+
         List<MarketAssetPrice> prices;
         try {
             prices = marketDataClient.fetchAssetPrices(properties.dex());

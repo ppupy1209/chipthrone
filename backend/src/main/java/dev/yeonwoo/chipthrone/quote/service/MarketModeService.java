@@ -21,6 +21,10 @@ public class MarketModeService {
     private static final LocalTime REGULAR_CLOSE = LocalTime.of(15, 30);
     private static final LocalTime NXT_OPEN = LocalTime.of(15, 40);
     private static final LocalTime NXT_CLOSE = LocalTime.of(20, 0);
+    // 세션 사이 거래 공백: 08:50~09:00(프리마켓 종료~정규장 개장), 15:20~15:40(정규장 마감단일가~NXT 개장)
+    private static final LocalTime AM_BREAK_START = LocalTime.of(8, 50);
+    private static final LocalTime PM_BREAK_START = LocalTime.of(15, 20);
+    private static final LocalTime PM_BREAK_END = LocalTime.of(15, 40);
 
     // 휴장일(주말 외). 대체공휴일·연말 폐장일 포함. 음력 공휴일이 매년 바뀌므로 연도별로 갱신 필요.
     private static final Set<LocalDate> HOLIDAYS = Set.of(
@@ -65,6 +69,21 @@ public class MarketModeService {
             return MarketMode.NXT;
         }
         return MarketMode.ESTIMATE;
+    }
+
+    /**
+     * 거래 공백(휴식) 구간 여부 — 거래일의 08:50~09:00, 15:20~15:40.
+     * 이 구간엔 실거래가 없으므로 마지막 가격을 고정해야 한다.
+     */
+    public boolean isNoTradeBreak(Instant at) {
+        ZonedDateTime kst = at.atZone(KST);
+        if (isWeekend(kst.getDayOfWeek()) || isHoliday(kst.toLocalDate())) {
+            return false;
+        }
+        LocalTime time = kst.toLocalTime();
+        boolean morningBreak = !time.isBefore(AM_BREAK_START) && time.isBefore(REGULAR_OPEN);
+        boolean afternoonBreak = !time.isBefore(PM_BREAK_START) && time.isBefore(PM_BREAK_END);
+        return morningBreak || afternoonBreak;
     }
 
     private boolean isWeekend(DayOfWeek dayOfWeek) {
