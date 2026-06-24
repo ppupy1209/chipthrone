@@ -21,7 +21,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
-      <div className="mx-auto max-w-2xl px-5 py-8">
+      <div className="mx-auto max-w-4xl px-5 sm:px-8 py-8">
         <Header mode={displayMode} />
 
         {fallbackEstimate && (
