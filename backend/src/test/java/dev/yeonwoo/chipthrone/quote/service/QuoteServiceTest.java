@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import dev.yeonwoo.chipthrone.alert.AlertProperties;
+import dev.yeonwoo.chipthrone.alert.AlertService;
+import dev.yeonwoo.chipthrone.alert.SlackNotifier;
 import dev.yeonwoo.chipthrone.quote.client.ExchangeRateClient;
 import dev.yeonwoo.chipthrone.quote.client.KisMarketDataClient;
 import dev.yeonwoo.chipthrone.quote.client.MarketDataClient;
@@ -24,6 +27,7 @@ import dev.yeonwoo.chipthrone.quote.model.StockQuote;
 import dev.yeonwoo.chipthrone.quote.web.QuoteBroadcaster;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestClient;
 
 class QuoteServiceTest {
 
@@ -319,6 +323,11 @@ class QuoteServiceTest {
                 factory,
                 new QuoteBroadcaster(),
                 new MarketModeService(),
+                new AlertService(
+                        new AlertProperties("", 5, 10),
+                        new SlackNotifier(RestClient.builder().build(), new AlertProperties("", 5, 10)),
+                        clock
+                ),
                 clock
         );
     }

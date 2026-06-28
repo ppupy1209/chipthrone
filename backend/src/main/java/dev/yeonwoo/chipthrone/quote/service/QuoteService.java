@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import dev.yeonwoo.chipthrone.alert.AlertEvent;
+import dev.yeonwoo.chipthrone.alert.AlertService;
 import dev.yeonwoo.chipthrone.quote.client.ExchangeRateClient;
 import dev.yeonwoo.chipthrone.quote.client.KisMarketDataClient;
 import dev.yeonwoo.chipthrone.quote.client.MarketDataClient;
@@ -48,6 +50,7 @@ public class QuoteService {
     private final QuoteSnapshotFactory snapshotFactory;
     private final QuoteBroadcaster broadcaster;
     private final MarketModeService marketModeService;
+    private final AlertService alertService;
     private final Clock clock;
     private final AtomicReference<QuoteSnapshot> latestSnapshot = new AtomicReference<>();
     private final AtomicReference<BigDecimal> latestFxRate;
@@ -64,6 +67,7 @@ public class QuoteService {
             QuoteSnapshotFactory snapshotFactory,
             QuoteBroadcaster broadcaster,
             MarketModeService marketModeService,
+            AlertService alertService,
             Clock clock
     ) {
         this.marketDataClient = marketDataClient;
@@ -73,6 +77,7 @@ public class QuoteService {
         this.snapshotFactory = snapshotFactory;
         this.broadcaster = broadcaster;
         this.marketModeService = marketModeService;
+        this.alertService = alertService;
         this.clock = clock;
         this.latestFxRate = new AtomicReference<>(BigDecimal.valueOf(properties.initialFxRate()));
     }
@@ -96,19 +101,27 @@ public class QuoteService {
         try {
             prices = marketDataClient.fetchAssetPrices(properties.dex());
         } catch (RuntimeException ex) {
+            alertService.recordFailure(AlertEvent.QUOTE_SOURCE);
             log.warn("Failed to fetch market prices. Keeping last quote snapshot.", ex);
             return currentSnapshot();
         }
 
         BigDecimal fxRate = fetchFxRateOrFallback();
         MarketMode mode = marketModeService.determine(clock.instant());
-        Map<String, KisStockQuote> kisQuoteByCode = fetchKisQuotesOrEmpty(mode);
+        KisQuoteFetchResult kisQuoteFetchResult = fetchKisQuotesOrEmpty(mode);
         try {
-            QuoteSnapshot snapshot = snapshotFactory.create(prices, fxRate, kisQuoteByCode);
+            QuoteSnapshot snapshot = snapshotFactory.create(prices, fxRate, kisQuoteFetchResult.quotesByCode());
             latestSnapshot.set(snapshot);
             broadcaster.publish(snapshot);
+            alertService.recordSuccess(AlertEvent.QUOTE_SOURCE);
+            if (kisQuoteFetchResult.regularEstimateFallback()) {
+                alertService.recordFailure(AlertEvent.KIS_PERSISTENT);
+            } else if (mode == MarketMode.REGULAR) {
+                alertService.recordSuccess(AlertEvent.KIS_PERSISTENT);
+            }
             return Optional.of(snapshot);
         } catch (RuntimeException ex) {
+            alertService.recordFailure(AlertEvent.QUOTE_SOURCE);
             log.warn("Failed to build quote snapshot. Keeping last quote snapshot.", ex);
             return currentSnapshot();
         }
@@ -125,26 +138,32 @@ public class QuoteService {
         }
     }
 
-    private Map<String, KisStockQuote> fetchKisQuotesOrEmpty(MarketMode mode) {
+    private KisQuoteFetchResult fetchKisQuotesOrEmpty(MarketMode mode) {
         if (!kisMarketDataClient.enabled()) {
-            return Map.of();
+            return new KisQuoteFetchResult(Map.of(), false);
         }
-        return properties.assets().stream()
+        List<KisQuoteResult> results = properties.assets().stream()
                 .map(asset -> kisQuoteFor(asset, mode))
+                .toList();
+        Map<String, KisStockQuote> quotesByCode = results.stream()
+                .map(KisQuoteResult::quote)
                 .flatMap(Optional::stream)
                 .collect(Collectors.toMap(KisStockQuote::code, Function.identity(), (left, right) -> left));
+        boolean regularEstimateFallback = results.stream().anyMatch(KisQuoteResult::regularEstimateFallback);
+        return new KisQuoteFetchResult(quotesByCode, regularEstimateFallback);
     }
 
-    private Optional<KisStockQuote> kisQuoteFor(QuoteProperties.Asset asset, MarketMode mode) {
+    private KisQuoteResult kisQuoteFor(QuoteProperties.Asset asset, MarketMode mode) {
         Optional<KisClosingPrice> closingPrice = refreshClosingPriceIfNeeded(asset.code());
-        Optional<KisStockQuote> currentQuote = fetchCurrentKisQuoteOrCached(asset, mode);
+        CurrentKisQuoteResult currentQuote = fetchCurrentKisQuoteOrCached(asset, mode);
+        Optional<KisStockQuote> currentQuoteValue = currentQuote.quote();
         if (currentQuote.isEmpty() && closingPrice.isEmpty()) {
-            return Optional.empty();
+            return new KisQuoteResult(Optional.empty(), currentQuote.regularEstimateFallback());
         }
 
-        KisStockQuote current = currentQuote.orElse(null);
+        KisStockQuote current = currentQuoteValue.orElse(null);
         KisClosingPrice close = closingPrice.orElse(null);
-        return Optional.of(new KisStockQuote(
+        return new KisQuoteResult(Optional.of(new KisStockQuote(
                 asset.code(),
                 current == null ? null : current.priceKrw(),
                 current == null ? null : current.changePct(),
@@ -154,19 +173,20 @@ public class QuoteService {
                 close == null ? null : close.regularHigh(),
                 close == null ? null : close.nxtClose(),
                 close == null ? null : close.nxtCloseDate()
-        ));
+        )), currentQuote.regularEstimateFallback());
     }
 
-    private Optional<KisStockQuote> fetchCurrentKisQuoteOrCached(QuoteProperties.Asset asset, MarketMode mode) {
+    private CurrentKisQuoteResult fetchCurrentKisQuoteOrCached(QuoteProperties.Asset asset, MarketMode mode) {
         if (mode == MarketMode.ESTIMATE) {
-            return Optional.empty();
+            return new CurrentKisQuoteResult(Optional.empty(), false);
         }
         String marketDivisionCode = currentMarketDivisionCode(mode);
         try {
             Optional<KisStockQuote> quote = kisMarketDataClient.fetchCurrentStockQuote(asset.code(), marketDivisionCode)
                     .filter(value -> isPositive(value.priceKrw()));
             quote.ifPresent(value -> latestCurrentQuoteByCode.put(asset.code(), value));
-            return quote.or(() -> currentQuoteFallback(asset.code(), mode));
+            Optional<KisStockQuote> fallback = quote.or(() -> currentQuoteFallback(asset.code(), mode));
+            return new CurrentKisQuoteResult(fallback, mode == MarketMode.REGULAR && fallback.isEmpty());
         } catch (RuntimeException ex) {
             KisStockQuote fallback = currentQuoteFallback(asset.code(), mode).orElse(null);
             if (fallback == null) {
@@ -174,7 +194,10 @@ public class QuoteService {
             } else {
                 log.warn("Failed to fetch KIS current quote for code {}. Using last current quote.", asset.code(), ex);
             }
-            return Optional.ofNullable(fallback);
+            return new CurrentKisQuoteResult(
+                    Optional.ofNullable(fallback),
+                    mode == MarketMode.REGULAR && fallback == null
+            );
         }
     }
 
@@ -265,5 +288,27 @@ public class QuoteService {
 
     private boolean isPositive(BigDecimal value) {
         return value != null && value.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    private record KisQuoteFetchResult(
+            Map<String, KisStockQuote> quotesByCode,
+            boolean regularEstimateFallback
+    ) {
+    }
+
+    private record KisQuoteResult(
+            Optional<KisStockQuote> quote,
+            boolean regularEstimateFallback
+    ) {
+    }
+
+    private record CurrentKisQuoteResult(
+            Optional<KisStockQuote> quote,
+            boolean regularEstimateFallback
+    ) {
+
+        private boolean isEmpty() {
+            return quote.isEmpty();
+        }
     }
 }
