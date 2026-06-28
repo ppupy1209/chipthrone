@@ -1,0 +1,68 @@
+name: Daily Heartbeat
+
+# 매일 오전 8시(KST)에 서버 생존을 Slack으로 1회 알린다.
+# 실패할 때만 알리는 Uptime Monitor와 달리, 정상이어도 "살아있음"을 보고한다.
+# 08:00 KST = 23:00 UTC (GitHub cron은 UTC 기준)
+
+on:
+  schedule:
+    - cron: "0 23 * * *"
+  workflow_dispatch: {} # 수동 실행(테스트용)
+
+permissions:
+  contents: read
+
+jobs:
+  heartbeat:
+    name: 데일리 헬스 확인 → Slack 보고
+    runs-on: ubuntu-latest
+    env:
+      HEALTH_URL: https://api.chipthrone.com/api/health
+    steps:
+      - name: 헬스 확인 (3회 재시도)
+        id: probe
+        run: |
+          set +e
+          ok=false
+          code=000
+          body=""
+          for i in 1 2 3; do
+            body=$(curl -s -m 10 -w "\n%{http_code}" "$HEALTH_URL")
+            code=$(printf '%s' "$body" | tail -n1)
+            body=$(printf '%s' "$body" | sed '$d')
+            echo "시도 $i: HTTP $code"
+            if [ "$code" = "200" ]; then ok=true; break; fi
+            sleep 10
+          done
+          version=$(printf '%s' "$body" | jq -r '.version // "?"' 2>/dev/null || echo "?")
+          {
+            echo "ok=$ok"
+            echo "code=$code"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Slack 보고 (정상/실패 모두)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          OK: ${{ steps.probe.outputs.ok }}
+          CODE: ${{ steps.probe.outputs.code }}
+          VERSION: ${{ steps.probe.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL 시크릿이 없어 보고를 건너뜀"
+            exit 1
+          fi
+          now=$(TZ=Asia/Seoul date +"%Y-%m-%d %H:%M KST")
+          if [ "$OK" = "true" ]; then
+            msg=$(jq -nc --arg v "$VERSION" --arg now "$now" \
+              '{text: ":large_green_circle: chipthrone 데일리 헬스 정상 — v\($v) · \($now)"}')
+          else
+            msg=$(jq -nc --arg code "$CODE" --arg now "$now" --arg run "$RUN_URL" \
+              '{text: ":red_circle: chipthrone 데일리 헬스 실패 — 코드: \($code) · \($now) · 로그: \($run)"}')
+          fi
+          curl -s -X POST -H 'Content-type: application/json' --data "$msg" "$SLACK_WEBHOOK_URL"
+
+      - name: 실패 시 실행 실패 처리(Actions 탭 표시)
+        if: steps.probe.outputs.ok != 'true'
+        run: exit 1
