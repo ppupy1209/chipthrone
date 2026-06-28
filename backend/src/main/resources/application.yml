@@ -7,6 +7,10 @@ kis:
   app-secret: ${KIS_APP_SECRET:}
 
 chipthrone:
+  alert:
+    slack-webhook-url: ${SLACK_WEBHOOK_URL:}
+    consecutive-failure-threshold: 5
+    cooldown-minutes: 10
   quote:
     poll-delay-ms: 3000
     polling-enabled: true
