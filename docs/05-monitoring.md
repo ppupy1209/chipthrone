@@ -29,7 +29,12 @@
 
 ## 2. 외부 liveness 모니터 (이미 구성됨)
 
-`.github/workflows/uptime-monitor.yml` — 5분 주기로 `https://api.chipthrone.com/api/health`를 찌르고, **3회 재시도 후에도 실패하면** Slack으로 알린다. 일시적 깜빡임은 재시도로 걸러 오탐을 줄였다.
+`.github/workflows/uptime-monitor.yml` — 5분 주기로 **두 진입점**을 찌르고, **3회 재시도 후에도 실패하면** 어느 쪽이 죽었는지 명시해 Slack으로 알린다. 일시적 깜빡임은 재시도로 걸러 오탐을 줄였다.
+
+- **API(백엔드, EC2)**: `https://api.chipthrone.com/api/health`
+- **프론트 도어(Vercel)**: `https://www.chipthrone.com` — DNS·SSL·CDN 등 백엔드 핑으론 못 보는 사용자 진입점 사각지대를 덮는다. (Vercel은 관리형이라 별도 liveness 감시는 불필요하고, 이 도어 핑만으로 충분.)
+
+> 프론트 **배포 성공/실패 통지**는 코드 없이 Vercel ↔ Slack 네이티브 연동으로 받는다 (Vercel Marketplace의 Slack 통합). 이 워크플로는 "사용자가 사이트를 여는지(liveness)"만 본다.
 
 **설정할 것 (GitHub 레포 시크릿):**
 1. GitHub 레포 → **Settings → Secrets and variables → Actions → New repository secret**
