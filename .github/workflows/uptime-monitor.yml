@@ -1,0 +1,56 @@
+name: Uptime Monitor
+
+# EC2 바깥(GitHub 러너)에서 api.chipthrone.com 헬스를 주기적으로 찔러
+# 서버가 죽으면 Slack으로 알린다. EC2 자원은 전혀 쓰지 않는다.
+# (스케줄 워크플로는 기본 브랜치에서만 동작 — main 머지 후부터 실행)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # 5분 주기 (GitHub Actions 최소 간격)
+  workflow_dispatch: {} # 수동 실행(설정 직후 테스트용)
+
+permissions:
+  contents: read
+
+jobs:
+  healthcheck:
+    name: 헬스체크 → 실패 시 Slack 알림
+    runs-on: ubuntu-latest
+    env:
+      HEALTH_URL: https://api.chipthrone.com/api/health
+    steps:
+      - name: 헬스 확인 (3회 재시도로 일시 장애 거르기)
+        id: probe
+        run: |
+          set +e
+          ok=false
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -m 10 -w "%{http_code}" "$HEALTH_URL")
+            echo "시도 $i: HTTP $code"
+            if [ "$code" = "200" ]; then ok=true; break; fi
+            sleep 10
+          done
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Slack 알림 (다운 확정 시)
+        if: steps.probe.outputs.ok == 'false'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          CODE: ${{ steps.probe.outputs.code }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL 시크릿이 없어 알림을 건너뜀"
+            exit 1
+          fi
+          now=$(date -u +"%Y-%m-%d %H:%M:%SZ")
+          # jq로 안전하게 JSON 생성(이스케이프). 제어문자 회피 위해 한 줄 메시지.
+          payload=$(jq -nc \
+            --arg url "$HEALTH_URL" --arg code "$CODE" --arg now "$now" --arg run "$RUN_URL" \
+            '{text: ":red_circle: chipthrone API 응답 없음 — URL: \($url) · 코드: \($code) · 확인(UTC): \($now) · 로그: \($run)"}')
+          curl -s -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
+
+      - name: 다운 시 실행 실패 처리(Actions 탭에 표시)
+        if: steps.probe.outputs.ok == 'false'
+        run: exit 1
