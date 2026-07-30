@@ -1,0 +1,11 @@
+[Unit]
+Description=Recover an unhealthy CHIP THRONE API container
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=CONTAINER_NAME=chipthrone-api
+Environment=MAX_RESTARTS=3
+Environment=WINDOW_SECONDS=600
+ExecStart=/usr/local/bin/chipthrone-health-recovery

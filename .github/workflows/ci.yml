@@ -6,6 +6,14 @@ on:
     branches: [main]
 
 jobs:
+  infra:
+    name: 자동 복구 스크립트 테스트
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash -n infra/*.sh
+      - run: bash infra/health-recovery.test.sh
+
   backend:
     name: 백엔드 빌드·테스트
     runs-on: ubuntu-latest

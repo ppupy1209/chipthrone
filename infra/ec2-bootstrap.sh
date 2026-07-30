@@ -9,6 +9,22 @@ set -euo pipefail
 OWNER="ppupy1209"
 IMAGE="ghcr.io/${OWNER}/chipthrone-api:latest"
 API_DOMAIN="api.chipthrone.com"
+RAW_INFRA_BASE="https://raw.githubusercontent.com/${OWNER}/chipthrone/main/infra"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+install_infra_file() {
+  local source_name="$1"
+  local target_path="$2"
+  local mode="$3"
+
+  if [ -f "${SCRIPT_DIR}/${source_name}" ]; then
+    sudo install -m "$mode" "${SCRIPT_DIR}/${source_name}" "$target_path"
+  else
+    curl -fsSL "${RAW_INFRA_BASE}/${source_name}" -o "/tmp/${source_name}"
+    sudo install -m "$mode" "/tmp/${source_name}" "$target_path"
+    rm -f "/tmp/${source_name}"
+  fi
+}
 
 echo "==> 시스템 업데이트 & Docker 설치"
 sudo dnf update -y
@@ -70,6 +86,16 @@ sudo docker run -d --name watchtower --restart unless-stopped \
   -v /var/run/docker.sock:/var/run/docker.sock \
   containrrr/watchtower --cleanup --interval 60 chipthrone-api
 
+echo "==> 응답 불능 컨테이너 자동 복구 설치"
+install_infra_file "health-recovery.sh" \
+  "/usr/local/bin/chipthrone-health-recovery" "0755"
+install_infra_file "chipthrone-health-recovery.service" \
+  "/etc/systemd/system/chipthrone-health-recovery.service" "0644"
+install_infra_file "chipthrone-health-recovery.timer" \
+  "/etc/systemd/system/chipthrone-health-recovery.timer" "0644"
+sudo systemctl daemon-reload
+sudo systemctl enable --now chipthrone-health-recovery.timer
+
 cat <<DONE
 
 ==================================================
@@ -80,6 +106,8 @@ cat <<DONE
 3) 확인:
      curl http://localhost:8080/api/health
      curl https://${API_DOMAIN}/api/health
+     sudo docker inspect --format '{{.State.Health.Status}}' chipthrone-api
+     systemctl status chipthrone-health-recovery.timer
 4) 이후 main 푸시 시 GitHub Actions가 자동 재배포
 ==================================================
 DONE
