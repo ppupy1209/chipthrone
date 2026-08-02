@@ -25,6 +25,7 @@ export const mockSnapshot: MarketSnapshot = {
   at: new Date().toISOString(),
   fxRate: 1531,
   fxAsOfDate: '2026-06-19',
+  fxFetchedAt: null,
   fxSource: 'KOREA_EXIMBANK',
   stocks: [
     {

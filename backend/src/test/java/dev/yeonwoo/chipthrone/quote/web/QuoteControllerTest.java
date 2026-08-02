@@ -94,13 +94,11 @@ class QuoteControllerTest {
     }
 
     @Test
-    void streamAcceptsEightSymbolsAndRejectsNine() throws Exception {
-        String eightSymbols = "005930,000660,SNDK,MU,AVGO,AAPL,MSFT,GOOGL";
+    void streamAcceptsEverySupportedSymbol() throws Exception {
+        String allSymbols = "005930,000660,SNDK,MU,AVGO,AMD,ASML,AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA,TSM,SKHY";
 
-        mockMvc.perform(get("/api/stream").param("symbols", eightSymbols))
+        mockMvc.perform(get("/api/stream").param("symbols", allSymbols))
                 .andExpect(request().asyncStarted());
-        mockMvc.perform(get("/api/stream").param("symbols", eightSymbols + ",AMZN"))
-                .andExpect(status().isBadRequest());
     }
 
     @Test

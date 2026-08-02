@@ -39,7 +39,8 @@ public class QuoteService {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final Duration DAILY_SOURCE_RETRY_BACKOFF = Duration.ofMinutes(10);
     private static final LocalTime FSC_PUBLISH_TIME = LocalTime.of(13, 5);
-    private static final LocalTime EXIM_PUBLISH_TIME = LocalTime.of(11, 5);
+    // 고시환율은 하루 여러 차례 갱신될 수 있다. 일 1000회 한도 대비 48회/일 수준으로 잡는다.
+    private static final Duration FX_REFRESH_INTERVAL = Duration.ofMinutes(30);
 
     private final MarketDataClient marketDataClient;
     private final OfficialStockPriceClient officialStockPriceClient;
@@ -178,7 +179,8 @@ public class QuoteService {
         }
         Instant now = clock.instant();
         Instant retryAt = nextFxRetryAt.get();
-        if (!shouldRefreshDaily(latestFxFetchedAt.get(), EXIM_PUBLISH_TIME)
+        Instant fetchedAt = latestFxFetchedAt.get();
+        if ((fetchedAt != null && now.isBefore(fetchedAt.plus(FX_REFRESH_INTERVAL)))
                 || (retryAt != null && now.isBefore(retryAt))) {
             return latestFxRate.get();
         }
@@ -227,6 +229,7 @@ public class QuoteService {
                 fxRate.rate().doubleValue(),
                 fxRate.asOfDate(),
                 fxRate.source(),
+                fxRate.fetchedAt(),
                 stocks
         ));
     }

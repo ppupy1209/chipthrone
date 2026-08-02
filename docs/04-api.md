@@ -32,6 +32,7 @@
   "fxRate": 1450.0,
   "fxAsOfDate": "2026-08-01",
   "fxSource": "KOREA_EXIMBANK",
+  "fxFetchedAt": "2026-08-02T05:41:12Z",
   "stocks": [
     {
       "code": "005930",
@@ -49,7 +50,9 @@
       "nxtCloseDate": null,
       "market": "KRX",
       "source": "HYPERLIQUID",
-      "status": "ESTIMATE"
+      "status": "ESTIMATE",
+      "officialCloseEstimate": 264523.0,
+      "officialDivergencePct": 0.77
     }
   ]
 }
@@ -57,10 +60,12 @@
 
 `marketCap`은 추정 가격 기준, `officialMarketCap`은 금융위원회 확정값이다. `changePct`는 Hyperliquid `prevDayPx` 기준이다.
 
+`officialCloseEstimate`는 `regularCloseDate`의 정규장 마감(15:30 KST) 시각 추정가(원)이고, `officialDivergencePct`는 그 값과 `regularClose`의 괴리율이다. 확정 종가가 없으면 둘 다 null이다. `fxFetchedAt`은 환율을 마지막으로 조회한 시각으로, 설정 기준값이면 null이다.
+
 ## GET /api/stream?symbols=005930,000660
 
 - `symbols` 필수
-- 연결당 최대 8개: 국내 핵심 2개 + 미국 선택 최대 6개
+- 연결당 최대 16개(지원 종목 전체): 국내 핵심 2개 + 미국 14개
 - 빈 목록, 미지원 코드, 최대 개수 초과는 400
 - 같은 종목의 여러 연결은 동일 수집 결과를 공유
 - 캐시가 있으면 연결 직후 1건 전송

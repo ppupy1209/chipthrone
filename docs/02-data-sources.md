@@ -35,7 +35,8 @@ API는 universe 전체를 한 번에 반환한다. 따라서 사용자 200명이
 - `GET https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON`
 - `data=AP01`, `cur_unit=USD`의 `deal_bas_r`를 사용한다.
 - 휴일에는 최근 7일을 역순으로 확인해 가장 최근 공식 고시값을 사용한다.
-- 화면에는 source와 실제 기준일을 함께 표시한다. 실시간 환율이라고 표현하지 않는다.
+- **30분 간격**으로 재조회한다. 일일 호출 한도 1,000회 대비 약 48회/일이다.
+- 화면에는 고시 기준일과 마지막 조회 시각(`fxFetchedAt`)을 함께 표시한다. 실시간 환율이라고 표현하지 않는다.
 
 환경변수: `KOREA_EXIM_AUTH_KEY`.
 

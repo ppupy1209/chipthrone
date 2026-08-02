@@ -130,7 +130,8 @@ chipthrone:
     scheduler-tick-ms: 1000
     subscription-grace-ms: 15000
     stale-after-ms: 5000
-    max-symbols-per-connection: 8
+    # 지원 종목 전체를 한 연결에서 구독할 수 있게 카탈로그 크기로 맞춘다.
+    max-symbols-per-connection: 16
   sse:
     heartbeat-ms: 10000
     emitter-timeout-ms: 300000

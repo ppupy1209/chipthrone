@@ -87,7 +87,8 @@ public class KoreaEximExchangeRateClient implements ExchangeRateClient {
                 .map(item -> new ExchangeRateQuote(
                         new BigDecimal(item.path("deal_bas_r").asText().replace(",", "")),
                         date.toString(),
-                        "KOREA_EXIMBANK"
+                        "KOREA_EXIMBANK",
+                        clock.instant()
                 ))
                 .orElse(null);
     }

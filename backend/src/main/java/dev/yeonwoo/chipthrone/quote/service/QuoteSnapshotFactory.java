@@ -58,6 +58,7 @@ public class QuoteSnapshotFactory {
                 fxRate.rate().doubleValue(),
                 fxRate.asOfDate(),
                 fxRate.source(),
+                fxRate.fetchedAt(),
                 stocks
         );
     }

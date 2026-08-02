@@ -52,7 +52,7 @@ class QuoteServiceTest {
     }
 
     @Test
-    void refreshesDailySourcesOnceMoreAfterTheirPublicationWindow() {
+    void refreshesOfficialDailyPriceOnceMoreAfterItsPublicationWindow() {
         StubMarketDataClient market = new StubMarketDataClient();
         StubOfficialClient official = new StubOfficialClient(true);
         StubExchangeRateClient fx = new StubExchangeRateClient(true);
@@ -66,7 +66,26 @@ class QuoteServiceTest {
         service.refresh(Set.of("005930", "000660"));
 
         assertThat(official.calls).isEqualTo(4);
+    }
+
+    @Test
+    void refetchesExchangeRateOncePerRefreshInterval() {
+        StubMarketDataClient market = new StubMarketDataClient();
+        StubOfficialClient official = new StubOfficialClient(false);
+        MutableClock clock = new MutableClock(Instant.parse("2026-06-22T01:00:00Z"));
+        StubExchangeRateClient fx = new StubExchangeRateClient(true, clock);
+        QuoteService service = newService(market, official, fx, clock);
+
+        service.refresh(Set.of("005930"));
+        clock.advance(Duration.ofMinutes(20));
+        service.refresh(Set.of("005930"));
+        assertThat(fx.calls).isOne();
+
+        clock.advance(Duration.ofMinutes(15));
+        QuoteSnapshot refreshed = service.refresh(Set.of("005930")).orElseThrow();
+
         assertThat(fx.calls).isEqualTo(2);
+        assertThat(refreshed.fxFetchedAt()).isEqualTo(clock.instant());
     }
 
     @Test
@@ -238,10 +257,16 @@ class QuoteServiceTest {
 
     private static final class StubExchangeRateClient implements ExchangeRateClient {
         private final boolean enabled;
+        private final Clock clock;
         private int calls;
 
         private StubExchangeRateClient(boolean enabled) {
+            this(enabled, null);
+        }
+
+        private StubExchangeRateClient(boolean enabled, Clock clock) {
             this.enabled = enabled;
+            this.clock = clock;
         }
 
         @Override
@@ -252,12 +277,16 @@ class QuoteServiceTest {
         @Override
         public ExchangeRateQuote fetchUsdKrw() {
             calls++;
-            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "KOREA_EXIMBANK");
+            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "KOREA_EXIMBANK", fetchedAt());
         }
 
         @Override
         public ExchangeRateQuote fetchUsdKrw(LocalDate date) {
-            return new ExchangeRateQuote(new BigDecimal("1476.8"), date.toString(), "KOREA_EXIMBANK");
+            return new ExchangeRateQuote(new BigDecimal("1476.8"), date.toString(), "KOREA_EXIMBANK", fetchedAt());
+        }
+
+        private Instant fetchedAt() {
+            return clock == null ? null : clock.instant();
         }
     }
 }

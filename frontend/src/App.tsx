@@ -17,6 +17,14 @@ import { MAX_WATCHLIST, MIN_WATCHLIST, normalizeWatchlist } from './lib/watchlis
 const STORAGE_KEY = 'chipthrone.watchlist.v1'
 const CORE_SYMBOLS = ['005930', '000660']
 
+/** ISO-8601 시각을 "14:32" 형식으로. 값이 없으면 "-" */
+function formatClock(iso: string | null): string {
+  if (!iso) return '-'
+  const at = new Date(iso)
+  if (Number.isNaN(at.getTime())) return '-'
+  return at.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
 function storedWatchlist(): unknown {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
@@ -96,7 +104,7 @@ function App() {
               <div className="text-[12px] font-medium tabular-nums">USD/KRW {snapshot.fxRate.toLocaleString('ko-KR')}</div>
               <div className="mt-0.5 text-[9px] text-neutral-400">
                 {snapshot.fxSource === 'KOREA_EXIMBANK'
-                  ? `한국수출입은행 고시 · ${snapshot.fxAsOfDate ?? ''}`
+                  ? `고시 ${snapshot.fxAsOfDate ?? ''} · 갱신 ${formatClock(snapshot.fxFetchedAt)}`
                   : '공식 환율 연결 대기 · 설정 기준값'}
               </div>
             </div>
@@ -112,7 +120,6 @@ function App() {
           <WatchlistPicker
             assets={assets}
             selected={symbols}
-            fixed={CORE_SYMBOLS}
             onAdd={add}
             onRemove={remove}
           />
