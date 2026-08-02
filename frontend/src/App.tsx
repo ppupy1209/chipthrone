@@ -70,7 +70,6 @@ function App() {
           <div className="mb-2 flex items-end justify-between gap-3">
             <div>
               <h2 className="text-[14px] font-medium">전일 확정 시세</h2>
-              <p className="mt-0.5 text-[10px] text-neutral-400">금융위원회 주식시세정보</p>
             </div>
             <span className="text-[11px] tabular-nums text-neutral-500">
               <OfficialDate date={officialDate} />
@@ -92,7 +91,6 @@ function App() {
           <div className="mb-2 flex items-end justify-between gap-3">
             <div>
               <h2 className="text-[14px] font-medium">해외 추정 시세</h2>
-              <p className="mt-0.5 text-[10px] text-neutral-400">Hyperliquid 파생시장 추정값</p>
             </div>
             <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-right dark:border-neutral-800 dark:bg-neutral-900">
               <div className="text-[12px] font-medium tabular-nums">USD/KRW {snapshot.fxRate.toLocaleString('ko-KR')}</div>
@@ -121,7 +119,6 @@ function App() {
           <div className="mt-4">
             <div className="mb-2">
               <h2 className="text-[14px] font-medium">미국 AI·반도체</h2>
-              <p className="mt-0.5 text-[10px] text-neutral-400">Hyperliquid 파생시장 추정값</p>
             </div>
             {usCompanies.length > 0 ? (
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

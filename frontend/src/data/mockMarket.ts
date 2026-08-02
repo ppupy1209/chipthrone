@@ -15,13 +15,6 @@ export const fallbackAssets: SupportedAsset[] = [
   { code: 'NVDA', name: '엔비디아', market: 'US' },
   { code: 'META', name: '메타', market: 'US' },
   { code: 'TSLA', name: '테슬라', market: 'US' },
-  { code: 'PLTR', name: '팔란티어', market: 'US' },
-  { code: 'MRVL', name: '마벨', market: 'US' },
-  { code: 'ORCL', name: '오라클', market: 'US' },
-  { code: 'ARM', name: 'ARM', market: 'US' },
-  { code: 'NOW', name: '서비스나우', market: 'US' },
-  { code: 'GEV', name: 'GE버노바', market: 'US' },
-  { code: 'NBIS', name: '네비우스', market: 'US' },
   { code: 'TSM', name: 'TSMC ADR', market: 'US' },
   { code: 'SKHY', name: 'SK하이닉스 ADR', market: 'US' },
 ]

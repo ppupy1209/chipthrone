@@ -75,16 +75,14 @@ class QuoteControllerTest {
     void assetsReturnsSupportedSymbols() throws Exception {
         mockMvc.perform(get("/api/assets"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(23)))
+                .andExpect(jsonPath("$", hasSize(16)))
                 .andExpect(jsonPath("$[0].code").value("005930"))
                 .andExpect(jsonPath("$[0].name").value("삼성전자"))
                 .andExpect(jsonPath("$[1].code").value("000660"))
                 .andExpect(jsonPath("$[5].code").value("AMD"))
                 .andExpect(jsonPath("$[6].code").value("ASML"))
-                .andExpect(jsonPath("$[14].code").value("PLTR"))
-                .andExpect(jsonPath("$[15].code").value("MRVL"))
-                .andExpect(jsonPath("$[20].code").value("NBIS"))
-                .andExpect(jsonPath("$[22].code").value("SKHY"));
+                .andExpect(jsonPath("$[14].code").value("TSM"))
+                .andExpect(jsonPath("$[15].code").value("SKHY"));
     }
 
     @Test

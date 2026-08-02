@@ -48,7 +48,6 @@ export function OfficialCompanyCard({ company, isLeader }: { company: Company; i
       <div className="flex items-baseline gap-2">
         <span className="text-[15px] font-medium">{company.name}</span>
         <span className="text-[11px] text-neutral-400">{company.code}</span>
-        <span className="ml-auto text-[10px] text-neutral-400">금융위원회 확정</span>
       </div>
       {close != null ? (
         <>

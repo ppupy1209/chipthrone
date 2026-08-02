@@ -110,55 +110,6 @@ chipthrone:
         shares-outstanding: 3949547394
         market: US
         exchange: NAS
-      # SEC 2026-04-27 Class A/B/F 합산
-      - code: "PLTR"
-        name: "팔란티어"
-        symbol: "xyz:PLTR"
-        shares-outstanding: 2397311977
-        market: US
-        exchange: NAS
-      # SEC 2026-05-21 10-Q 발행주식수
-      - code: "MRVL"
-        name: "마벨"
-        symbol: "xyz:MRVL"
-        shares-outstanding: 874800000
-        market: US
-        exchange: NAS
-      # SEC 2026-06-12 10-K 발행주식수
-      - code: "ORCL"
-        name: "오라클"
-        symbol: "xyz:ORCL"
-        shares-outstanding: 2880471000
-        market: US
-        exchange: NYS
-      # SEC 2026-03-31 20-F 발행주식수
-      - code: "ARM"
-        name: "ARM"
-        symbol: "xyz:ARM"
-        shares-outstanding: 1064055252
-        market: US
-        exchange: NAS
-      # SEC 2026-06-30 10-Q 발행주식수
-      - code: "NOW"
-        name: "서비스나우"
-        symbol: "xyz:NOW"
-        shares-outstanding: 1034000000
-        market: US
-        exchange: NYS
-      # SEC 2026-06-30 10-Q 발행주식수
-      - code: "GEV"
-        name: "GE버노바"
-        symbol: "xyz:GEV"
-        shares-outstanding: 266333581
-        market: US
-        exchange: NYS
-      # SEC 2025-12-31 20-F 발행주식수
-      - code: "NBIS"
-        name: "네비우스"
-        symbol: "xyz:NBIS"
-        shares-outstanding: 253016971
-        market: US
-        exchange: NAS
       # TSMC 2025 20-F, ADR 1주 = 보통주 5주
       - code: "TSM"
         name: "TSMC ADR"

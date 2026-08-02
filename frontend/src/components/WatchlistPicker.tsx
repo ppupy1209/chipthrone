@@ -15,12 +15,6 @@ const US_GROUPS = [
     description: '미국 초대형 기술주',
     codes: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA'],
   },
-  {
-    id: 'ai',
-    label: 'AI 관련',
-    description: 'AI 인프라·플랫폼',
-    codes: ['PLTR', 'MRVL', 'ORCL', 'ARM', 'NOW', 'GEV', 'NBIS'],
-  },
 ]
 
 const GROUPED_CODES = new Set(US_GROUPS.flatMap((group) => group.codes))
@@ -65,9 +59,7 @@ export function WatchlistPicker({
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-[13px] font-medium">미국 AI·반도체 종목 추가</h2>
-          <p className="mt-0.5 text-[10px] text-neutral-400">
-            최대 {selectionLimit}개 · 이 브라우저에 저장 · 선택된 종목을 다시 누르면 해제
-          </p>
+          <p className="mt-0.5 text-[10px] text-neutral-400">최대 {selectionLimit}개</p>
         </div>
         <span className="text-[11px] tabular-nums text-neutral-400">
           {selectedCount}/{selectionLimit}
