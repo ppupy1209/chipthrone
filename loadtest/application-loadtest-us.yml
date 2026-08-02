@@ -1,0 +1,23 @@
+chipthrone:
+  quote:
+    assets:
+      - { code: "100001", name: "미장부하01", symbol: "xyz:S0001", shares-outstanding: 1000000000, market: US }
+      - { code: "100002", name: "미장부하02", symbol: "xyz:S0002", shares-outstanding: 1000000000, market: US }
+      - { code: "100003", name: "미장부하03", symbol: "xyz:S0003", shares-outstanding: 1000000000, market: US }
+      - { code: "100004", name: "미장부하04", symbol: "xyz:S0004", shares-outstanding: 1000000000, market: US }
+      - { code: "100005", name: "미장부하05", symbol: "xyz:S0005", shares-outstanding: 1000000000, market: US }
+      - { code: "100006", name: "미장부하06", symbol: "xyz:S0006", shares-outstanding: 1000000000, market: US }
+      - { code: "100007", name: "미장부하07", symbol: "xyz:S0007", shares-outstanding: 1000000000, market: US }
+      - { code: "100008", name: "미장부하08", symbol: "xyz:S0008", shares-outstanding: 1000000000, market: US }
+      - { code: "100009", name: "미장부하09", symbol: "xyz:S0009", shares-outstanding: 1000000000, market: US }
+      - { code: "100010", name: "미장부하10", symbol: "xyz:S0010", shares-outstanding: 1000000000, market: US }
+      - { code: "100011", name: "미장부하11", symbol: "xyz:S0011", shares-outstanding: 1000000000, market: US }
+      - { code: "100012", name: "미장부하12", symbol: "xyz:S0012", shares-outstanding: 1000000000, market: US }
+      - { code: "100013", name: "미장부하13", symbol: "xyz:S0013", shares-outstanding: 1000000000, market: US }
+      - { code: "100014", name: "미장부하14", symbol: "xyz:S0014", shares-outstanding: 1000000000, market: US }
+      - { code: "100015", name: "미장부하15", symbol: "xyz:S0015", shares-outstanding: 1000000000, market: US }
+      - { code: "100016", name: "미장부하16", symbol: "xyz:S0016", shares-outstanding: 1000000000, market: US }
+      - { code: "100017", name: "미장부하17", symbol: "xyz:S0017", shares-outstanding: 1000000000, market: US }
+      - { code: "100018", name: "미장부하18", symbol: "xyz:S0018", shares-outstanding: 1000000000, market: US }
+      - { code: "100019", name: "미장부하19", symbol: "xyz:S0019", shares-outstanding: 1000000000, market: US }
+      - { code: "100020", name: "미장부하20", symbol: "xyz:S0020", shares-outstanding: 1000000000, market: US }

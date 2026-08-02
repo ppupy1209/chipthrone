@@ -1,0 +1,47 @@
+server:
+  port: 18080
+
+kis:
+  base-url: http://127.0.0.1:19090
+  app-key: fake-loadtest-key
+  app-secret: fake-loadtest-secret
+
+chipthrone:
+  source:
+    hyperliquid-url: http://127.0.0.1:19090/info
+    fx-url: http://127.0.0.1:19090/fx
+  alert:
+    slack-webhook-url: ""
+  demand:
+    enabled: true
+    live-poll-delay-ms: 3000
+    closed-poll-delay-ms: 60000
+    scheduler-tick-ms: 1000
+    subscription-grace-ms: 15000
+    stale-after-ms: 5000
+    max-symbols-per-connection: 4
+  sse:
+    heartbeat-ms: 10000
+    emitter-timeout-ms: 0
+  quote:
+    assets:
+      - { code: "100001", name: "부하테스트01", symbol: "xyz:S0001", shares-outstanding: 1000000000 }
+      - { code: "100002", name: "부하테스트02", symbol: "xyz:S0002", shares-outstanding: 1000000000 }
+      - { code: "100003", name: "부하테스트03", symbol: "xyz:S0003", shares-outstanding: 1000000000 }
+      - { code: "100004", name: "부하테스트04", symbol: "xyz:S0004", shares-outstanding: 1000000000 }
+      - { code: "100005", name: "부하테스트05", symbol: "xyz:S0005", shares-outstanding: 1000000000 }
+      - { code: "100006", name: "부하테스트06", symbol: "xyz:S0006", shares-outstanding: 1000000000 }
+      - { code: "100007", name: "부하테스트07", symbol: "xyz:S0007", shares-outstanding: 1000000000 }
+      - { code: "100008", name: "부하테스트08", symbol: "xyz:S0008", shares-outstanding: 1000000000 }
+      - { code: "100009", name: "부하테스트09", symbol: "xyz:S0009", shares-outstanding: 1000000000 }
+      - { code: "100010", name: "부하테스트10", symbol: "xyz:S0010", shares-outstanding: 1000000000 }
+      - { code: "100011", name: "부하테스트11", symbol: "xyz:S0011", shares-outstanding: 1000000000 }
+      - { code: "100012", name: "부하테스트12", symbol: "xyz:S0012", shares-outstanding: 1000000000 }
+      - { code: "100013", name: "부하테스트13", symbol: "xyz:S0013", shares-outstanding: 1000000000 }
+      - { code: "100014", name: "부하테스트14", symbol: "xyz:S0014", shares-outstanding: 1000000000 }
+      - { code: "100015", name: "부하테스트15", symbol: "xyz:S0015", shares-outstanding: 1000000000 }
+      - { code: "100016", name: "부하테스트16", symbol: "xyz:S0016", shares-outstanding: 1000000000 }
+      - { code: "100017", name: "부하테스트17", symbol: "xyz:S0017", shares-outstanding: 1000000000 }
+      - { code: "100018", name: "부하테스트18", symbol: "xyz:S0018", shares-outstanding: 1000000000 }
+      - { code: "100019", name: "부하테스트19", symbol: "xyz:S0019", shares-outstanding: 1000000000 }
+      - { code: "100020", name: "부하테스트20", symbol: "xyz:S0020", shares-outstanding: 1000000000 }

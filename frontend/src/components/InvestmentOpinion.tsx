@@ -132,12 +132,12 @@ function EmptyOpinion() {
   )
 }
 
-export function InvestmentOpinion() {
+export function InvestmentOpinion({ symbols }: { symbols: string[] }) {
   const data = useOpinions()
-  if (!data) return null
+  if (!data || symbols.length === 0) return null
 
   const stocks = data.stocks.filter(
-    (s) => s.reports.length > 0 || s.consensus.institutionCount > 0,
+    (s) => symbols.includes(s.code) && (s.reports.length > 0 || s.consensus.institutionCount > 0),
   )
   const hasData = stocks.length > 0
 

@@ -1,0 +1,70 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "type": "stat", "title": "SSE 연결", "id": 1,
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 0 },
+      "targets": [{ "expr": "chipthrone_sse_connections", "refId": "A" }]
+    },
+    {
+      "type": "stat", "title": "활성 고유 종목", "id": 2,
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 0 },
+      "targets": [{ "expr": "chipthrone_quote_active_symbols", "refId": "A" }]
+    },
+    {
+      "type": "stat", "title": "미정리 Emitter", "id": 3,
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 0 },
+      "targets": [{ "expr": "chipthrone_sse_orphan_emitters", "refId": "A" }]
+    },
+    {
+      "type": "timeseries", "title": "외부 API 호출률", "id": 4,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "targets": [{
+        "expr": "sum by (source, operation) (rate(chipthrone_quote_external_api_calls_total[1m]))",
+        "legendFormat": "{{source}} · {{operation}}", "refId": "A"
+      }]
+    },
+    {
+      "type": "timeseries", "title": "시장 상태별 polling", "id": 5,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "targets": [{
+        "expr": "sum by (mode, result) (rate(chipthrone_quote_polls_total[1m]))",
+        "legendFormat": "{{mode}} · {{result}}", "refId": "A"
+      }]
+    },
+    {
+      "type": "timeseries", "title": "수집 시간 p95", "id": 6,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum by (le) (rate(chipthrone_quote_collection_duration_seconds_bucket[5m])))",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "timeseries", "title": "SSE 전달 지연 p95", "id": 7,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum by (le) (rate(chipthrone_quote_delivery_latency_seconds_bucket[5m])))",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "table", "title": "지원 종목별 구독자", "id": 8,
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 21 },
+      "targets": [{ "expr": "chipthrone_quote_symbol_subscribers", "format": "table", "instant": true, "refId": "A" }]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": ["chipthrone", "sse", "demand"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timezone": "browser",
+  "title": "CHIP THRONE · 수요 기반 시세",
+  "uid": "chipthrone-demand",
+  "version": 1
+}

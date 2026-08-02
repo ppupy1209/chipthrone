@@ -23,7 +23,17 @@ public record QuoteProperties(
             @NotBlank String code,
             @NotBlank String name,
             @NotBlank String symbol,
-            @Positive long sharesOutstanding
+            @Positive long sharesOutstanding,
+            Market market
     ) {
+        public Asset {
+            market = market == null ? Market.KRX : market;
+        }
+
+    }
+
+    public enum Market {
+        KRX,
+        US
     }
 }

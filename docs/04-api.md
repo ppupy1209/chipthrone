@@ -10,7 +10,7 @@
 
 ## GET /api/quotes
 
-최신 스냅샷 1회. 스냅샷이 아직 없으면 503.
+`symbols=005930,000660`을 선택적으로 받는다. 지정 시 지원 종목만 반환한다. 스냅샷이 아직 없으면 503이다.
 
 ```json
 {
@@ -30,7 +30,10 @@
       "regularCloseDate": "2026-06-19",
       "high": 357000.0,               // 정규장 고가(KIS), null 가능
       "nxtClose": 350500.0,           // 애프터마켓(NXT) 종가, null 가능
-      "nxtCloseDate": "2026-06-19"
+      "nxtCloseDate": "2026-06-19",
+      "market": "KRX",               // KRX | US
+      "source": "KIS",               // KIS | ALPACA_IEX | HYPERLIQUID
+      "status": "LIVE"                // LIVE | CLOSED | ESTIMATE
     }
     // ... SK하이닉스(000660)
   ]
@@ -39,13 +42,26 @@
 
 프론트는 등락률/등락금액을 종가(정규장 종가 우선) 대비로 직접 계산해 표시한다.
 
-## GET /api/stream
+## GET /api/assets
 
-`text/event-stream`(SSE). 폴링 갱신마다 `quotes` 이벤트로 위 스냅샷을 push. 구독 즉시 현재 스냅샷 1건 전송.
+검색 가능한 지원 종목 목록이다.
+
+```json
+[
+  { "code": "005930", "name": "삼성전자", "market": "KRX" },
+  { "code": "SNDK", "name": "샌디스크", "market": "US" }
+]
+```
+
+## GET /api/stream?symbols=005930,000660
+
+`symbols`는 필수이며 연결당 최대 4개다. 빈 목록, 미지원 코드, 최대 개수 초과는 HTTP 400이다. 같은 종목을 여러 연결이 구독해도 수집은 공유한다. `text/event-stream`으로 해당 종목만 `quotes` 이벤트에 담고, 캐시가 있으면 구독 즉시 1건을 전송한다.
 
 ```
 event:quotes
 data:{ ...QuoteSnapshot... }
+
+:keepalive
 ```
 
 ## GET /api/opinions
@@ -74,4 +90,4 @@ data:{ ...QuoteSnapshot... }
 }
 ```
 
-> KIS 키 미연동 시 KIS 의존 필드(regularClose/high/nxtClose/opinions)는 null/빈 값이며, 시세는 Hyperliquid 추정으로 폴백한다.
+> 투자의견은 국장 종목만 지원한다. KIS 키 미연동 시 KIS 의존 필드는 null/빈 값이다. Alpaca 키 미연동 시 미장 시세는 Hyperliquid 추정으로 폴백한다.

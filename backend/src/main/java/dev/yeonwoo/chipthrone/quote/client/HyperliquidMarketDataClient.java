@@ -7,25 +7,34 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.yeonwoo.chipthrone.quote.model.MarketAssetPrice;
+import dev.yeonwoo.chipthrone.quote.service.QuoteMetrics;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
 public class HyperliquidMarketDataClient implements MarketDataClient {
 
-    private static final String INFO_URL = "https://api.hyperliquid.xyz/info";
-
     private final RestClient restClient;
+    private final QuoteMetrics metrics;
+    private final String infoUrl;
 
-    public HyperliquidMarketDataClient(RestClient restClient) {
+    public HyperliquidMarketDataClient(
+            RestClient restClient,
+            QuoteMetrics metrics,
+            @Value("${chipthrone.source.hyperliquid-url:https://api.hyperliquid.xyz/info}") String infoUrl
+    ) {
         this.restClient = restClient;
+        this.metrics = metrics;
+        this.infoUrl = infoUrl;
     }
 
     @Override
     public List<MarketAssetPrice> fetchAssetPrices(String dex) {
+        metrics.externalCall("hyperliquid", "batch_quotes");
         JsonNode response = restClient.post()
-                .uri(INFO_URL)
+                .uri(infoUrl)
                 .body(Map.of("type", "metaAndAssetCtxs", "dex", dex))
                 .retrieve()
                 .body(JsonNode.class);

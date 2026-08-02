@@ -7,6 +7,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.yeonwoo.chipthrone.quote.config.KisProperties;
 import dev.yeonwoo.chipthrone.quote.model.KisAccessToken;
+import dev.yeonwoo.chipthrone.quote.service.QuoteMetrics;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -17,15 +18,23 @@ public class KisRestTokenClient implements KisTokenClient {
     private final RestClient restClient;
     private final KisProperties properties;
     private final Clock clock;
+    private final QuoteMetrics metrics;
 
-    public KisRestTokenClient(RestClient.Builder builder, KisProperties properties, Clock clock) {
+    public KisRestTokenClient(
+            RestClient.Builder builder,
+            KisProperties properties,
+            Clock clock,
+            QuoteMetrics metrics
+    ) {
         this.restClient = builder.baseUrl(properties.baseUrl()).build();
         this.properties = properties;
         this.clock = clock;
+        this.metrics = metrics;
     }
 
     @Override
     public KisAccessToken issueToken() {
+        metrics.externalCall("kis", "oauth_token");
         JsonNode response = restClient.post()
                 .uri("/oauth2/tokenP")
                 .body(Map.of(

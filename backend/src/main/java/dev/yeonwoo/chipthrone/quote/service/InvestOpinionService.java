@@ -44,6 +44,7 @@ public class InvestOpinionService {
     public OpinionsResponse currentOpinions() {
         LocalDate today = LocalDate.now(clock.withZone(KST));
         List<OpinionsResponse.Stock> stocks = properties.assets().stream()
+                .filter(asset -> asset.market() == QuoteProperties.Market.KRX)
                 .map(asset -> toStock(asset, today))
                 .toList();
         return new OpinionsResponse(today.toString(), stocks);

@@ -1,6 +1,9 @@
 package dev.yeonwoo.chipthrone.quote.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -10,11 +13,14 @@ import java.time.ZoneOffset;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import dev.yeonwoo.chipthrone.alert.AlertProperties;
 import dev.yeonwoo.chipthrone.alert.AlertService;
 import dev.yeonwoo.chipthrone.alert.SlackNotifier;
+import dev.yeonwoo.chipthrone.quote.client.AlpacaMarketDataClient;
 import dev.yeonwoo.chipthrone.quote.client.ExchangeRateClient;
 import dev.yeonwoo.chipthrone.quote.client.KisMarketDataClient;
 import dev.yeonwoo.chipthrone.quote.client.MarketDataClient;
@@ -25,6 +31,7 @@ import dev.yeonwoo.chipthrone.quote.model.MarketAssetPrice;
 import dev.yeonwoo.chipthrone.quote.model.QuoteSnapshot;
 import dev.yeonwoo.chipthrone.quote.model.StockQuote;
 import dev.yeonwoo.chipthrone.quote.web.QuoteBroadcaster;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
@@ -43,7 +50,7 @@ class QuoteServiceTest {
         Optional<QuoteSnapshot> second = service.refresh();
 
         assertThat(first).isPresent();
-        assertThat(second).containsSame(first.orElseThrow());
+        assertThat(second).contains(first.orElseThrow());
         assertThat(marketDataClient.calls).isEqualTo(2);
         assertThat(kisMarketDataClient.currentCalls).isZero();
         assertThat(kisMarketDataClient.closeCalls).isZero();
@@ -204,6 +211,35 @@ class QuoteServiceTest {
     }
 
     @Test
+    void refreshesOnlyRequestedUniqueSymbols() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient);
+
+        QuoteSnapshot snapshot = service.refresh(Set.of("005930")).orElseThrow();
+
+        assertThat(snapshot.stocks()).extracting(StockQuote::code).containsExactly("005930");
+        assertThat(marketDataClient.calls).isOne();
+        assertThat(kisMarketDataClient.currentCalls).isOne();
+        assertThat(kisMarketDataClient.closeCalls).isOne();
+        assertThat(exchangeRateClient.calls).isOne();
+    }
+
+    @Test
+    void fxRateIsFetchedOncePerDay() {
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(false);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        QuoteService service = newService(marketDataClient, kisMarketDataClient, exchangeRateClient);
+
+        service.refresh();
+        service.refresh();
+
+        assertThat(exchangeRateClient.calls).isOne();
+    }
+
+    @Test
     void premarketAndNxtFetchKisCurrentPriceFromNxtMarket() {
         StubMarketDataClient premarketDataClient = new StubMarketDataClient();
         StubKisMarketDataClient premarketKisClient = new StubKisMarketDataClient(true);
@@ -269,12 +305,80 @@ class QuoteServiceTest {
         QuoteSnapshot frozen = service.refresh().orElseThrow();
 
         // 가격·종목은 마지막 값으로 고정, 시각만 갱신, 추가 외부 호출 없음
-        assertThat(frozen.stocks()).isSameAs(live.stocks());
+        assertThat(frozen.stocks()).isEqualTo(live.stocks());
         assertThat(frozen.stocks().getFirst().priceKrw())
                 .isEqualTo(live.stocks().getFirst().priceKrw());
         assertThat(frozen.at()).isEqualTo(clock.instant());
         assertThat(marketDataClient.calls).isEqualTo(marketCallsBefore);
         assertThat(kisMarketDataClient.currentCalls).isEqualTo(currentCallsBefore);
+    }
+
+    @Test
+    void usAssetsShareOneAlpacaBatchAndNeverCallKis() {
+        QuoteProperties properties = new QuoteProperties(
+                3000,
+                false,
+                "xyz",
+                1450,
+                List.of(
+                        new QuoteProperties.Asset("SNDK", "샌디스크", "xyz:SNDK", 148_089_758L, QuoteProperties.Market.US),
+                        new QuoteProperties.Asset("MU", "마이크론", "xyz:MU", 1_129_393_151L, QuoteProperties.Market.US)
+                )
+        );
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        StubExchangeRateClient exchangeRateClient = new StubExchangeRateClient();
+        AlpacaMarketDataClient alpaca = mock(AlpacaMarketDataClient.class);
+        when(alpaca.enabled()).thenReturn(true);
+        when(alpaca.fetchSnapshots(Set.of("SNDK", "MU"))).thenReturn(Map.of(
+                "SNDK", new MarketAssetPrice("SNDK", new BigDecimal("81.25"), new BigDecimal("79.50")),
+                "MU", new MarketAssetPrice("MU", new BigDecimal("154.75"), new BigDecimal("151.20"))
+        ));
+        Clock clock = Clock.fixed(Instant.parse("2026-06-22T14:00:00Z"), ZoneOffset.UTC);
+        QuoteService service = newService(
+                marketDataClient, alpaca, kisMarketDataClient, exchangeRateClient, properties, clock);
+
+        QuoteSnapshot snapshot = service.refresh(Set.of("SNDK", "MU")).orElseThrow();
+
+        verify(alpaca).fetchSnapshots(Set.of("SNDK", "MU"));
+        assertThat(marketDataClient.calls).isZero();
+        assertThat(kisMarketDataClient.currentCalls).isZero();
+        assertThat(kisMarketDataClient.closeCalls).isZero();
+        assertThat(snapshot.stocks()).extracting(StockQuote::source).containsOnly("ALPACA_IEX");
+        assertThat(snapshot.stocks()).extracting(StockQuote::status).containsOnly("LIVE");
+        assertThat(snapshot.stocks()).extracting(StockQuote::priceUsd)
+                .containsExactlyInAnyOrder(81.25, 154.75);
+    }
+
+    @Test
+    void usAssetFallsBackToHyperliquidWhenAlpacaIsDisabled() {
+        QuoteProperties properties = new QuoteProperties(
+                3000,
+                false,
+                "xyz",
+                1450,
+                List.of(new QuoteProperties.Asset(
+                        "SNDK", "샌디스크", "xyz:SNDK", 148_089_758L, QuoteProperties.Market.US))
+        );
+        StubMarketDataClient marketDataClient = new StubMarketDataClient();
+        StubKisMarketDataClient kisMarketDataClient = new StubKisMarketDataClient(true);
+        Clock clock = Clock.fixed(Instant.parse("2026-06-22T14:00:00Z"), ZoneOffset.UTC);
+        QuoteService service = newService(
+                marketDataClient,
+                mock(AlpacaMarketDataClient.class),
+                kisMarketDataClient,
+                new StubExchangeRateClient(),
+                properties,
+                clock
+        );
+
+        StockQuote stock = service.refresh(Set.of("SNDK")).orElseThrow().stocks().getFirst();
+
+        assertThat(marketDataClient.calls).isOne();
+        assertThat(kisMarketDataClient.currentCalls).isZero();
+        assertThat(stock.source()).isEqualTo("HYPERLIQUID");
+        assertThat(stock.status()).isEqualTo("ESTIMATE");
+        assertThat(stock.priceUsd()).isEqualTo(80.0);
     }
 
     private QuoteService newService(
@@ -286,10 +390,40 @@ class QuoteServiceTest {
         QuoteSnapshotFactory factory = new QuoteSnapshotFactory(
                 properties,
                 new MarketModeService(),
+                new UsMarketHours(),
                 Clock.fixed(Instant.parse("2026-06-22T01:00:00Z"), ZoneOffset.UTC)
         );
         return newService(marketDataClient, kisMarketDataClient, exchangeRateClient,
                 Clock.fixed(Instant.parse("2026-06-22T01:00:00Z"), ZoneOffset.UTC), factory);
+    }
+
+    private QuoteService newService(
+            StubMarketDataClient marketDataClient,
+            AlpacaMarketDataClient alpacaMarketDataClient,
+            StubKisMarketDataClient kisMarketDataClient,
+            StubExchangeRateClient exchangeRateClient,
+            QuoteProperties properties,
+            Clock clock
+    ) {
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        return new QuoteService(
+                marketDataClient,
+                alpacaMarketDataClient,
+                kisMarketDataClient,
+                exchangeRateClient,
+                properties,
+                new AssetCatalog(properties),
+                new QuoteSnapshotFactory(properties, new MarketModeService(), new UsMarketHours(), clock),
+                mock(QuoteBroadcaster.class),
+                new MarketModeService(),
+                new AlertService(
+                        new AlertProperties("", 5, 10),
+                        new SlackNotifier(RestClient.builder().build(), new AlertProperties("", 5, 10)),
+                        clock
+                ),
+                new QuoteMetrics(meterRegistry),
+                clock
+        );
     }
 
     private QuoteService newService(
@@ -302,6 +436,7 @@ class QuoteServiceTest {
         QuoteSnapshotFactory factory = new QuoteSnapshotFactory(
                 properties,
                 new MarketModeService(),
+                new UsMarketHours(),
                 clock
         );
         return newService(marketDataClient, kisMarketDataClient, exchangeRateClient, clock, factory);
@@ -315,19 +450,23 @@ class QuoteServiceTest {
             QuoteSnapshotFactory factory
     ) {
         QuoteProperties properties = properties();
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
         return new QuoteService(
                 marketDataClient,
+                mock(AlpacaMarketDataClient.class),
                 kisMarketDataClient,
                 exchangeRateClient,
                 properties,
+                new AssetCatalog(properties),
                 factory,
-                new QuoteBroadcaster(),
+                mock(QuoteBroadcaster.class),
                 new MarketModeService(),
                 new AlertService(
                         new AlertProperties("", 5, 10),
                         new SlackNotifier(RestClient.builder().build(), new AlertProperties("", 5, 10)),
                         clock
                 ),
+                new QuoteMetrics(meterRegistry),
                 clock
         );
     }
@@ -339,8 +478,8 @@ class QuoteServiceTest {
                 "xyz",
                 1450,
                 List.of(
-                        new QuoteProperties.Asset("005930", "삼성전자", "xyz:SMSN", 5_919_637_922L),
-                        new QuoteProperties.Asset("000660", "SK하이닉스", "xyz:SKHX", 728_002_365L)
+                        new QuoteProperties.Asset("005930", "삼성전자", "xyz:SMSN", 5_919_637_922L, QuoteProperties.Market.KRX),
+                        new QuoteProperties.Asset("000660", "SK하이닉스", "xyz:SKHX", 728_002_365L, QuoteProperties.Market.KRX)
                 )
         );
     }
@@ -357,16 +496,20 @@ class QuoteServiceTest {
             }
             return List.of(
                     new MarketAssetPrice("xyz:SMSN", new BigDecimal("241.18"), new BigDecimal("238.70")),
-                    new MarketAssetPrice("xyz:SKHX", new BigDecimal("1913.95"), new BigDecimal("1869.28"))
+                    new MarketAssetPrice("xyz:SKHX", new BigDecimal("1913.95"), new BigDecimal("1869.28")),
+                    new MarketAssetPrice("xyz:SNDK", new BigDecimal("80.00"), new BigDecimal("78.00")),
+                    new MarketAssetPrice("xyz:MU", new BigDecimal("150.00"), new BigDecimal("149.00"))
             );
         }
     }
 
     private static class StubExchangeRateClient implements ExchangeRateClient {
         private boolean fail;
+        private int calls;
 
         @Override
         public BigDecimal fetchUsdKrw() {
+            calls++;
             if (fail) {
                 throw new IllegalStateException("fx unavailable");
             }

@@ -6,6 +6,12 @@ kis:
   app-key: ${KIS_APP_KEY:}
   app-secret: ${KIS_APP_SECRET:}
 
+alpaca:
+  snapshots-url: ${ALPACA_SNAPSHOTS_URL:https://data.alpaca.markets/v2/stocks/snapshots}
+  api-key: ${ALPACA_API_KEY:}
+  api-secret: ${ALPACA_API_SECRET:}
+  feed: iex
+
 chipthrone:
   alert:
     slack-webhook-url: ${SLACK_WEBHOOK_URL:}
@@ -22,17 +28,48 @@ chipthrone:
         name: "삼성전자"
         symbol: "xyz:SMSN"
         shares-outstanding: 5919637922
+        market: KRX
       # KRX 기준 재검증 필요
       - code: "000660"
         name: "SK하이닉스"
         symbol: "xyz:SKHX"
         shares-outstanding: 728002365
+        market: KRX
+      # SEC 2026-04-24 발행주식수
+      - code: "SNDK"
+        name: "샌디스크"
+        symbol: "xyz:SNDK"
+        shares-outstanding: 148089758
+        market: US
+      # SEC 2026-06-17 발행주식수
+      - code: "MU"
+        name: "마이크론"
+        symbol: "xyz:MU"
+        shares-outstanding: 1129393151
+        market: US
+      # SEC 2026-05-29 발행주식수
+      - code: "AVGO"
+        name: "브로드컴"
+        symbol: "xyz:AVGO"
+        shares-outstanding: 4757580198
+        market: US
+  demand:
+    enabled: true
+    live-poll-delay-ms: 3000
+    closed-poll-delay-ms: 60000
+    scheduler-tick-ms: 1000
+    subscription-grace-ms: 15000
+    stale-after-ms: 5000
+    max-symbols-per-connection: 4
+  sse:
+    heartbeat-ms: 10000
+    emitter-timeout-ms: 300000
 
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,prometheus
   endpoint:
     health:
       probes:

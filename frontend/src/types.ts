@@ -3,8 +3,7 @@ export type MarketMode = 'REGULAR' | 'NXT' | 'PREMARKET' | 'ESTIMATE'
 export type Company = {
   code: string
   name: string
-  /** 'blue' = 삼성전자, 'red' = SK하이닉스 */
-  color: 'blue' | 'red'
+  color: 'blue' | 'red' | 'emerald' | 'violet'
   /** 로고 이미지 경로 */
   logo: string
   /** 현재가(원) — 모드에 따라 실제가 또는 추정가 */
@@ -23,6 +22,9 @@ export type Company = {
   high: number | null
   /** 상장주식수(보통주) */
   sharesOutstanding: number
+  market: 'KRX' | 'US'
+  source: 'KIS' | 'ALPACA_IEX' | 'HYPERLIQUID'
+  status: 'LIVE' | 'CLOSED' | 'ESTIMATE'
 }
 
 export type MarketSnapshot = {
@@ -31,9 +33,16 @@ export type MarketSnapshot = {
   at: string
   /** USD/KRW 환율 — 추정가(달러 환산)에 사용 */
   fxRate: number
-  samsung: Company
-  hynix: Company
+  stocks: Company[]
 }
+
+export type SupportedAsset = {
+  code: string
+  name: string
+  market: 'KRX' | 'US'
+}
+
+export type ConnectionState = 'connecting' | 'connected' | 'reconnecting'
 
 /** 증권사 1건의 투자의견 리포트 */
 export type OpinionReport = {

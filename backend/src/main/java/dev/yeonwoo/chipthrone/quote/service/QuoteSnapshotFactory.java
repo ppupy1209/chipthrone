@@ -6,6 +6,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -23,11 +24,18 @@ public class QuoteSnapshotFactory {
 
     private final QuoteProperties properties;
     private final MarketModeService marketModeService;
+    private final UsMarketHours usMarketHours;
     private final Clock clock;
 
-    public QuoteSnapshotFactory(QuoteProperties properties, MarketModeService marketModeService, Clock clock) {
+    public QuoteSnapshotFactory(
+            QuoteProperties properties,
+            MarketModeService marketModeService,
+            UsMarketHours usMarketHours,
+            Clock clock
+    ) {
         this.properties = properties;
         this.marketModeService = marketModeService;
+        this.usMarketHours = usMarketHours;
         this.clock = clock;
     }
 
@@ -40,18 +48,39 @@ public class QuoteSnapshotFactory {
             BigDecimal fxRate,
             Map<String, KisStockQuote> kisQuoteByCode
     ) {
+        return create(prices, fxRate, kisQuoteByCode, properties.assets(), Set.of());
+    }
+
+    public QuoteSnapshot create(
+            List<MarketAssetPrice> prices,
+            BigDecimal fxRate,
+            Map<String, KisStockQuote> kisQuoteByCode,
+            List<QuoteProperties.Asset> assets
+    ) {
+        return create(prices, fxRate, kisQuoteByCode, assets, Set.of());
+    }
+
+    public QuoteSnapshot create(
+            List<MarketAssetPrice> prices,
+            BigDecimal fxRate,
+            Map<String, KisStockQuote> kisQuoteByCode,
+            List<QuoteProperties.Asset> assets,
+            Set<String> alpacaSymbols
+    ) {
         Instant at = clock.instant();
         MarketMode mode = marketModeService.determine(at);
         Map<String, MarketAssetPrice> priceBySymbol = prices.stream()
                 .collect(Collectors.toMap(MarketAssetPrice::symbol, Function.identity(), (left, right) -> left));
 
-        List<StockQuote> stocks = properties.assets().stream()
+        List<StockQuote> stocks = assets.stream()
                 .map(asset -> toStockQuote(
                         asset,
                         requirePrice(priceBySymbol, asset.symbol()),
                         kisQuoteByCode.get(asset.code()),
                         fxRate,
-                        mode
+                        mode,
+                        alpacaSymbols.contains(asset.code()),
+                        at
                 ))
                 .toList();
 
@@ -71,7 +100,9 @@ public class QuoteSnapshotFactory {
             MarketAssetPrice price,
             KisStockQuote kisQuote,
             BigDecimal fxRate,
-            MarketMode mode
+            MarketMode mode,
+            boolean useAlpaca,
+            Instant at
     ) {
         BigDecimal hyperliquidPriceKrw = price.markPx().multiply(fxRate);
         BigDecimal hyperliquidChangePct = price.markPx()
@@ -98,6 +129,10 @@ public class QuoteSnapshotFactory {
                 nxtClose
         );
         BigDecimal marketCap = priceKrw.multiply(BigDecimal.valueOf(asset.sharesOutstanding()));
+        String source = useKisCurrentPrice ? "KIS" : useAlpaca ? "ALPACA_IEX" : "HYPERLIQUID";
+        String status = useKisCurrentPrice
+                ? "LIVE"
+                : useAlpaca ? (usMarketHours.isOpen(at) ? "LIVE" : "CLOSED") : "ESTIMATE";
 
         return new StockQuote(
                 asset.code(),
@@ -111,7 +146,10 @@ public class QuoteSnapshotFactory {
                 kisQuote == null ? null : kisQuote.regularCloseDate(),
                 regularHigh == null ? null : regularHigh.doubleValue(),
                 nxtClose == null ? null : nxtClose.doubleValue(),
-                kisQuote == null ? null : kisQuote.nxtCloseDate()
+                kisQuote == null ? null : kisQuote.nxtCloseDate(),
+                asset.market().name(),
+                source,
+                status
         );
     }
 

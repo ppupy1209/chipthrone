@@ -17,7 +17,10 @@ import dev.yeonwoo.chipthrone.quote.config.KisProperties;
 import dev.yeonwoo.chipthrone.quote.model.InvestOpinionReport;
 import dev.yeonwoo.chipthrone.quote.model.KisClosingPrice;
 import dev.yeonwoo.chipthrone.quote.model.KisStockQuote;
+import dev.yeonwoo.chipthrone.quote.service.QuoteMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -40,6 +43,22 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
     private final KisProperties properties;
     private final KisAccessTokenProvider tokenProvider;
     private final Clock clock;
+    private final QuoteMetrics metrics;
+
+    @Autowired
+    public KisRestMarketDataClient(
+            RestClient.Builder builder,
+            KisProperties properties,
+            KisAccessTokenProvider tokenProvider,
+            Clock clock,
+            QuoteMetrics metrics
+    ) {
+        this.restClient = builder.baseUrl(properties.baseUrl()).build();
+        this.properties = properties;
+        this.tokenProvider = tokenProvider;
+        this.clock = clock;
+        this.metrics = metrics;
+    }
 
     public KisRestMarketDataClient(
             RestClient.Builder builder,
@@ -47,10 +66,7 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
             KisAccessTokenProvider tokenProvider,
             Clock clock
     ) {
-        this.restClient = builder.baseUrl(properties.baseUrl()).build();
-        this.properties = properties;
-        this.tokenProvider = tokenProvider;
-        this.clock = clock;
+        this(builder, properties, tokenProvider, clock, new QuoteMetrics(new SimpleMeterRegistry()));
     }
 
     @Override
@@ -139,6 +155,7 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
         String startDate = today.minusDays(180).format(KIS_DATE_FORMAT);
         String endDate = today.format(KIS_DATE_FORMAT);
 
+        metrics.externalCall("kis", "invest_opinion");
         JsonNode response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/uapi/domestic-stock/v1/quotations/invest-opinion")
@@ -181,6 +198,7 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
     }
 
     private JsonNode fetchPriceOutput(String marketDivisionCode, String code, String accessToken) {
+        metrics.externalCall("kis", "current_quote");
         JsonNode response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/uapi/domestic-stock/v1/quotations/inquire-price")
@@ -202,6 +220,9 @@ public class KisRestMarketDataClient implements KisMarketDataClient {
     }
 
     private DailyClose fetchDailyClose(String marketDivisionCode, String code, String accessToken) {
+        metrics.externalCall("kis", NXT_MARKET_DIVISION_CODE.equals(marketDivisionCode)
+                ? "nxt_close"
+                : "regular_close");
         JsonNode response = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/uapi/domestic-stock/v1/quotations/inquire-daily-price")

@@ -132,14 +132,16 @@ sudo docker logs --tail 100 chipthrone-api
 sudo certbot --nginx -d api.chipthrone.com
 ```
 
-## 7. KIS 키 주입 (정규장 연동)
+## 7. KIS·Alpaca 키 주입
 
-KIS APP KEY/SECRET은 **시크릿**이므로 레포·이미지에 넣지 않고 EC2 환경변수로 주입한다.
+KIS와 Alpaca KEY/SECRET은 **시크릿**이므로 레포·이미지에 넣지 않고 EC2 환경변수로 주입한다.
 
 1. EC2에서 env 파일 생성 (`~/chipthrone.env`):
    ```
    KIS_APP_KEY=실전_APP_KEY
    KIS_APP_SECRET=실전_APP_SECRET
+   ALPACA_API_KEY=ALPACA_KEY
+   ALPACA_API_SECRET=ALPACA_SECRET
    ```
 2. 컨테이너를 env 파일로 재실행:
    ```bash
@@ -149,5 +151,5 @@ KIS APP KEY/SECRET은 **시크릿**이므로 레포·이미지에 넣지 않고 
      --env-file ~/chipthrone.env ghcr.io/ppupy1209/chipthrone-api:latest
    ```
    - watchtower가 이후 업데이트 시 이 환경변수를 그대로 유지한다.
-   - `KIS_APP_KEY`가 비어 있으면 KIS 비활성(Hyperliquid 추정만 사용).
-3. 확인: `/api/quotes`의 `regularClose`가 채워지면 KIS 연동 성공(주말·야간엔 종가, 정규장엔 실시세).
+   - KIS 키가 비면 국장, Alpaca 키가 비면 미장 시세가 Hyperliquid 추정으로 폴백한다.
+3. 확인: `/api/quotes?symbols=005930,SNDK`의 `source`가 각각 `KIS`, `ALPACA_IEX`면 연동 성공이다. 장 상태에 따라 `status`는 `LIVE` 또는 `CLOSED`다.

@@ -2,64 +2,43 @@ import type { Company } from '../types'
 import { formatCap, marketCap } from '../lib/marketCap'
 import { AnimatedNumber } from './AnimatedNumber'
 
-// 좌우 위치는 항상 고정: 삼성(왼쪽/블루), 하이닉스(오른쪽/레드).
-export function MarketCapBar({
-  samsung,
-  hynix,
-}: {
-  samsung: Company
-  hynix: Company
-}) {
-  const capS = marketCap(samsung)
-  const capH = marketCap(hynix)
-  const total = capS + capH
-  const samsungW = (capS / total) * 100
+const BAR: Record<Company['color'], string> = {
+  blue: 'bg-blue-500',
+  red: 'bg-red-500',
+  emerald: 'bg-emerald-500',
+  violet: 'bg-violet-500',
+}
 
-  const gap = Math.abs(capS - capH)
-  const gapPct = (gap / Math.min(capS, capH)) * 100
+export function MarketCapBar({ companies }: { companies: Company[] }) {
+  const ranked = [...companies].sort((a, b) => marketCap(b) - marketCap(a))
+  const max = ranked.length ? marketCap(ranked[0]) : 1
+  const gap = ranked.length > 1 ? marketCap(ranked[0]) - marketCap(ranked[1]) : 0
+  const gapPct = ranked.length > 1 ? (gap / marketCap(ranked[1])) * 100 : 0
 
   return (
-    <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5">
-      <div className="mb-2.5 text-center text-[10px] tracking-[0.14em] text-neutral-400">
-        시총 비교
+    <div data-testid="market-cap-comparison" className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="mb-3 text-center text-[10px] tracking-[0.14em] text-neutral-400">시총 비교</div>
+      <div className="space-y-2.5">
+        {ranked.map((company) => {
+          const cap = marketCap(company)
+          return (
+            <div key={company.code}>
+              <div className="mb-1 flex items-baseline justify-between gap-3 text-[12px]">
+                <span className="truncate font-medium">{company.name}</span>
+                <AnimatedNumber value={cap} format={formatCap} className="tabular-nums text-neutral-500" />
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                <div className={`h-full ${BAR[company.color]}`} style={{ width: `${(cap / max) * 100}%` }} />
+              </div>
+            </div>
+          )
+        })}
       </div>
-      <div className="flex items-baseline justify-between text-[13px]">
-        <span className="font-medium text-blue-600">
-          삼성전자{' '}
-          <AnimatedNumber
-            value={capS}
-            format={formatCap}
-            className="font-normal text-neutral-500 tabular-nums"
-          />
-        </span>
-        <span className="font-medium text-red-600">
-          <AnimatedNumber
-            value={capH}
-            format={formatCap}
-            className="font-normal text-neutral-500 tabular-nums"
-          />{' '}
-          SK하이닉스
-        </span>
-      </div>
-      <div className="my-2 flex h-1.5 overflow-hidden rounded-full">
-        <div
-          className="bg-blue-500"
-          style={{ width: `${samsungW}%`, transition: 'width 0.5s ease-out' }}
-        />
-        <div
-          className="bg-red-500"
-          style={{ width: `${100 - samsungW}%`, transition: 'width 0.5s ease-out' }}
-        />
-      </div>
-      <div className="text-center text-[11px] text-neutral-400 tabular-nums">
-        격차{' '}
-        <AnimatedNumber
-          value={gap}
-          format={formatCap}
-          className="font-medium text-neutral-600 dark:text-neutral-300"
-        />{' '}
-        · {gapPct.toFixed(1)}%
-      </div>
+      {ranked.length > 1 && (
+        <div className="mt-3 text-center text-[11px] text-neutral-400 tabular-nums">
+          1·2위 격차 <AnimatedNumber value={gap} format={formatCap} className="font-medium text-neutral-600 dark:text-neutral-300" /> · {gapPct.toFixed(1)}%
+        </div>
+      )}
     </div>
   )
 }

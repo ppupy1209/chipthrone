@@ -1,4 +1,20 @@
-# 05. 모니터링 — Slack 알림
+# 05. 모니터링 — Prometheus·Grafana·Slack
+
+## 수요 기반 시세 지표
+
+Actuator `/actuator/prometheus`에서 SSE 연결, 활성 고유 종목, 종목별 구독자, 외부 API 실제 호출, 시장 상태별 polling 성공·실패, 수집 시간, SSE 전달 지연, 미정리 Emitter를 제공한다. 로컬 Grafana capture stack은 다음으로 실행한다.
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
+```
+
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3001`
+- 대시보드: `CHIP THRONE · 수요 기반 시세`
+
+사용자/연결 ID는 metric tag로 쓰지 않는다. 자세한 이름과 실제 부하 결과는 [06-demand-driven-quotes.md](06-demand-driven-quotes.md).
+
+## Slack 알림
 
 서버 상태와 에러를 Slack으로 받기 위한 구성. **두 층**으로 나눈다.
 

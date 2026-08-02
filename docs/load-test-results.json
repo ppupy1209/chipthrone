@@ -1,0 +1,164 @@
+{
+  "measuredAt": "2026-08-02T03:25:35.451971Z",
+  "environment": {
+    "host": "local macOS arm64",
+    "supportedSymbols": 20,
+    "concurrentSseConnections": 200,
+    "symbolsPerConnection": 2,
+    "livePollIntervalSeconds": 3,
+    "closedPollIntervalSeconds": 60,
+    "subscriptionGraceSeconds": 15,
+    "quoteSource": "loadtest/fake_quote_server.py",
+    "artificialLatency": false
+  },
+  "scenarios": [
+    {
+      "name": "fixed_all_symbols",
+      "durationSeconds": 12,
+      "activeUniqueSymbols": 20,
+      "maxSseConnections": 200,
+      "calls": {
+        "hyperliquidBatch": 5,
+        "fx": 1,
+        "kisToken": 1,
+        "kisRegularClose": 20,
+        "kisNxtClose": 20,
+        "kisCurrent": 100
+      },
+      "cpuPercent": { "mean": 34.18, "max": 286.8 },
+      "rssMiB": { "mean": 260.54, "max": 267.52 },
+      "deliveryP95Ms": 96.73,
+      "quoteEvents": 1000,
+      "errorRate": 0.0,
+      "pollFailures": 0,
+      "cleanedSymbolSubscriptions": 400
+    },
+    {
+      "name": "active_symbols_only",
+      "durationSeconds": 12,
+      "activeUniqueSymbols": 2,
+      "maxSseConnections": 200,
+      "calls": {
+        "hyperliquidBatch": 5,
+        "fx": 1,
+        "kisToken": 1,
+        "kisRegularClose": 2,
+        "kisNxtClose": 2,
+        "kisCurrent": 10
+      },
+      "cpuPercent": { "mean": 11.22, "max": 91.6 },
+      "rssMiB": { "mean": 257.23, "max": 267.72 },
+      "deliveryP95Ms": 80.07,
+      "quoteEvents": 1000,
+      "errorRate": 0.0,
+      "pollFailures": 0,
+      "cleanedSymbolSubscriptions": 400
+    },
+    {
+      "name": "shared_single_symbol",
+      "durationSeconds": 12,
+      "activeUniqueSymbols": 1,
+      "maxSseConnections": 200,
+      "calls": {
+        "hyperliquidBatch": 5,
+        "fx": 1,
+        "kisToken": 1,
+        "kisRegularClose": 1,
+        "kisNxtClose": 1,
+        "kisCurrent": 5
+      },
+      "cpuPercent": { "mean": 9.33, "max": 70.8 },
+      "rssMiB": { "mean": 260.74, "max": 270.53 },
+      "deliveryP95Ms": 61.19,
+      "quoteEvents": 1000,
+      "errorRate": 0.0,
+      "pollFailures": 0,
+      "cleanedSymbolSubscriptions": 200
+    },
+    {
+      "name": "distributed_symbols",
+      "durationSeconds": 12,
+      "activeUniqueSymbols": 20,
+      "maxSseConnections": 200,
+      "calls": {
+        "hyperliquidBatch": 5,
+        "fx": 1,
+        "kisToken": 1,
+        "kisRegularClose": 20,
+        "kisNxtClose": 20,
+        "kisCurrent": 100
+      },
+      "cpuPercent": { "mean": 20.38, "max": 187.4 },
+      "rssMiB": { "mean": 265.15, "max": 273.83 },
+      "deliveryP95Ms": 76.39,
+      "quoteEvents": 1000,
+      "errorRate": 0.0,
+      "pollFailures": 0,
+      "cleanedSymbolSubscriptions": 400
+    },
+    {
+      "name": "all_disconnected",
+      "connectedDurationSeconds": 6,
+      "activeUniqueSymbolsWhileConnected": 2,
+      "maxSseConnections": 200,
+      "callsWhileConnected": {
+        "hyperliquidBatch": 3,
+        "fx": 1,
+        "kisToken": 1,
+        "kisRegularClose": 2,
+        "kisNxtClose": 2,
+        "kisCurrent": 6
+      },
+      "cpuPercent": { "mean": 24.45, "max": 124.4 },
+      "rssMiB": { "mean": 265.10, "max": 265.97 },
+      "deliveryP95Ms": 65.77,
+      "quoteEvents": 600,
+      "errorRate": 0.0,
+      "pollFailures": 0,
+      "cleanedSymbolSubscriptions": 400,
+      "activeUniqueSymbolsAfterGrace": 0,
+      "callsDuringGrace": 12,
+      "unnecessaryCallsAfterGrace": 0
+    },
+    {
+      "name": "closed_low_frequency",
+      "durationSeconds": 65,
+      "activeUniqueSymbols": 2,
+      "maxSseConnections": 200,
+      "calls": {
+        "hyperliquidBatch": 2,
+        "fx": 1,
+        "kisToken": 1,
+        "kisRegularClose": 2,
+        "kisNxtClose": 2,
+        "kisCurrent": 0
+      },
+      "cpuPercent": { "mean": 0.68, "max": 22.9 },
+      "rssMiB": { "mean": 191.96, "max": 262.19 },
+      "deliveryP95Ms": 72.80,
+      "quoteEvents": 400,
+      "errorRate": 0.0,
+      "pollFailures": 0,
+      "cleanedSymbolSubscriptions": 400
+    },
+    {
+      "name": "us_shared_symbols_alpaca_batch",
+      "durationSeconds": 12,
+      "activeUniqueSymbols": 2,
+      "maxSseConnections": 200,
+      "calls": {
+        "alpacaBatch": 5,
+        "hyperliquidBatch": 0,
+        "kisCurrent": 0,
+        "fx": 1
+      },
+      "cpuPercent": { "mean": 8.52, "max": 64.2 },
+      "rssMiB": { "mean": 255.70, "max": 269.20 },
+      "deliveryP95Ms": 61.52,
+      "quoteEvents": 1000,
+      "errorRate": 0.0,
+      "pollFailures": 0,
+      "cleanedSymbolSubscriptions": 400
+    }
+  ]
+}

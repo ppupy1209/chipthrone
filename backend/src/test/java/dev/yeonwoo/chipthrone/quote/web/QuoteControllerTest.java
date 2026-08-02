@@ -68,6 +68,23 @@ class QuoteControllerTest {
     }
 
     @Test
+    void assetsReturnsSearchableSupportedSymbols() throws Exception {
+        mockMvc.perform(get("/api/assets"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].code").value("005930"))
+                .andExpect(jsonPath("$[0].name").value("삼성전자"))
+                .andExpect(jsonPath("$[1].code").value("000660"));
+    }
+
+    @Test
+    void streamRejectsMissingAndUnsupportedSymbols() throws Exception {
+        mockMvc.perform(get("/api/stream"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/stream").param("symbols", "999999"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void corsAllowsConfiguredApiOrigins() throws Exception {
         assertCorsAllowsOrigin("https://chipthrone.com");
         assertCorsAllowsOrigin("https://www.chipthrone.com");
