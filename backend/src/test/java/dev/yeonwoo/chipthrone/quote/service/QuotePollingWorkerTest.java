@@ -53,14 +53,14 @@ class QuotePollingWorkerTest {
     }
 
     @Test
-    void closedMarketUsesLowFrequencyInterval() {
+    void estimatesKeepThreeSecondIntervalAroundTheClock() {
         MutableClock clock = new MutableClock(Instant.parse("2026-06-22T13:00:00Z"));
         QuoteService service = mock(QuoteService.class);
         Fixture fixture = fixture(service, clock, true);
         fixture.registry.subscribe(Set.of("005930"));
 
         fixture.worker.poll();
-        clock.advance(Duration.ofSeconds(59));
+        clock.advance(Duration.ofSeconds(2));
         fixture.worker.poll();
         verify(service).refresh(Set.of("005930"));
 
@@ -86,8 +86,6 @@ class QuotePollingWorkerTest {
 
     private Fixture fixture(QuoteService service, Clock clock, boolean enabled) {
         QuoteProperties quoteProperties = new QuoteProperties(
-                3000,
-                true,
                 "xyz",
                 1450,
                 List.of(
@@ -95,15 +93,13 @@ class QuotePollingWorkerTest {
                         new QuoteProperties.Asset("000660", "SK하이닉스", "xyz:SKHX", 728_002_365L, QuoteProperties.Market.KRX)
                 )
         );
-        DemandProperties demand = new DemandProperties(enabled, 3000, 60000, 1000, 15000, 5000, 4);
+        DemandProperties demand = new DemandProperties(enabled, 3000, 1000, 15000, 5000, 4);
         AssetCatalog catalog = new AssetCatalog(quoteProperties);
         SubscriptionRegistry registry = new SubscriptionRegistry(catalog, demand, clock, new SimpleMeterRegistry());
         QuotePollingWorker worker = new QuotePollingWorker(
                 service,
                 registry,
                 catalog,
-                new MarketModeService(),
-                new UsMarketHours(),
                 demand,
                 clock,
                 new SimpleMeterRegistry()

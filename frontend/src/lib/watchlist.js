@@ -1,5 +1,5 @@
 export const MIN_WATCHLIST = 2
-export const MAX_WATCHLIST = 4
+export const MAX_WATCHLIST = 8
 
 /** 저장값을 현재 지원 목록에 맞춰 검증하고 최소 선택 수를 채운다. */
 export function normalizeWatchlist(value, supportedCodes, requiredCodes = []) {

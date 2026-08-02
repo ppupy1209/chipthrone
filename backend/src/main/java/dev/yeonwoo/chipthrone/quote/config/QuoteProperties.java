@@ -8,13 +8,12 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.ConstructorBinding;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
 @ConfigurationProperties(prefix = "chipthrone.quote")
 public record QuoteProperties(
-        @Positive long pollDelayMs,
-        boolean pollingEnabled,
         @NotBlank String dex,
         @Positive double initialFxRate,
         @Valid @NotEmpty List<Asset> assets
@@ -24,10 +23,17 @@ public record QuoteProperties(
             @NotBlank String name,
             @NotBlank String symbol,
             @Positive long sharesOutstanding,
-            Market market
+            Market market,
+            String exchange
     ) {
+        public Asset(String code, String name, String symbol, long sharesOutstanding, Market market) {
+            this(code, name, symbol, sharesOutstanding, market, "");
+        }
+
+        @ConstructorBinding
         public Asset {
             market = market == null ? Market.KRX : market;
+            exchange = exchange == null ? "" : exchange;
         }
 
     }

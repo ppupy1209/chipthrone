@@ -3,17 +3,17 @@ package dev.yeonwoo.chipthrone.quote.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import dev.yeonwoo.chipthrone.quote.config.QuoteProperties;
-import dev.yeonwoo.chipthrone.quote.model.KisStockQuote;
+import dev.yeonwoo.chipthrone.quote.model.EstimateAccuracy;
+import dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote;
 import dev.yeonwoo.chipthrone.quote.model.MarketAssetPrice;
 import dev.yeonwoo.chipthrone.quote.model.MarketMode;
+import dev.yeonwoo.chipthrone.quote.model.OfficialStockPrice;
 import dev.yeonwoo.chipthrone.quote.model.QuoteSnapshot;
 import dev.yeonwoo.chipthrone.quote.model.StockQuote;
 
@@ -23,74 +23,49 @@ import org.springframework.stereotype.Service;
 public class QuoteSnapshotFactory {
 
     private final QuoteProperties properties;
-    private final MarketModeService marketModeService;
-    private final UsMarketHours usMarketHours;
     private final Clock clock;
 
-    public QuoteSnapshotFactory(
-            QuoteProperties properties,
-            MarketModeService marketModeService,
-            UsMarketHours usMarketHours,
-            Clock clock
-    ) {
+    public QuoteSnapshotFactory(QuoteProperties properties, Clock clock) {
         this.properties = properties;
-        this.marketModeService = marketModeService;
-        this.usMarketHours = usMarketHours;
         this.clock = clock;
     }
 
-    public QuoteSnapshot create(List<MarketAssetPrice> prices, BigDecimal fxRate) {
-        return create(prices, fxRate, Map.of());
+    public QuoteSnapshot create(List<MarketAssetPrice> prices, ExchangeRateQuote fxRate) {
+        return create(prices, fxRate, Map.of(), Map.of(), properties.assets());
     }
 
     public QuoteSnapshot create(
             List<MarketAssetPrice> prices,
-            BigDecimal fxRate,
-            Map<String, KisStockQuote> kisQuoteByCode
-    ) {
-        return create(prices, fxRate, kisQuoteByCode, properties.assets(), Set.of());
-    }
-
-    public QuoteSnapshot create(
-            List<MarketAssetPrice> prices,
-            BigDecimal fxRate,
-            Map<String, KisStockQuote> kisQuoteByCode,
+            ExchangeRateQuote fxRate,
+            Map<String, OfficialStockPrice> officialByCode,
+            Map<String, EstimateAccuracy> accuracyByCode,
             List<QuoteProperties.Asset> assets
     ) {
-        return create(prices, fxRate, kisQuoteByCode, assets, Set.of());
-    }
-
-    public QuoteSnapshot create(
-            List<MarketAssetPrice> prices,
-            BigDecimal fxRate,
-            Map<String, KisStockQuote> kisQuoteByCode,
-            List<QuoteProperties.Asset> assets,
-            Set<String> alpacaSymbols
-    ) {
-        Instant at = clock.instant();
-        MarketMode mode = marketModeService.determine(at);
         Map<String, MarketAssetPrice> priceBySymbol = prices.stream()
                 .collect(Collectors.toMap(MarketAssetPrice::symbol, Function.identity(), (left, right) -> left));
-
         List<StockQuote> stocks = assets.stream()
                 .map(asset -> toStockQuote(
                         asset,
                         requirePrice(priceBySymbol, asset.symbol()),
-                        kisQuoteByCode.get(asset.code()),
-                        fxRate,
-                        mode,
-                        alpacaSymbols.contains(asset.code()),
-                        at
+                        officialByCode.get(asset.code()),
+                        accuracyByCode.get(asset.code()),
+                        fxRate.rate()
                 ))
                 .toList();
-
-        return new QuoteSnapshot(mode, at, fxRate.doubleValue(), stocks);
+        return new QuoteSnapshot(
+                MarketMode.ESTIMATE,
+                clock.instant(),
+                fxRate.rate().doubleValue(),
+                fxRate.asOfDate(),
+                fxRate.source(),
+                stocks
+        );
     }
 
     private MarketAssetPrice requirePrice(Map<String, MarketAssetPrice> priceBySymbol, String symbol) {
         MarketAssetPrice price = priceBySymbol.get(symbol);
         if (price == null) {
-            throw new IllegalStateException("Missing market price for symbol: " + symbol);
+            throw new IllegalStateException("Missing Hyperliquid price for symbol: " + symbol);
         }
         return price;
     }
@@ -98,98 +73,39 @@ public class QuoteSnapshotFactory {
     private StockQuote toStockQuote(
             QuoteProperties.Asset asset,
             MarketAssetPrice price,
-            KisStockQuote kisQuote,
-            BigDecimal fxRate,
-            MarketMode mode,
-            boolean useAlpaca,
-            Instant at
+            OfficialStockPrice official,
+            EstimateAccuracy accuracy,
+            BigDecimal fxRate
     ) {
-        BigDecimal hyperliquidPriceKrw = price.markPx().multiply(fxRate);
-        BigDecimal hyperliquidChangePct = price.markPx()
+        BigDecimal priceKrw = price.markPx().multiply(fxRate);
+        BigDecimal changePct = price.markPx()
                 .divide(price.prevDayPx(), 12, RoundingMode.HALF_UP)
                 .subtract(BigDecimal.ONE)
                 .multiply(BigDecimal.valueOf(100));
-        boolean useKisCurrentPrice = kisQuote != null
-                && (mode == MarketMode.REGULAR || mode == MarketMode.NXT || mode == MarketMode.PREMARKET)
-                && kisQuote.priceKrw() != null;
-        BigDecimal regularClose = kisQuote == null ? null : kisQuote.regularClose();
-        BigDecimal regularHigh = kisQuote == null ? null : kisQuote.regularHigh();
-        BigDecimal nxtClose = kisQuote == null ? null : kisQuote.nxtClose();
-        BigDecimal priceKrw = useKisCurrentPrice ? kisQuote.priceKrw() : hyperliquidPriceKrw;
-        BigDecimal priceUsd = useKisCurrentPrice
-                ? kisQuote.priceKrw().divide(fxRate, 12, RoundingMode.HALF_UP)
-                : price.markPx();
-        BigDecimal changePct = changePct(
-                mode,
-                useKisCurrentPrice,
-                kisQuote,
-                priceKrw,
-                hyperliquidChangePct,
-                regularClose,
-                nxtClose
-        );
-        BigDecimal marketCap = priceKrw.multiply(BigDecimal.valueOf(asset.sharesOutstanding()));
-        String source = useKisCurrentPrice ? "KIS" : useAlpaca ? "ALPACA_IEX" : "HYPERLIQUID";
-        String status = useKisCurrentPrice
-                ? "LIVE"
-                : useAlpaca ? (usMarketHours.isOpen(at) ? "LIVE" : "CLOSED") : "ESTIMATE";
+        long shares = official == null || official.sharesOutstanding() <= 0
+                ? asset.sharesOutstanding()
+                : official.sharesOutstanding();
+        BigDecimal estimatedMarketCap = priceKrw.multiply(BigDecimal.valueOf(shares));
 
         return new StockQuote(
                 asset.code(),
                 asset.name(),
                 priceKrw.doubleValue(),
-                priceUsd.doubleValue(),
+                price.markPx().doubleValue(),
                 changePct.doubleValue(),
-                asset.sharesOutstanding(),
-                marketCap.doubleValue(),
-                regularClose == null ? null : regularClose.doubleValue(),
-                kisQuote == null ? null : kisQuote.regularCloseDate(),
-                regularHigh == null ? null : regularHigh.doubleValue(),
-                nxtClose == null ? null : nxtClose.doubleValue(),
-                kisQuote == null ? null : kisQuote.nxtCloseDate(),
+                shares,
+                estimatedMarketCap.doubleValue(),
+                official == null ? null : official.marketCap().doubleValue(),
+                official == null ? null : official.close().doubleValue(),
+                official == null ? null : official.closeDate(),
+                official == null ? null : official.high().doubleValue(),
+                null,
+                null,
                 asset.market().name(),
-                source,
-                status
+                "HYPERLIQUID",
+                "ESTIMATE",
+                accuracy == null ? null : accuracy.estimateKrw().doubleValue(),
+                accuracy == null ? null : accuracy.divergencePct().doubleValue()
         );
-    }
-
-    private BigDecimal changePct(
-            MarketMode mode,
-            boolean useKisCurrentPrice,
-            KisStockQuote kisQuote,
-            BigDecimal priceKrw,
-            BigDecimal hyperliquidChangePct,
-            BigDecimal regularClose,
-            BigDecimal nxtClose
-    ) {
-        if (mode == MarketMode.PREMARKET) {
-            if (isPositive(regularClose)) {
-                return changeFrom(priceKrw, regularClose);
-            }
-            return hyperliquidChangePct;
-        }
-        if (useKisCurrentPrice && kisQuote.changePct() != null) {
-            return kisQuote.changePct();
-        }
-        if (mode == MarketMode.ESTIMATE) {
-            if (isPositive(nxtClose)) {
-                return changeFrom(priceKrw, nxtClose);
-            }
-            if (isPositive(regularClose)) {
-                return changeFrom(priceKrw, regularClose);
-            }
-        }
-        return hyperliquidChangePct;
-    }
-
-    private BigDecimal changeFrom(BigDecimal priceKrw, BigDecimal basis) {
-        return priceKrw
-                .subtract(basis)
-                .divide(basis, 12, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100));
-    }
-
-    private boolean isPositive(BigDecimal value) {
-        return value != null && value.compareTo(BigDecimal.ZERO) > 0;
     }
 }

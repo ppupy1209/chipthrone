@@ -93,7 +93,9 @@ public class QuoteBroadcaster {
         if (stocks.isEmpty()) {
             return;
         }
-        QuoteSnapshot filtered = new QuoteSnapshot(snapshot.mode(), snapshot.at(), snapshot.fxRate(), stocks);
+        QuoteSnapshot filtered = new QuoteSnapshot(
+                snapshot.mode(), snapshot.at(), snapshot.fxRate(),
+                snapshot.fxAsOfDate(), snapshot.fxSource(), stocks);
         try {
             connection.emitter.send(SseEmitter.event().name("quotes").data(filtered));
             metrics.recordDelivery(snapshot.at(), clock.instant());

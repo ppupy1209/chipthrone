@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Measure the deployed SSE service without invoking KIS.
+"""Measure the deployed SSE service using shared Hyperliquid batches.
 
-All clients share two US symbols, so the server makes one Alpaca batch call per
-poll cycle regardless of the connection count.
+All clients share the same symbols, so one Hyperliquid batch serves every
+connection in a poll cycle.
 """
 
 import argparse
@@ -211,8 +211,13 @@ def run(base_url, users, duration, symbols):
         "open_files_max": int(max(
             metric_sum(sample, "process_files_open_files") for _, sample in samples
         )),
-        "alpaca_calls": int(external_calls(after, "alpaca") - external_calls(before, "alpaca")),
-        "kis_calls": int(external_calls(after, "kis") - external_calls(before, "kis")),
+        "fsc_daily_stock_calls": int(
+            external_calls(after, "financial_services_commission")
+            - external_calls(before, "financial_services_commission")
+        ),
+        "korea_exim_fx_calls": int(
+            external_calls(after, "korea_eximbank") - external_calls(before, "korea_eximbank")
+        ),
         "hyperliquid_calls": int(
             external_calls(after, "hyperliquid") - external_calls(before, "hyperliquid")
         ),

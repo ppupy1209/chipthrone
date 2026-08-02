@@ -74,8 +74,6 @@ class SubscriptionRegistryTest {
 
     private SubscriptionRegistry registry(Clock clock) {
         QuoteProperties quoteProperties = new QuoteProperties(
-                3000,
-                false,
                 "xyz",
                 1450,
                 List.of(
@@ -83,7 +81,7 @@ class SubscriptionRegistryTest {
                         new QuoteProperties.Asset("000660", "SK하이닉스", "xyz:SKHX", 728_002_365L, QuoteProperties.Market.KRX)
                 )
         );
-        DemandProperties demandProperties = new DemandProperties(true, 3000, 60000, 1000, 15000, 5000, 4);
+        DemandProperties demandProperties = new DemandProperties(true, 3000, 1000, 15000, 5000, 4);
         return new SubscriptionRegistry(
                 new AssetCatalog(quoteProperties),
                 demandProperties,

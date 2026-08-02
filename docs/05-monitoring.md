@@ -28,7 +28,7 @@ docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
 | ① 외부 liveness 모니터 | 서버가 살아있는지(완전 다운) | GitHub Actions 러너 (EC2 밖) | 무료, EC2 자원 0 |
 | ② 인앱 알림 | 애플리케이션 레벨 에러·배포 | Spring Boot 앱 안 | HTTP POST 한 방, 사실상 0 |
 
-> 왜 둘? 앱이 완전히 죽으면 **자기 죽음을 Slack에 못 알린다.** liveness는 반드시 EC2 바깥에서 봐야 하고, 반대로 "KIS 폴백 중" 같은 앱 내부 사건은 외부 핑으로는 안 보인다.
+> 왜 둘? 앱이 완전히 죽으면 **자기 죽음을 Slack에 못 알린다.** liveness는 반드시 EC2 바깥에서 봐야 하고, 반대로 시세 원천 장애 같은 앱 내부 사건은 외부 핑으로는 안 보인다.
 
 감시와 별도로 EC2 호스트에는 **자동 복구 계층**이 있다. Docker Healthcheck가 프로세스는 살아 있지만 `/api/health`가 응답하지 않는 상태를 판정하고, systemd timer가 10분에 최대 3회까지 컨테이너를 재시작한다. 제한을 넘긴 장애는 자동 복구를 멈추고 외부 liveness 알림에 맡긴다.
 
@@ -48,7 +48,7 @@ docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
 4. 하단 **Add New Webhook to Workspace** → 알림 받을 채널(`#alerts`) 선택 → **Allow**.
 5. 생성된 **Webhook URL** 복사 (`https://hooks.slack.com/services/T.../B.../xxxx`).
 
-> ⚠️ 이 URL은 **비밀값**이다. 아는 사람은 누구나 채널에 글을 쏠 수 있으니 레포·이미지·문서에 절대 커밋하지 않는다. (KIS 키와 같은 취급)
+> ⚠️ 이 URL은 **비밀값**이다. 아는 사람은 누구나 채널에 글을 쏠 수 있으니 레포·이미지·문서에 절대 커밋하지 않는다.
 
 ## 2. 외부 liveness 모니터 (이미 구성됨)
 
@@ -79,7 +79,6 @@ docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
 ### 알릴 이벤트
 1. **배포/재시작** — `ApplicationReadyEvent`에서 1회. 예: `:white_check_mark: chipthrone-api vX.Y.Z 기동`. watchtower가 조용히 재배포하므로 의도치 않은 재시작·크래시루프를 드러내는 용도.
 2. **시세 소스 장애** — `QuoteService.refresh()`의 `marketDataClient`/`snapshotFactory` 호출이 **N회 연속 실패**하면 1회 알림(현재는 `log.warn`만 남기고 마지막 스냅샷 동결). 복구되면 회복 알림 1회.
-3. **KIS 지속 실패** — 정규장(`MarketMode`가 실거래 시간)인데 KIS 현재가/토큰이 N회 연속 실패해 추정치로 폴백 중이면 1회 알림. 복구 시 1회.
 
 ### 폭주 방지 규칙 (필수)
 - **상태 전이에서만**: `정상→실패` 1회, `실패→복구` 1회. 매 실패마다 X.
@@ -87,8 +86,8 @@ docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
 - 모든 임계값·쿨다운은 `application.yml`(`chipthrone.alert.*`)로 노출.
 
 ### 시크릿/설정
-- Webhook URL은 환경변수 `SLACK_WEBHOOK_URL`로만 주입. EC2 `~/chipthrone.env`(`--env-file`)에 추가 — KIS 키와 동일 패턴. **레포·이미지엔 넣지 않는다.**
-- `SLACK_WEBHOOK_URL` 미설정이면 알림 비활성(로컬·CI에서 조용히 끔). 키 없으면 폴백하는 KIS와 같은 결.
+- Webhook URL은 환경변수 `SLACK_WEBHOOK_URL`로만 주입. EC2 `~/chipthrone.env`(`--env-file`)에 추가하고 **레포·이미지엔 넣지 않는다.**
+- `SLACK_WEBHOOK_URL` 미설정이면 알림은 비활성화된다.
 - `application.yml` 예시:
   ```yaml
   chipthrone:

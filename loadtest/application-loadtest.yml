@@ -1,21 +1,18 @@
 server:
   port: 18080
 
-kis:
-  base-url: http://127.0.0.1:19090
-  app-key: fake-loadtest-key
-  app-secret: fake-loadtest-secret
-
 chipthrone:
   source:
     hyperliquid-url: http://127.0.0.1:19090/info
-    fx-url: http://127.0.0.1:19090/fx
+    fsc-stock-url: http://127.0.0.1:19090/getStockPriceInfo
+    public-data-service-key: fake-loadtest-key
+    korea-exim-url: http://127.0.0.1:19090/exchangeJSON
+    korea-exim-auth-key: fake-loadtest-key
   alert:
     slack-webhook-url: ""
   demand:
     enabled: true
     live-poll-delay-ms: 3000
-    closed-poll-delay-ms: 60000
     scheduler-tick-ms: 1000
     subscription-grace-ms: 15000
     stale-after-ms: 5000

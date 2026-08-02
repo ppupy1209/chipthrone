@@ -1,6 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type { SupportedAsset } from '../types'
 import { MAX_WATCHLIST, MIN_WATCHLIST } from '../lib/watchlist.js'
+
+const US_GROUPS = [
+  {
+    id: 'semiconductor',
+    label: '반도체',
+    description: '메모리·파운드리·팹리스',
+    codes: ['SNDK', 'MU', 'AVGO', 'TSM', 'SKHY', 'AMD', 'ASML'],
+  },
+  {
+    id: 'm7',
+    label: 'M7',
+    description: '미국 초대형 기술주',
+    codes: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA'],
+  },
+  {
+    id: 'ai',
+    label: 'AI 관련',
+    description: 'AI 인프라·플랫폼',
+    codes: ['PLTR', 'MRVL', 'ORCL', 'ARM', 'NOW', 'GEV', 'NBIS'],
+  },
+]
+
+const GROUPED_CODES = new Set(US_GROUPS.flatMap((group) => group.codes))
 
 export function WatchlistPicker({
   assets,
@@ -15,116 +38,78 @@ export function WatchlistPicker({
   onAdd: (code: string) => void
   onRemove: (code: string) => void
 }) {
-  const [query, setQuery] = useState('')
-  const normalizedQuery = query.trim().toLowerCase()
-  const candidates = useMemo(
-    () =>
-      assets.filter(
-        (asset) =>
-          !selected.includes(asset.code) &&
-          (!normalizedQuery ||
-            asset.code.includes(normalizedQuery) ||
-            asset.name.toLowerCase().includes(normalizedQuery)),
-      ),
-    [assets, normalizedQuery, selected],
+  const assetByCode = useMemo(() => new Map(assets.map((asset) => [asset.code, asset])), [assets])
+  const selectedSet = new Set(selected)
+  const selectedCount = selected.filter((code) => !fixed.includes(code)).length
+  // 그룹에 없는 지원 종목이 목록에서 사라지지 않도록 자동으로 묶는다.
+  const ungrouped = useMemo(
+    () => assets.filter((asset) => asset.market === 'US' && !GROUPED_CODES.has(asset.code)).map((asset) => asset.code),
+    [assets],
   )
-  const selectedAssets = selected
-    .map((code) => assets.find((asset) => asset.code === code))
-    .filter((asset): asset is SupportedAsset => !!asset)
-  const candidateGroups = [
-    { market: 'KRX' as const, label: '국장 반도체' },
-    { market: 'US' as const, label: '미장 반도체' },
-  ].map((group) => ({
-    ...group,
-    assets: candidates.filter((asset) => asset.market === group.market),
-  }))
+  const definedGroups = ungrouped.length > 0
+    ? [...US_GROUPS, { id: 'etc', label: '기타', description: '그 외 지원 종목', codes: ungrouped }]
+    : US_GROUPS
+  const groups = definedGroups
+    .map((group) => ({
+      ...group,
+      assets: group.codes
+        .map((code) => assetByCode.get(code))
+        .filter((asset): asset is SupportedAsset => !!asset),
+    }))
+    .filter((group) => group.assets.length > 0)
+  const selectionLimit = MAX_WATCHLIST - MIN_WATCHLIST
+  const atLimit = selected.length >= MAX_WATCHLIST
 
   return (
     <section data-testid="watchlist" className="mt-5 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-[13px] font-medium">관심 종목</h2>
+          <h2 className="text-[13px] font-medium">미국 AI·반도체 종목 추가</h2>
           <p className="mt-0.5 text-[10px] text-neutral-400">
-            국장 2개 고정 · 미장 최대 {MAX_WATCHLIST - MIN_WATCHLIST}개 · 이 브라우저에 저장
+            최대 {selectionLimit}개 · 이 브라우저에 저장 · 선택된 종목을 다시 누르면 해제
           </p>
         </div>
         <span className="text-[11px] tabular-nums text-neutral-400">
-          {selected.length}/{MAX_WATCHLIST}
+          {selectedCount}/{selectionLimit}
         </span>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {selectedAssets.map((asset) => (
-          <span
-            key={asset.code}
-            className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 py-1 pl-2.5 pr-1.5 text-[11px] dark:bg-neutral-800"
-          >
-            <span>{asset.name}</span>
-            <span className="text-neutral-400">{asset.code}</span>
-            <span className="rounded bg-neutral-200 px-1 py-0.5 text-[9px] text-neutral-500 dark:bg-neutral-700 dark:text-neutral-300">
-              {asset.market === 'KRX' ? '국장' : '미장'}
-            </span>
-            {fixed.includes(asset.code) ? (
-              <span className="px-1 text-[9px] text-neutral-400">고정</span>
-            ) : (
-              <button
-                type="button"
-                aria-label={`${asset.name} 삭제`}
-                onClick={() => onRemove(asset.code)}
-                className="grid h-5 w-5 place-items-center rounded-full text-neutral-400 hover:bg-neutral-200 hover:text-neutral-700 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
-              >
-                ×
-              </button>
-            )}
-          </span>
+      <div className="mt-3 space-y-3">
+        {groups.map((group) => (
+          <section key={group.id} aria-labelledby={`asset-group-${group.id}`} className="overflow-hidden rounded-lg border border-neutral-100 dark:border-neutral-800">
+            <div className="flex items-baseline gap-2 bg-neutral-50 px-3 py-2 dark:bg-neutral-950/50">
+              <h3 id={`asset-group-${group.id}`} className="text-[11px] font-medium">{group.label}</h3>
+              <span className="text-[9px] text-neutral-400">{group.description}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 p-2 sm:grid-cols-3 lg:grid-cols-4">
+              {group.assets.map((asset) => {
+                const isSelected = selectedSet.has(asset.code)
+                const unavailable = !isSelected && atLimit
+                return (
+                  <button
+                    key={asset.code}
+                    type="button"
+                    aria-pressed={isSelected}
+                    disabled={unavailable}
+                    onClick={() => (isSelected ? onRemove(asset.code) : onAdd(asset.code))}
+                    className={`flex min-w-0 items-center gap-1.5 rounded-md border px-2.5 py-2 text-left text-[11px] transition-colors disabled:cursor-default ${
+                      isSelected
+                        ? 'border-neutral-300 bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-800'
+                        : unavailable
+                          ? 'border-neutral-100 opacity-40 dark:border-neutral-800'
+                          : 'border-neutral-100 hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:border-neutral-600 dark:hover:bg-neutral-800'
+                    }`}
+                  >
+                    <span className="truncate font-medium">{asset.name}</span>
+                    {asset.name !== asset.code && <span className="shrink-0 text-[9px] text-neutral-400">{asset.code}</span>}
+                    <span className="ml-auto shrink-0 text-[9px] text-neutral-400">{isSelected ? '해제' : '추가'}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
         ))}
       </div>
-
-      <div className="relative mt-3">
-        <label htmlFor="stock-search" className="sr-only">지원 종목 검색</label>
-        <input
-          id="stock-search"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="종목명 또는 코드·티커 검색"
-          className="w-full rounded-lg border border-neutral-200 bg-transparent px-3 py-2 text-[12px] outline-none placeholder:text-neutral-400 focus:border-neutral-400 dark:border-neutral-700 dark:focus:border-neutral-500"
-        />
-      </div>
-
-      {(normalizedQuery || selected.length < assets.length) && (
-        <div className="mt-2 max-h-36 overflow-y-auto rounded-lg border border-neutral-100 dark:border-neutral-800">
-          {candidates.length > 0 ? (
-            candidateGroups.map((group) =>
-              group.assets.length > 0 && (
-                <div key={group.market}>
-                  <div className="bg-neutral-50 px-3 py-1.5 text-[10px] font-medium text-neutral-400 dark:bg-neutral-950/50">
-                    {group.label}
-                  </div>
-                  {group.assets.map((asset) => (
-                    <button
-                      key={asset.code}
-                      type="button"
-                      disabled={selected.length >= MAX_WATCHLIST}
-                      onClick={() => {
-                        onAdd(asset.code)
-                        setQuery('')
-                      }}
-                      className="flex w-full items-center gap-2 border-b border-neutral-100 px-3 py-2 text-left text-[12px] last:border-0 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-neutral-800 dark:hover:bg-neutral-800"
-                    >
-                      <span className="font-medium">{asset.name}</span>
-                      <span className="text-neutral-400">{asset.code}</span>
-                      <span className="ml-auto text-neutral-400">추가</span>
-                    </button>
-                  ))}
-                </div>
-              ),
-            )
-          ) : (
-            <p className="px-3 py-3 text-[11px] text-neutral-400">검색 가능한 미선택 종목이 없습니다.</p>
-          )}
-        </div>
-      )}
     </section>
   )
 }

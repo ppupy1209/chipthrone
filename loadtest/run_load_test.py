@@ -146,7 +146,10 @@ def process_sample(process):
 def wait_for_sse_cleanup(timeout=22):
     deadline = time.time() + timeout
     samples = parse_prometheus()
-    while metric_sum(samples, "chipthrone_sse_connections") > 0 and time.time() < deadline:
+    while (
+        metric_sum(samples, "chipthrone_sse_connections") > 0
+        or metric_sum(samples, "chipthrone_quote_symbol_subscribers") > 0
+    ) and time.time() < deadline:
         time.sleep(0.5)
         samples = parse_prometheus()
     return samples
@@ -175,15 +178,7 @@ def backend_process(demand_enabled, mode, log_file, us_market):
         "--spring.profiles.active=loadtest",
         f"--spring.config.additional-location={config_locations}",
         f"--chipthrone.demand.enabled={str(demand_enabled).lower()}",
-        f"--chipthrone.loadtest.market-mode={mode}",
-        f"--chipthrone.loadtest.us-market-open={str(us_market).lower()}",
     ]
-    if us_market:
-        command += [
-            f"--alpaca.snapshots-url=http://127.0.0.1:{FAKE_PORT}/v2/stocks/snapshots",
-            "--alpaca.api-key=fake-loadtest-key",
-            "--alpaca.api-secret=fake-loadtest-secret",
-        ]
     return subprocess.Popen(command, cwd=ROOT, stdout=log_file, stderr=subprocess.STDOUT)
 
 
@@ -251,9 +246,9 @@ def run_scenario(name, demand_enabled, mode, pattern, duration, disconnect_check
                 "max_sse_connections": max_connections,
                 "active_unique_symbols": max_active_symbols,
                 "fake_external_calls": connected_counts,
-                "kis_current_calls": connected_counts.get("kis_current", 0),
+                "fsc_daily_stock_calls": connected_counts.get("fsc_daily_stock", 0),
                 "hyperliquid_batch_calls": connected_counts.get("hyperliquid_batch", 0),
-                "alpaca_batch_calls": connected_counts.get("alpaca_batch", 0),
+                "korea_exim_fx_calls": connected_counts.get("korea_exim_fx", 0),
                 "cpu_percent_mean": round(statistics.mean(cpu_samples), 2),
                 "cpu_percent_max": round(max(cpu_samples), 2),
                 "rss_mib_mean": round(statistics.mean(rss_samples), 2),
@@ -263,6 +258,8 @@ def run_scenario(name, demand_enabled, mode, pattern, duration, disconnect_check
                 "connection_error_rate": round(errors / USERS, 4),
                 "poll_failures": poll_failures,
                 "cleaned_subscriptions": int(subscriber_before - subscriber_after),
+                "remaining_subscriptions": int(subscriber_after),
+                "orphan_emitters": int(metric_sum(after_close, "chipthrone_sse_orphan_emitters")),
                 "remaining_active_symbols": remaining_active,
                 "calls_during_disconnect_grace": calls_during_grace,
                 "unnecessary_calls_after_grace": unnecessary_after_grace,
@@ -293,8 +290,8 @@ def main():
             ("shared_single_symbol", True, "REGULAR", "same_one", 12, False, False),
             ("distributed_symbols", True, "REGULAR", "distributed", 12, False, False),
             ("all_disconnected", True, "REGULAR", "popular_pair", 6, True, False),
-            ("closed_market_low_frequency", True, "ESTIMATE", "popular_pair", 65, False, False),
-            ("us_shared_symbols_alpaca_batch", True, "ESTIMATE", "popular_pair", 12, False, True),
+            ("around_the_clock_estimates", True, "ESTIMATE", "popular_pair", 12, False, False),
+            ("us_shared_symbols_hyperliquid_batch", True, "ESTIMATE", "popular_pair", 12, False, True),
         ]
         selected_scenarios = set(filter(None, os.getenv("LOADTEST_SCENARIOS", "").split(",")))
         if selected_scenarios:

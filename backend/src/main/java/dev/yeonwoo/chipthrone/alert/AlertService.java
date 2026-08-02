@@ -66,14 +66,12 @@ public class AlertService {
     private AlertNotification failureNotification(AlertEvent event) {
         return switch (event) {
             case QUOTE_SOURCE -> AlertNotification.QUOTE_SOURCE_FAILURE;
-            case KIS_PERSISTENT -> AlertNotification.KIS_PERSISTENT_FAILURE;
         };
     }
 
     private AlertNotification recoveryNotification(AlertEvent event) {
         return switch (event) {
             case QUOTE_SOURCE -> AlertNotification.QUOTE_SOURCE_RECOVERY;
-            case KIS_PERSISTENT -> AlertNotification.KIS_PERSISTENT_RECOVERY;
         };
     }
 
@@ -81,24 +79,19 @@ public class AlertService {
         return switch (event) {
             case QUOTE_SOURCE -> ":warning: chipthrone-api 시세 소스 장애: 연속 실패 "
                     + properties.consecutiveFailureThreshold() + "회";
-            case KIS_PERSISTENT -> ":warning: chipthrone-api KIS 지속 실패: 정규장 추정치 폴백 "
-                    + properties.consecutiveFailureThreshold() + "회";
         };
     }
 
     private String recoveryMessage(AlertEvent event) {
         return switch (event) {
             case QUOTE_SOURCE -> ":white_check_mark: chipthrone-api 시세 소스 복구";
-            case KIS_PERSISTENT -> ":white_check_mark: chipthrone-api KIS 복구";
         };
     }
 
     private enum AlertNotification {
         DEPLOYMENT,
         QUOTE_SOURCE_FAILURE,
-        QUOTE_SOURCE_RECOVERY,
-        KIS_PERSISTENT_FAILURE,
-        KIS_PERSISTENT_RECOVERY
+        QUOTE_SOURCE_RECOVERY
     }
 
     private static final class FailureState {

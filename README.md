@@ -1,90 +1,72 @@
 # CHIP·THRONE
 
-> 투자 조언은 드리지 못합니다. 다만 **오늘 누가 왕좌에 앉아 있는지**는 실시간으로 알려드립니다.
-
-삼성전자와 SK하이닉스의 주가·시가총액을 비교하고, 관심 있는 미국 반도체 주가를 함께 보는 실시간 대시보드입니다.
+삼성전자와 SK하이닉스의 전일 확정 시세와 24시간 해외 추정 시세를 비교하고, 관심 있는 미국 AI·반도체 종목을 함께 보는 대시보드다.
 
 🔗 https://chipthrone.com
 
-![CHIP·THRONE 삼성전자·SK하이닉스 시총 비교](docs/images/live-krx-main.png)
+## 화면 구성
 
-미국 반도체 관심 종목은 메인 비교를 방해하지 않도록 좁은 보조 사이드바에 표시한다.
+- **전일 확정 시세**: 금융위원회 주식시세정보의 종가·시가총액·기준일과 왕좌 교체 조건
+- **365일·24시간 추정 시세**: Hyperliquid 파생시장 가격을 공식 USD/KRW 고시환율로 환산
+- **미국 AI·반도체**: 반도체·M7 목록에서 최대 6개 선택, 브라우저 Local Storage에 유지
+- **괴리율**: 국내 두 종목은 공식 종가와 **같은 시점(15:30 KST)의 추정가**를 맞대어 계산. 미국 종목은 대조할 공식 종가가 없어 24시간 등락률 표시
+- **수요 기반 수집**: 사용자별 polling 없이 활성 고유 종목만 단일 polling하고 SSE로 공유
 
-![CHIP·THRONE 미국 반도체 사이드바](docs/images/live-us-sidebar.png)
+추정 가격은 실제 주식 체결가가 아니다. 모든 추정 카드에 `Hyperliquid 추정`과 괴리 기준을 표시한다.
 
-## 무엇을 보여주나
+## 데이터 소스
 
-- **국장 메인 비교** — 삼성전자·SK하이닉스의 주가·시가총액과 격차를 나란히
-- **미장 관심 종목** — 샌디스크·마이크론·브로드컴 중 최대 2개를 사이드에서 선택·저장
-- **역전까지 몇 %** — "삼성전자가 +3.1%(약 +11,130원) 오르면 왕좌 교체" + 근접도 게이지
-- **명확한 화면 우선순위** — 국장 비교가 본문, 미국 반도체 주가는 데스크톱 우측·모바일 하단 보조 영역
-- **시간대별 실제 시세** — 국장은 KIS, 미장은 Alpaca 무료 IEX 시세
-- **장 마감 후 추정 시세** — 야간·주말·공휴일엔 해외 파생(Hyperliquid)×환율로 다음 날 분위기를 미리
-- **증권사 투자의견** — 평균 목표주가, 추정기관 수, 매수/중립/매도 분포
-- **라이트 / 다크 테마**
-- **공유 수요 기반 수집** — 사용자별 polling 없이 활성 고유 종목만 수집하고 SSE fan-out
+| 데이터 | 출처 | 갱신 정책 |
+|---|---|---|
+| 삼성전자·SK하이닉스 확정 종가/시총 | 금융위원회 일별 주식시세정보 | 활성 국내 종목만 일 단위 캐시 |
+| 국내·미국 24시간 추정 가격 | Hyperliquid `metaAndAssetCtxs` | 활성 종목이 있을 때 3초마다 batch 1회 |
+| USD/KRW | 한국수출입은행 고시환율 | 일 단위 캐시 |
 
-## 시세는 시간대별로 이렇게
+KIS와 Alpaca는 사용하지 않는다. 토스증권 Open API는 이용 조건과 시세 재배포 권한을 확인한 뒤 별도 작업으로 검토한다.
 
-| 시장 | 거래 시간 | 표시 | 출처 |
-|---|---|---|---|
-| 국장 | KST 08:00~09:00, 09:00~15:30, 15:40~20:00 | 실제 시세 | KIS NXT/KRX |
-| 미장 | ET 09:30~16:00 | IEX 실시간 | Alpaca Basic |
-| 휴장·소스 장애 | 그 외 | 추정 시세 | Hyperliquid 해외 파생 × 환율 |
-
-## 로컬에서 실행하기
-
-### Docker로 한번에 (권장)
-
-도커만 있으면 한 줄로 백엔드·프론트가 함께 뜹니다.
+## 로컬 실행
 
 ```bash
 docker compose up --build
 ```
 
-- 프론트 **http://localhost:5173** · 백엔드 **http://localhost:8080**
-- 종료: `Ctrl+C` (또는 `docker compose down`)
+- 프론트: `http://localhost:5173`
+- 백엔드: `http://localhost:8080`
+- 종료: `docker compose down`
 
-### 직접 실행
-
-필요: **Java 21**, **Node 20 이상**
+직접 실행하려면 Java 21과 Node 20 이상이 필요하다.
 
 ```bash
-# 백엔드 — http://localhost:8080
 cd backend
-./gradlew bootRun           # Windows: gradlew.bat bootRun
+./gradlew bootRun
 
-# 프론트엔드 — http://localhost:5173
 cd frontend
 npm install
 npm run dev
 ```
 
-### 시세 API 키 (선택)
-
-**키가 없어도 동작**합니다 — 실거래가 대신 해외 추정 시세로 폴백. 실거래가·투자의견까지 보려면 환경변수를 주입하세요(한국투자증권 [KIS Developers](https://apiportal.koreainvestment.com) 무료 발급):
+공식 확정 데이터와 고시환율을 사용하려면 키를 환경변수로만 주입한다. 키가 없으면 UI는 Hyperliquid 추정값과 설정 환율을 사용하며 공식 확정값은 비워 둔다.
 
 ```bash
-# Docker
-KIS_APP_KEY=... KIS_APP_SECRET=... docker compose up --build
-
-# 직접 실행(백엔드)
-KIS_APP_KEY=... KIS_APP_SECRET=... ./gradlew bootRun
+PUBLIC_DATA_SERVICE_KEY=... KOREA_EXIM_AUTH_KEY=... docker compose up --build
 ```
 
-미장 IEX 시세는 [Alpaca Basic](https://docs.alpaca.markets/us/docs/about-market-data-api)의 무료 API 키를 사용한다. 키가 없거나 호출에 실패하면 Hyperliquid 추정 시세로 폴백한다.
+프론트가 다른 백엔드를 바라보게 하려면 `frontend/.env`에 `VITE_API_URL`을 지정한다.
 
-```bash
-ALPACA_API_KEY=... ALPACA_API_SECRET=... docker compose up --build
-```
+## 문서
 
-프론트가 다른 주소의 백엔드를 바라보게 하려면 `frontend/.env`에 `VITE_API_URL`을 지정하세요(기본값 `http://localhost:8080`).
+- [아키텍처](docs/01-architecture.md)
+- [데이터 소스](docs/02-data-sources.md)
+- [수요 기반 수집과 측정](docs/06-demand-driven-quotes.md)
 
-## 더 보기
+## 부분 캡처
 
-- 만든 이야기: https://yeonwoo.dev/work/chipthrone
-- 수요 기반 수집 설계와 실제 부하 결과: [docs/06-demand-driven-quotes.md](docs/06-demand-driven-quotes.md)
+- [전일 확정 시세와 왕좌 교체 조건](docs/images/official-confirmed-prices.jpg)
+- [24시간 추정 시세와 공식 고시환율](docs/images/hyperliquid-estimates-fx.jpg)
+- [미국 반도체 종목 선택](docs/images/us-watchlist-picker.jpg)
+- [M7·AI 관련 종목 목록](docs/images/us-watchlist-categories.jpg)
+- [미국 Hyperliquid 추정 카드](docs/images/us-hyperliquid-cards.jpg)
+- [Grafana 외부 API 호출률 패널](docs/images/grafana-external-api-calls-current.jpg)
+- [Grafana SSE 전달 지연 p95 패널](docs/images/grafana-sse-delivery-p95-current.jpg)
 
----
-
-투자 참고용 서비스다. Alpaca Basic은 전체 미국 거래소 통합시세가 아닌 IEX 범위이며, 추정 시세는 공식 거래소 체결가가 아니다. 본 서비스는 투자 자문이 아니다.
+본 서비스는 투자 권유나 자문이 아니다.

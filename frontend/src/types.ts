@@ -8,23 +8,31 @@ export type Company = {
   logo: string
   /** 현재가(원) — 모드에 따라 실제가 또는 추정가 */
   price: number
-  /** 등락률(%) — 추정 모드는 애프터마켓/정규장 종가 대비 */
+  /** Hyperliquid 추정가(달러) */
+  priceUsd: number
+  /** Hyperliquid 전일 기준가 대비 등락률(%) */
   changePct: number
-  /** 정규장 종가(원) — KIS 미연동 시 null */
+  /** 금융위원회 확정 종가(원) — 공공데이터 미연동 시 null */
   regularClose: number | null
-  /** 정규장 종가 기준일(yyyy-MM-dd) — KIS 미연동 시 null */
+  /** 금융위원회 확정 종가 기준일(yyyy-MM-dd) */
   regularCloseDate: string | null
-  /** NXT 애프터마켓 종가(원) — KIS 미연동 시 null */
+  /** 이전 API 호환 필드. 현재는 null */
   nxtClose: number | null
-  /** NXT 애프터마켓 종가 기준일(yyyy-MM-dd) — KIS 미연동 시 null */
+  /** 이전 API 호환 필드. 현재는 null */
   nxtCloseDate: string | null
-  /** 직전 완료 거래일 정규장 고가(원) — KIS 미연동 시 null */
+  /** 금융위원회 확정 거래일 고가(원) */
   high: number | null
   /** 상장주식수(보통주) */
   sharesOutstanding: number
+  /** 금융위원회 전일 확정 시가총액(원) */
+  officialMarketCap: number | null
+  /** 확정 종가와 같은 시점(정규장 마감)의 추정가(원) */
+  officialCloseEstimate: number | null
+  /** 확정 종가 대비 같은 시점 추정가의 괴리율(%) */
+  officialDivergencePct: number | null
   market: 'KRX' | 'US'
-  source: 'KIS' | 'ALPACA_IEX' | 'HYPERLIQUID'
-  status: 'LIVE' | 'CLOSED' | 'ESTIMATE'
+  source: 'HYPERLIQUID'
+  status: 'ESTIMATE'
 }
 
 export type MarketSnapshot = {
@@ -33,6 +41,8 @@ export type MarketSnapshot = {
   at: string
   /** USD/KRW 환율 — 추정가(달러 환산)에 사용 */
   fxRate: number
+  fxAsOfDate: string | null
+  fxSource: 'KOREA_EXIMBANK' | 'CONFIG_FALLBACK'
   stocks: Company[]
 }
 
@@ -40,49 +50,4 @@ export type SupportedAsset = {
   code: string
   name: string
   market: 'KRX' | 'US'
-}
-
-export type ConnectionState = 'connecting' | 'connected' | 'reconnecting'
-
-/** 증권사 1건의 투자의견 리포트 */
-export type OpinionReport = {
-  /** 발표일 (yyyy-MM-dd) */
-  date: string
-  /** 증권사명 */
-  broker: string
-  /** 현재 투자의견 (예: '매수') */
-  opinion: string
-  /** 직전 투자의견 */
-  prevOpinion: string
-  /** 목표가(원) — 없으면 null */
-  targetPrice: number | null
-}
-
-/** 종목 컨센서스 요약 */
-export type OpinionConsensus = {
-  /** 평균 목표가(원) — 없으면 null */
-  avgTargetPrice: number | null
-  /** 추정기관수(증권사 수) */
-  institutionCount: number
-  /** 매수계열 의견 수 */
-  buy: number
-  /** 중립 의견 수 */
-  hold: number
-  /** 매도계열 의견 수 */
-  sell: number
-  /** 컨센서스 점수 1~5 (강력매도 1 … 강력매수 5) — 없으면 null */
-  score: number | null
-}
-
-export type StockOpinion = {
-  code: string
-  name: string
-  consensus: OpinionConsensus
-  reports: OpinionReport[]
-}
-
-export type OpinionsResponse = {
-  /** 기준일 (yyyy-MM-dd) */
-  asOf: string
-  stocks: StockOpinion[]
 }

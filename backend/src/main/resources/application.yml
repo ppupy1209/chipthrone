@@ -1,35 +1,26 @@
 server:
   port: 8080
 
-kis:
-  base-url: https://openapi.koreainvestment.com:9443
-  app-key: ${KIS_APP_KEY:}
-  app-secret: ${KIS_APP_SECRET:}
-
-alpaca:
-  snapshots-url: ${ALPACA_SNAPSHOTS_URL:https://data.alpaca.markets/v2/stocks/snapshots}
-  api-key: ${ALPACA_API_KEY:}
-  api-secret: ${ALPACA_API_SECRET:}
-  feed: iex
-
 chipthrone:
   alert:
     slack-webhook-url: ${SLACK_WEBHOOK_URL:}
     consecutive-failure-threshold: 5
     cooldown-minutes: 10
+  source:
+    public-data-service-key: ${PUBLIC_DATA_SERVICE_KEY:}
+    korea-exim-auth-key: ${KOREA_EXIM_AUTH_KEY:}
   quote:
-    poll-delay-ms: 3000
     polling-enabled: true
     dex: xyz
     initial-fx-rate: 1450
     assets:
-      # KRX 기준 재검증 필요
+      # 금융위원회 일별 데이터의 상장주식수로 갱신됨. 값은 API 미연동 시 폴백.
       - code: "005930"
         name: "삼성전자"
         symbol: "xyz:SMSN"
         shares-outstanding: 5919637922
         market: KRX
-      # KRX 기준 재검증 필요
+      # 금융위원회 일별 데이터의 상장주식수로 갱신됨. 값은 API 미연동 시 폴백.
       - code: "000660"
         name: "SK하이닉스"
         symbol: "xyz:SKHX"
@@ -41,26 +32,154 @@ chipthrone:
         symbol: "xyz:SNDK"
         shares-outstanding: 148089758
         market: US
+        exchange: NAS
       # SEC 2026-06-17 발행주식수
       - code: "MU"
         name: "마이크론"
         symbol: "xyz:MU"
         shares-outstanding: 1129393151
         market: US
+        exchange: NAS
       # SEC 2026-05-29 발행주식수
       - code: "AVGO"
         name: "브로드컴"
         symbol: "xyz:AVGO"
         shares-outstanding: 4757580198
         market: US
+        exchange: NAS
+      # SEC 2026-01-30 발행주식수
+      - code: "AMD"
+        name: "AMD"
+        symbol: "xyz:AMD"
+        shares-outstanding: 1630410843
+        market: US
+        exchange: NAS
+      # ASML 2025 20-F 발행주식수
+      - code: "ASML"
+        name: "ASML"
+        symbol: "xyz:ASML"
+        shares-outstanding: 385417665
+        market: US
+        exchange: NAS
+      # SEC 2026-07-31 발행주식수
+      - code: "AAPL"
+        name: "애플"
+        symbol: "xyz:AAPL"
+        shares-outstanding: 14594180000
+        market: US
+        exchange: NAS
+      # SEC 2026-07-29 발행주식수
+      - code: "MSFT"
+        name: "마이크로소프트"
+        symbol: "xyz:MSFT"
+        shares-outstanding: 7425545491
+        market: US
+        exchange: NAS
+      # SEC 2026-07-23 Class A/B/C 합산
+      - code: "GOOGL"
+        name: "알파벳"
+        symbol: "xyz:GOOGL"
+        shares-outstanding: 12230000000
+        market: US
+        exchange: NAS
+      # SEC 2026-07-31 발행주식수
+      - code: "AMZN"
+        name: "아마존"
+        symbol: "xyz:AMZN"
+        shares-outstanding: 10786313572
+        market: US
+        exchange: NAS
+      # SEC 2026-05-20 발행주식수
+      - code: "NVDA"
+        name: "엔비디아"
+        symbol: "xyz:NVDA"
+        shares-outstanding: 24200000000
+        market: US
+        exchange: NAS
+      # SEC 2026-07-30 Class A/B 합산
+      - code: "META"
+        name: "메타"
+        symbol: "xyz:META"
+        shares-outstanding: 2547506225
+        market: US
+        exchange: NAS
+      # SEC 2026-07-23 발행주식수
+      - code: "TSLA"
+        name: "테슬라"
+        symbol: "xyz:TSLA"
+        shares-outstanding: 3949547394
+        market: US
+        exchange: NAS
+      # SEC 2026-04-27 Class A/B/F 합산
+      - code: "PLTR"
+        name: "팔란티어"
+        symbol: "xyz:PLTR"
+        shares-outstanding: 2397311977
+        market: US
+        exchange: NAS
+      # SEC 2026-05-21 10-Q 발행주식수
+      - code: "MRVL"
+        name: "마벨"
+        symbol: "xyz:MRVL"
+        shares-outstanding: 874800000
+        market: US
+        exchange: NAS
+      # SEC 2026-06-12 10-K 발행주식수
+      - code: "ORCL"
+        name: "오라클"
+        symbol: "xyz:ORCL"
+        shares-outstanding: 2880471000
+        market: US
+        exchange: NYS
+      # SEC 2026-03-31 20-F 발행주식수
+      - code: "ARM"
+        name: "ARM"
+        symbol: "xyz:ARM"
+        shares-outstanding: 1064055252
+        market: US
+        exchange: NAS
+      # SEC 2026-06-30 10-Q 발행주식수
+      - code: "NOW"
+        name: "서비스나우"
+        symbol: "xyz:NOW"
+        shares-outstanding: 1034000000
+        market: US
+        exchange: NYS
+      # SEC 2026-06-30 10-Q 발행주식수
+      - code: "GEV"
+        name: "GE버노바"
+        symbol: "xyz:GEV"
+        shares-outstanding: 266333581
+        market: US
+        exchange: NYS
+      # SEC 2025-12-31 20-F 발행주식수
+      - code: "NBIS"
+        name: "네비우스"
+        symbol: "xyz:NBIS"
+        shares-outstanding: 253016971
+        market: US
+        exchange: NAS
+      # TSMC 2025 20-F, ADR 1주 = 보통주 5주
+      - code: "TSM"
+        name: "TSMC ADR"
+        symbol: "xyz:TSM"
+        shares-outstanding: 5186504904
+        market: US
+        exchange: NYS
+      # SK hynix 2026 F-1, ADS 1주 = 보통주 0.1주
+      - code: "SKHY"
+        name: "SK하이닉스 ADR"
+        symbol: "xyz:SKHY"
+        shares-outstanding: 7288655000
+        market: US
+        exchange: NAS
   demand:
     enabled: true
     live-poll-delay-ms: 3000
-    closed-poll-delay-ms: 60000
     scheduler-tick-ms: 1000
     subscription-grace-ms: 15000
     stale-after-ms: 5000
-    max-symbols-per-connection: 4
+    max-symbols-per-connection: 8
   sse:
     heartbeat-ms: 10000
     emitter-timeout-ms: 300000

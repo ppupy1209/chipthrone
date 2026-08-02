@@ -1,11 +1,13 @@
 package dev.yeonwoo.chipthrone.quote.web;
 
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
@@ -44,6 +46,7 @@ class QuoteControllerTest {
                 .andExpect(jsonPath("$.mode").value("ESTIMATE"))
                 .andExpect(jsonPath("$.at").value("2026-06-21T05:00:00Z"))
                 .andExpect(jsonPath("$.fxRate").value(1476.8))
+                .andExpect(jsonPath("$.fxSource").value("CONFIG_FALLBACK"))
                 .andExpect(jsonPath("$.stocks[0].code").value("005930"))
                 .andExpect(jsonPath("$.stocks[0].name").value("삼성전자"))
                 .andExpect(jsonPath("$.stocks[0].priceKrw").value(356208.0))
@@ -52,6 +55,7 @@ class QuoteControllerTest {
                 .andExpect(jsonPath("$.stocks[0].changeBasis").doesNotExist())
                 .andExpect(jsonPath("$.stocks[0].sharesOutstanding").value(5_919_637_922L))
                 .andExpect(jsonPath("$.stocks[0].marketCap").value(2.108E15))
+                .andExpect(jsonPath("$.stocks[0].officialMarketCap").value(nullValue()))
                 .andExpect(jsonPath("$.stocks[0].regularClose").value(nullValue()))
                 .andExpect(jsonPath("$.stocks[0].regularCloseDate").value(nullValue()))
                 .andExpect(jsonPath("$.stocks[0].high").value(nullValue()))
@@ -68,12 +72,19 @@ class QuoteControllerTest {
     }
 
     @Test
-    void assetsReturnsSearchableSupportedSymbols() throws Exception {
+    void assetsReturnsSupportedSymbols() throws Exception {
         mockMvc.perform(get("/api/assets"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(23)))
                 .andExpect(jsonPath("$[0].code").value("005930"))
                 .andExpect(jsonPath("$[0].name").value("삼성전자"))
-                .andExpect(jsonPath("$[1].code").value("000660"));
+                .andExpect(jsonPath("$[1].code").value("000660"))
+                .andExpect(jsonPath("$[5].code").value("AMD"))
+                .andExpect(jsonPath("$[6].code").value("ASML"))
+                .andExpect(jsonPath("$[14].code").value("PLTR"))
+                .andExpect(jsonPath("$[15].code").value("MRVL"))
+                .andExpect(jsonPath("$[20].code").value("NBIS"))
+                .andExpect(jsonPath("$[22].code").value("SKHY"));
     }
 
     @Test
@@ -81,6 +92,16 @@ class QuoteControllerTest {
         mockMvc.perform(get("/api/stream"))
                 .andExpect(status().isBadRequest());
         mockMvc.perform(get("/api/stream").param("symbols", "999999"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void streamAcceptsEightSymbolsAndRejectsNine() throws Exception {
+        String eightSymbols = "005930,000660,SNDK,MU,AVGO,AAPL,MSFT,GOOGL";
+
+        mockMvc.perform(get("/api/stream").param("symbols", eightSymbols))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(get("/api/stream").param("symbols", eightSymbols + ",AMZN"))
                 .andExpect(status().isBadRequest());
     }
 

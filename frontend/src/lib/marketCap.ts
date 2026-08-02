@@ -5,6 +5,11 @@ export function marketCap(c: Company): number {
   return c.price * c.sharesOutstanding
 }
 
+export function officialMarketCap(c: Company): number {
+  if (c.officialMarketCap != null) return c.officialMarketCap
+  return (c.regularClose ?? 0) * c.sharesOutstanding
+}
+
 /** 시총을 "552.3조" 형식으로 */
 export function formatCap(cap: number): string {
   return `${(cap / 1e12).toFixed(1)}조`
@@ -21,17 +26,9 @@ export function formatPct(pct: number): string {
   return `${sign}${pct.toFixed(1)}%`
 }
 
-/** "yyyy-MM-dd" → "M/D" (null이면 빈 문자열) */
-export function formatDateMMDD(date: string | null): string {
-  if (!date) return ''
-  const parts = date.split('-')
-  if (parts.length !== 3) return ''
-  return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`
-}
-
 const KOR_DAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
 
-/** "yyyy-MM-dd" → "06/19 (금)" (null이면 빈 문자열) */
+/** "yyyy-MM-dd" → "2026-06-19 (금)" (null이면 빈 문자열) */
 export function formatDateWithDay(date: string | null): string {
   if (!date) return ''
   const parts = date.split('-')
@@ -41,45 +38,7 @@ export function formatDateWithDay(date: string | null): string {
   const day = KOR_DAYS[new Date(y, m - 1, d).getDay()]
   const mm = String(m).padStart(2, '0')
   const dd = String(d).padStart(2, '0')
-  return `${mm}/${dd} (${day})`
-}
-
-export type DisplayChange = {
-  /** 등락률(%) */
-  pct: number
-  /** 등락 금액(원) */
-  amount: number
-  /** 기준 문구 (예: "6/19 애프터마켓 종가 대비"). 기준값 없으면 '' */
-  label: string
-  /** 기준 종가가 있어 금액/문구를 표시할 수 있는지 */
-  hasBasis: boolean
-}
-
-/**
- * 등락 기준: 정규장 종가(전일 종가) 대비 — 모든 장 상황 공통.
- * 정규장 종가가 없으면 백엔드 등락률로 폴백(금액/문구 생략).
- */
-export function computeChange(company: Company): DisplayChange {
-  const close = company.regularClose
-  const date = company.regularCloseDate
-
-  if (close != null && close !== 0) {
-    const datePart = date ? `${formatDateMMDD(date)} ` : ''
-    return {
-      pct: ((company.price - close) / close) * 100,
-      amount: company.price - close,
-      label: `${datePart}정규장 종가 대비`,
-      hasBasis: true,
-    }
-  }
-  // 정규장 종가가 없으면 백엔드 등락률로 폴백, 문구/금액 생략
-  return { pct: company.changePct, amount: 0, label: '', hasBasis: false }
-}
-
-/** 등락 금액을 "+18,855원" / "-3,200원" 형식으로 */
-export function formatChangeAmount(amount: number): string {
-  const sign = amount > 0 ? '+' : amount < 0 ? '-' : ''
-  return `${sign}${Math.abs(Math.round(amount)).toLocaleString('ko-KR')}원`
+  return `${y}-${mm}-${dd} (${day})`
 }
 
 /** 원화가를 달러 환산해 "$66.91" 형식으로 */
@@ -105,27 +64,23 @@ export type Comparison = {
   reversalPrice: number
 }
 
-/** 두 회사의 시총을 비교해 1위/도전자와 역전 조건을 계산 */
-export function compare(a: Company, b: Company): Comparison {
-  const capA = marketCap(a)
-  const capB = marketCap(b)
+/** 금융위원회 확정 시가총액 기준 왕좌 교체 조건. */
+export function compareOfficial(a: Company, b: Company): Comparison | null {
+  if (!a.regularClose || !b.regularClose) return null
+  const capA = officialMarketCap(a)
+  const capB = officialMarketCap(b)
   const [leader, challenger, leaderCap, challengerCap] =
     capA >= capB ? [a, b, capA, capB] : [b, a, capB, capA]
-
-  const gap = leaderCap - challengerCap
-  const gapPct = (gap / challengerCap) * 100
-  // 도전자가 1위 시총에 도달하기 위한 가격/등락률
+  const challengerClose = challenger.regularClose!
   const reversalPrice = leaderCap / challenger.sharesOutstanding
-  const reversalPct = (reversalPrice / challenger.price - 1) * 100
-
   return {
     leader,
     challenger,
     leaderCap,
     challengerCap,
-    gap,
-    gapPct,
-    reversalPct,
+    gap: leaderCap - challengerCap,
+    gapPct: ((leaderCap - challengerCap) / challengerCap) * 100,
+    reversalPct: (reversalPrice / challengerClose - 1) * 100,
     reversalPrice,
   }
 }

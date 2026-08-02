@@ -14,13 +14,10 @@ services:
       CHIPTHRONE_LOADTEST_MARKET_MODE: ${CAPTURE_MARKET_MODE:-REGULAR}
       CHIPTHRONE_LOADTEST_US_MARKET_OPEN: ${CAPTURE_US_MARKET_OPEN:-true}
       CHIPTHRONE_SOURCE_HYPERLIQUID_URL: http://fake-quotes:19090/info
-      CHIPTHRONE_SOURCE_FX_URL: http://fake-quotes:19090/fx
-      KIS_BASE_URL: http://fake-quotes:19090
-      KIS_APP_KEY: fake-capture-key
-      KIS_APP_SECRET: fake-capture-secret
-      ALPACA_SNAPSHOTS_URL: http://fake-quotes:19090/v2/stocks/snapshots
-      ALPACA_API_KEY: fake-capture-key
-      ALPACA_API_SECRET: fake-capture-secret
+      CHIPTHRONE_SOURCE_FSC_STOCK_URL: http://fake-quotes:19090/getStockPriceInfo
+      CHIPTHRONE_SOURCE_PUBLIC_DATA_SERVICE_KEY: fake-capture-key
+      CHIPTHRONE_SOURCE_KOREA_EXIM_URL: http://fake-quotes:19090/exchangeJSON
+      CHIPTHRONE_SOURCE_KOREA_EXIM_AUTH_KEY: fake-capture-key
     depends_on:
       - fake-quotes
 

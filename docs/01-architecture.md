@@ -1,90 +1,71 @@
-# 아키텍처 설계
+# 아키텍처
 
-## 1. 시스템 개요
+## 시스템 개요
 
-chipthrone은 한·미 반도체 관심 종목의 주가·시가총액을 실시간 비교하는 단일 페이지 대시보드다. 국장은 삼성전자·SK하이닉스, 미장은 샌디스크·마이크론·브로드컴을 지원한다.
-핵심 제약은 **AWS 프리티어 1대(EC2 t3.micro)** 에서 동작해야 한다는 것. 현재 DB는 사용하지 않고 **인메모리**로만 동작한다.
+CHIP·THRONE은 DB 없이 Spring Boot 인메모리 캐시와 React Local Storage로 동작한다.
 
-```
-┌──────────────┐   SSE    ┌─────────────────────────────────┐
-│  React SPA   │◀─────────│  Spring Boot (EC2 t3.micro)     │
-│  (Vercel)    │  HTTP    │  ├ 수요 기반 단일 폴링 워커      │
-└──────────────┘─────────▶│  ├ 인메모리 캐시(AtomicReference)│
-                          │  ├ SSE Emitter (fan-out)        │
-                          │  └ 마지막값 폴백(try/catch)      │
-                          └──────────────┬──────────────────┘
-                                         │
-                                ┌────────▼───────────────┐
-                                │ 외부 데이터 소스        │
-                                │ KIS / Alpaca / Hyper / FX │
-                                └────────────────────────┘
-```
-
-> 현재 RDS/Caffeine/Resilience4j는 사용하지 않는다. 영속화(과거 시총·역전 기록) 도입 시 RDS(MySQL) 추가 예정.
-
-## 2. 시장 모드 & 거래 시간 (KST)
-
-`MarketModeService`가 현재 시각(Asia/Seoul) + 주말/공휴일로 모드를 판별한다.
-
-| 시간대 | 모드 | 소스 | 표시 |
-|---|---|---|---|
-| 08:00 ~ 09:00 | PREMARKET | KIS(시간외) / 추정 | 프리마켓 |
-| 09:00 ~ 15:30 | REGULAR | KIS 실시세 | 정규장 |
-| 15:40 ~ 20:00 | NXT | KIS NXT(애프터마켓) | 애프터마켓 |
-| 그 외 · 주말 · 공휴일 | ESTIMATE | Hyperliquid perp × 환율 | 추정 |
-
-미장은 별도로 뉴욕시간 평일 09:30~16:00을 판정해 Alpaca IEX snapshot을 사용한다. 미국 휴장일 캘린더는 아직 반영하지 않아 운영 보완 항목이다.
-
-공휴일은 `MarketModeService` 내 정적 집합(2026년치)으로 관리한다(음력 공휴일은 매년 갱신 필요). 자세한 데이터 소스는 [02-data-sources.md](02-data-sources.md).
-
-## 3. 핵심 과제: 활성 종목 수만큼 수집하고 fan-out
-
-문제: 유저 요청마다 외부 API를 호출하면 (1) 무료 쿼터 소진 (2) 응답 지연 (3) 장애 전파.
-
-해결:
-1. 연결별 관심 종목을 공유 subscriber count로 합쳐 **활성 고유 종목 집합**을 만든다.
-2. 단일 `@Scheduled` 워커가 활성 종목만 폴링한다. 구독자가 없으면 quote collection은 멈춘다.
-3. KIS는 활성 국장 고유 종목별 주기당 1회, Alpaca는 활성 미장 종목을 주기당 batch 1회 조회한다. Hyperliquid는 실제 소스 미연동·누락 때 batch 1회 폴백한다.
-4. 최신 종목별 스냅샷을 인메모리에 저장하고 연결별 관심 종목으로 필터링해 fan-out 한다.
-5. 외부 API 실패 시 예외 전파 없이 마지막 성공 스냅샷/값을 유지한다.
-
-추가로 KIS **종가**는 확정 불변값이므로 1회 성공 후 캐시 고정하고, 거래일이 바뀔 때만 재조회한다(호출 최소화).
-
-→ 외부 KIS 현재가 호출량은 사용자 수 × 관심 종목 수가 아니라 활성 고유 종목 수에 비례한다. 자세한 구현·측정은 [06-demand-driven-quotes.md](06-demand-driven-quotes.md).
-
-## 4. 데이터 모델 (현재 인메모리)
-
-DB는 사용하지 않는다. 종목 마스터(코드·이름·상장주식수)는 설정(`QuoteProperties`)으로, 시세·종가·투자의견 캐시는 인메모리(AtomicReference / ConcurrentHashMap)로 보관한다.
-
-영속화 도입 시(과거 시총 추이·역전 기록 등) 운영 관행대로 **외래키·JPA 연관관계 미사용**(ID 참조, 애플리케이션 레벨 조인) 원칙을 따른다.
-
-`StockQuote` 응답에는 가격·시총 외에 `market`, `source`, `status`가 포함돼 KRX/US, KIS/ALPACA_IEX/HYPERLIQUID, LIVE/CLOSED/ESTIMATE를 구분한다.
-
-## 5. 시가총액 & 역전 계산
-
-```
-시가총액 = 현재가 × 상장주식수
-격차(%)  = (1위 시총 − 2위 시총) / 2위 시총 × 100
-역전 임계 등락률 = (1위 시총 / 2위 상장주식수 / 2위 현재가 − 1) × 100
+```text
+React SPA
+  ├─ GET /api/assets
+  └─ GET /api/stream?symbols=...
+          │ SSE
+Spring Boot
+  ├─ 연결별 구독 Set
+  ├─ 종목별 공유 subscriber count
+  ├─ 단일 수요 기반 polling worker
+  ├─ 종목별 최신값/일별 공식값 인메모리 캐시
+  └─ 연결별 필터링 SSE fan-out
+          │
+          ├─ 금융위원회 일별 주식시세정보
+          ├─ 한국수출입은행 USD/KRW 고시환율
+          └─ Hyperliquid 공개 info API
 ```
 
-상장주식수는 자주 바뀌지 않으므로 설정값으로 보관한다(재검증 필요).
+KIS와 Alpaca 코드·설정·토큰 처리는 제거했다. 현재 모든 장중 추정 가격의 source/status는 `HYPERLIQUID`/`ESTIMATE`다.
 
-## 6. API 엔드포인트
+## 구독과 수집
 
-| 엔드포인트 | 설명 |
-|---|---|
-| `GET /api/health` | 헬스체크 |
-| `GET /api/assets` | 검색 가능한 지원 종목 |
-| `GET /api/quotes?symbols=...` | 선택 종목 최신 스냅샷(JSON) 1회 |
-| `GET /api/stream?symbols=...` | 선택 종목 SSE(`text/event-stream`) |
-| `GET /api/opinions` | 증권사 투자의견 컨센서스(KIS 종목투자의견) |
+1. 백엔드가 연결당 최대 8개 코드를 지원 목록으로 검증한다.
+2. 동일 종목을 여러 연결이 요청해도 공유 subscriber count와 활성 종목 집합에는 한 번만 들어간다.
+3. 단일 scheduler가 활성 종목이 있을 때만 3초마다 `metaAndAssetCtxs`를 한 번 호출한다.
+4. Hyperliquid 응답 한 건에서 활성 종목만 추려 스냅샷을 만들고, 연결별 관심 종목으로 다시 필터링해 fan-out 한다.
+5. completion/error/timeout/send 실패 정리는 idempotent하다. 마지막 구독 종료 후 15초 grace가 지나면 종목을 제거한다.
+6. 활성 종목이 0이면 시세 수집만 멈춘다. Health Check와 외부 liveness는 계속 동작한다.
 
-응답 형식 상세는 [04-api.md](04-api.md).
+Hyperliquid는 일괄 API이므로 한 polling cycle의 호출 수는 사용자 수와 선택 종목 수에 관계없이 1회다. 금융위원회는 종목별 API지만 활성 국내 종목만 일 단위로 조회하며 현재 상한은 삼성전자·SK하이닉스 2개다.
 
-## 7. 배포 (CI/CD)
+## 캐시와 장애 폴백
 
-1. `main` 머지 시 GitHub Actions가 백엔드 Docker 이미지를 빌드해 **GHCR**에 푸시.
-2. EC2의 **watchtower**가 60초 주기로 새 이미지를 감지해 자동 pull·재시작(SSH 인바운드 불필요).
-3. 프론트엔드는 Vercel GitHub 연동으로 자동 배포.
-4. Nginx 리버스 프록시 + Let's Encrypt(certbot) SSL. 자세한 절차는 [03-deploy.md](03-deploy.md).
+- Hyperliquid 실패: 마지막 성공 종목 스냅샷 유지, 연속 장애/복구 상태 전이만 Slack 알림
+- 금융위원회: 성공값을 일 단위 캐시. 오전 조회 후 당일 발표 시각(13:05 KST)이 지나면 한 번 더 조회
+- 한국수출입은행: 성공값을 일 단위 캐시. 오전 조회 후 11:05 KST가 지나면 한 번 더 조회
+- 공식 소스 실패: 10분 후 재시도하며 마지막 성공값 또는 설정 환율 유지
+- 서버 재시작: 인메모리 캐시는 초기화되지만 브라우저 관심 종목은 Local Storage에 남음
+
+## 시가총액과 괴리
+
+```text
+공식 시가총액 = 금융위원회 mrktTotAmt
+추정 시가총액 = Hyperliquid markPx × USD/KRW × 상장주식수
+국내 괴리율 = (마감 시점 추정 원화가 / 같은 날 공식 종가 - 1) × 100
+미국 등락률 = (markPx / prevDayPx - 1) × 100
+```
+
+국내 괴리율은 **같은 시점의 두 값**만 비교한다. 현재가와 전일 종가를 맞대면 그 사이 등락이
+섞여 추정 오차를 잴 수 없기 때문에, 공식 종가 기준일의 정규장 마감(15:30 KST)에 마감된
+Hyperliquid 15분 캔들(`candleSnapshot`)과 그날 한국수출입은행 고시환율을 써서 계산한다.
+공식 종가 기준일이 바뀔 때만 다시 계산하고, 실패하면 30분 뒤 재시도하며 직전 값을 유지한다.
+
+미국 종목은 대조할 공식 종가가 없으므로 괴리율이 아니라 24시간 등락률을 표시한다.
+
+왕좌 교체 문장과 1·2위 비교 막대는 금융위원회 공식 종가·시가총액만 사용한다. 막대는 두 종목
+합계 대비 점유율로 그리며 가운데 50% 선이 역전선이다.
+
+## 배포
+
+- 프론트: Vercel
+- 백엔드: 기존 EC2 Docker 컨테이너
+- 이미지: GitHub Actions → GHCR, 기존 Watchtower 자동 반영
+- DNS/CDN: Cloudflare
+
+실제 AWS 변경이나 새 유료 리소스 생성은 별도 승인 없이는 수행하지 않는다.

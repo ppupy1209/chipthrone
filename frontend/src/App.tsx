@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Header } from './components/Header'
-import { CompanyCard } from './components/CompanyCard'
-import { MarketCapBar } from './components/MarketCapBar'
+import {
+  EstimateCompanyCard,
+  OfficialCompanyCard,
+  OfficialDate,
+  UsCompanyCard,
+} from './components/CompanyCard'
 import { ReversalCalculator } from './components/ReversalCalculator'
-import { InvestmentOpinion } from './components/InvestmentOpinion'
 import { WatchlistPicker } from './components/WatchlistPicker'
-import { ConnectionStatus } from './components/ConnectionStatus'
 import { useMarketData } from './hooks/useMarketData'
 import { useSupportedAssets } from './hooks/useSupportedAssets'
-import { compare, marketCap } from './lib/marketCap'
+import { compareOfficial, officialMarketCap } from './lib/marketCap'
 import { fallbackAssets } from './data/mockMarket'
 import { MAX_WATCHLIST, MIN_WATCHLIST, normalizeWatchlist } from './lib/watchlist.js'
 
@@ -34,19 +36,19 @@ function App() {
   )
   useEffect(() => localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols)), [symbols])
 
-  const { snapshot, connection, hasReceived } = useMarketData(symbols)
+  const { snapshot } = useMarketData(symbols)
   const companies = useMemo(
     () => symbols.map((code) => snapshot.stocks.find((stock) => stock.code === code)).filter((stock): stock is NonNullable<typeof stock> => !!stock),
     [snapshot.stocks, symbols],
   )
   const krxCompanies = companies.filter((company) => company.market === 'KRX')
   const usCompanies = companies.filter((company) => company.market === 'US')
-  const krxRanked = useMemo(() => [...krxCompanies].sort((a, b) => marketCap(b) - marketCap(a)), [krxCompanies])
-  const comparison = krxRanked.length >= 2 ? compare(krxRanked[0], krxRanked[1]) : null
-  const fallbackEstimate = snapshot.mode !== 'ESTIMATE'
-    && krxCompanies.length > 0
-    && krxCompanies.every((company) => company.source === 'HYPERLIQUID')
-  const displayMode = fallbackEstimate ? 'ESTIMATE' : snapshot.mode
+  const krxRanked = useMemo(
+    () => [...krxCompanies].sort((a, b) => officialMarketCap(b) - officialMarketCap(a)),
+    [krxCompanies],
+  )
+  const comparison = krxRanked.length >= 2 ? compareOfficial(krxRanked[0], krxRanked[1]) : null
+  const officialDate = krxCompanies.map((company) => company.regularCloseDate).find(Boolean) ?? null
 
   const add = (code: string) =>
     setStoredSymbols((current) =>
@@ -62,91 +64,85 @@ function App() {
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 sm:py-8">
-        <Header mode={displayMode} statuses={companies.map((company) => company.status)} />
-        <ConnectionStatus state={connection} updatedAt={snapshot.at} hasReceived={hasReceived} />
+        <Header />
 
-        {fallbackEstimate && (
-          <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-            <span aria-hidden>ⓘ</span>
-            <span>KIS 미연동 — 해외 거래소(Hyperliquid) 추정 시세로 표시 중입니다.</span>
+        <section data-testid="official-krx" className="mt-5">
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-[14px] font-medium">전일 확정 시세</h2>
+              <p className="mt-0.5 text-[10px] text-neutral-400">금융위원회 주식시세정보</p>
+            </div>
+            <span className="text-[11px] tabular-nums text-neutral-500">
+              <OfficialDate date={officialDate} />
+            </span>
           </div>
-        )}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {krxCompanies.map((company) => (
+              <OfficialCompanyCard
+                key={company.code}
+                company={company}
+                isLeader={krxRanked[0]?.code === company.code && officialMarketCap(company) > 0}
+              />
+            ))}
+          </div>
+          {comparison && <div className="mt-3"><ReversalCalculator cmp={comparison} /></div>}
+        </section>
 
-        <WatchlistPicker
-          assets={assets}
-          selected={symbols}
-          fixed={CORE_SYMBOLS}
-          onAdd={add}
-          onRemove={remove}
-        />
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start">
-          <section data-testid="krx-main">
-            <div className="mb-2 flex items-end justify-between gap-3">
-              <div>
-                <h2 className="text-[13px] font-medium">국장 메인</h2>
-                <p className="mt-0.5 text-[10px] text-neutral-400">삼성전자 · SK하이닉스 왕좌 비교</p>
+        <section data-testid="estimate-krx" className="mt-7">
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-[14px] font-medium">해외 추정 시세</h2>
+              <p className="mt-0.5 text-[10px] text-neutral-400">Hyperliquid 파생시장 추정값</p>
+            </div>
+            <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-right dark:border-neutral-800 dark:bg-neutral-900">
+              <div className="text-[12px] font-medium tabular-nums">USD/KRW {snapshot.fxRate.toLocaleString('ko-KR')}</div>
+              <div className="mt-0.5 text-[9px] text-neutral-400">
+                {snapshot.fxSource === 'KOREA_EXIMBANK'
+                  ? `한국수출입은행 고시 · ${snapshot.fxAsOfDate ?? ''}`
+                  : '공식 환율 연결 대기 · 설정 기준값'}
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {krxCompanies.map((company) => (
-                <CompanyCard
-                  key={company.code}
-                  company={company}
-                  isLeader={krxRanked[0]?.code === company.code}
-                  mode={displayMode}
-                  fxRate={snapshot.fxRate}
-                />
-              ))}
-            </div>
-            {krxCompanies.length > 0 && (
-              <div className="mt-3">
-                <MarketCapBar companies={krxCompanies} />
-              </div>
-            )}
-            {comparison && (
-              <div className="mt-3">
-                <ReversalCalculator cmp={comparison} />
-              </div>
-            )}
-            <InvestmentOpinion symbols={krxCompanies.map((company) => company.code)} />
-          </section>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {krxCompanies.map((company) => (
+              <EstimateCompanyCard key={company.code} company={company} fxRate={snapshot.fxRate} />
+            ))}
+          </div>
+        </section>
 
-          <aside data-testid="us-sidebar" className="rounded-xl border border-neutral-200 bg-neutral-100/60 p-2.5 dark:border-neutral-800 dark:bg-neutral-900/40">
-            <div className="mb-2 px-0.5">
-              <h2 className="text-[13px] font-medium">미장 반도체</h2>
-              <p className="mt-0.5 text-[10px] text-neutral-400">관심 종목 · Alpaca IEX</p>
+        <section data-testid="us-watchlist" className="mt-7">
+          <WatchlistPicker
+            assets={assets}
+            selected={symbols}
+            fixed={CORE_SYMBOLS}
+            onAdd={add}
+            onRemove={remove}
+          />
+          <div className="mt-4">
+            <div className="mb-2">
+              <h2 className="text-[14px] font-medium">미국 AI·반도체</h2>
+              <p className="mt-0.5 text-[10px] text-neutral-400">Hyperliquid 파생시장 추정값</p>
             </div>
             {usCompanies.length > 0 ? (
-              <div className="space-y-2">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {usCompanies.map((company) => (
-                  <CompanyCard
-                    key={company.code}
-                    company={company}
-                    isLeader={false}
-                    mode={displayMode}
-                    fxRate={snapshot.fxRate}
-                    compact
-                  />
+                  <UsCompanyCard key={company.code} company={company} />
                 ))}
               </div>
             ) : (
-              <p className="rounded-lg border border-dashed border-neutral-300 px-3 py-6 text-center text-[11px] text-neutral-400 dark:border-neutral-700">
-                관심 종목에서 미장 종목을 추가하세요.
-              </p>
+              <div className="rounded-xl border border-dashed border-neutral-200 px-4 py-6 text-center text-[11px] text-neutral-400 dark:border-neutral-800">
+                위 목록에서 관심 종목을 추가하세요.
+              </div>
             )}
-          </aside>
-        </div>
+          </div>
+        </section>
 
         <footer className="mt-8 border-t border-neutral-200 pt-4 text-[11px] leading-relaxed text-neutral-400 dark:border-neutral-800">
           <p className="mb-1 font-medium text-neutral-500">면책조항</p>
           <p>
-            본 사이트는 재미와 학습 목적으로 만든 비상업 프로젝트입니다. 국장은 KIS,
-            미장은 Alpaca IEX 범위의 시세를 사용하며 전체 미국 거래소 통합시세가 아닙니다.
-            소스 미연동·장애 시에는 Hyperliquid와 환율로 산출한 <span className="text-neutral-500">추정치</span>를
-            표시합니다. 시세는 지연·오차가 있을 수 있습니다. 본 정보는 <span className="text-neutral-500">투자
-            권유나 자문이 아니며</span>, 모든 투자 판단과 그 결과의 책임은 이용자 본인에게
-            있습니다.
+            국내 확정값은 금융위원회 일별 주식시세정보, 환율은 한국수출입은행 고시환율을 사용합니다.
+            24시간 가격은 실제 주식 체결가가 아닌 Hyperliquid 파생시장의 추정값이며 지연·괴리가 있을 수 있습니다.
+            본 정보는 투자 권유나 자문이 아닙니다.
           </p>
         </footer>
       </div>

@@ -132,16 +132,14 @@ sudo docker logs --tail 100 chipthrone-api
 sudo certbot --nginx -d api.chipthrone.com
 ```
 
-## 7. KIS·Alpaca 키 주입
+## 7. 공식 데이터 키 주입
 
-KIS와 Alpaca KEY/SECRET은 **시크릿**이므로 레포·이미지에 넣지 않고 EC2 환경변수로 주입한다.
+공공데이터포털과 한국수출입은행 인증키는 **시크릿**이므로 레포·이미지에 넣지 않고 EC2 환경변수로 주입한다. KIS·Alpaca 키는 더 이상 사용하지 않는다.
 
 1. EC2에서 env 파일 생성 (`~/chipthrone.env`):
    ```
-   KIS_APP_KEY=실전_APP_KEY
-   KIS_APP_SECRET=실전_APP_SECRET
-   ALPACA_API_KEY=ALPACA_KEY
-   ALPACA_API_SECRET=ALPACA_SECRET
+   PUBLIC_DATA_SERVICE_KEY=공공데이터포털_DECODING_인증키
+   KOREA_EXIM_AUTH_KEY=한국수출입은행_인증키
    ```
 2. 컨테이너를 env 파일로 재실행:
    ```bash
@@ -151,5 +149,6 @@ KIS와 Alpaca KEY/SECRET은 **시크릿**이므로 레포·이미지에 넣지 �
      --env-file ~/chipthrone.env ghcr.io/ppupy1209/chipthrone-api:latest
    ```
    - watchtower가 이후 업데이트 시 이 환경변수를 그대로 유지한다.
-   - KIS 키가 비면 국장, Alpaca 키가 비면 미장 시세가 Hyperliquid 추정으로 폴백한다.
-3. 확인: `/api/quotes?symbols=005930,SNDK`의 `source`가 각각 `KIS`, `ALPACA_IEX`면 연동 성공이다. 장 상태에 따라 `status`는 `LIVE` 또는 `CLOSED`다.
+   - 키가 비면 Hyperliquid 추정 시세는 계속 동작한다.
+   - 공공데이터 키가 비면 국내 확정 종가·시총이 비어 있고, 환율 키가 비면 설정 기준 환율을 표시한다.
+3. 확인: `/api/quotes?symbols=005930,SNDK`에서 `source=HYPERLIQUID`, 국내 종목의 `regularClose/officialMarketCap`, `fxSource=KOREA_EXIMBANK`를 확인한다.

@@ -63,7 +63,7 @@ sudo nginx -t && sudo systemctl reload nginx
 echo "==> 컨테이너 최초 실행 시도 ($IMAGE)"
 # GHCR 패키지가 private면 먼저 로그인 필요:
 #   echo <GitHub PAT(read:packages)> | docker login ghcr.io -u ${OWNER} --password-stdin
-# 시크릿(KIS 키 등)은 env 파일로 주입한다. 있으면 --env-file 로 전달.
+# 시크릿(공공데이터·환율·Slack 키)은 env 파일로 주입한다. 있으면 --env-file 로 전달.
 ENV_FILE="$HOME/chipthrone.env"
 ENV_OPT=""
 if [ -f "$ENV_FILE" ]; then

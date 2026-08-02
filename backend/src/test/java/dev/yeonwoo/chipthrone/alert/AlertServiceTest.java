@@ -36,14 +36,14 @@ class AlertServiceTest {
         CapturingSlackNotifier notifier = new CapturingSlackNotifier();
         AlertService service = newService(notifier, clock, 2, 10);
 
-        service.recordFailure(AlertEvent.KIS_PERSISTENT);
-        service.recordFailure(AlertEvent.KIS_PERSISTENT);
-        service.recordSuccess(AlertEvent.KIS_PERSISTENT);
-        service.recordSuccess(AlertEvent.KIS_PERSISTENT);
+        service.recordFailure(AlertEvent.QUOTE_SOURCE);
+        service.recordFailure(AlertEvent.QUOTE_SOURCE);
+        service.recordSuccess(AlertEvent.QUOTE_SOURCE);
+        service.recordSuccess(AlertEvent.QUOTE_SOURCE);
 
         assertThat(notifier.messages).hasSize(2);
-        assertThat(notifier.messages.get(0)).contains("KIS 지속 실패");
-        assertThat(notifier.messages.get(1)).contains("KIS 복구");
+        assertThat(notifier.messages.get(0)).contains("시세 소스 장애");
+        assertThat(notifier.messages.get(1)).contains("시세 소스 복구");
     }
 
     @Test
