@@ -1,0 +1,85 @@
+{
+  "measuredAt": "2026-08-02",
+  "target": "https://api.chipthrone.com",
+  "environment": {
+    "existingEc2Only": true,
+    "newAwsResources": false,
+    "symbols": ["SNDK", "MU"],
+    "marketState": "closed",
+    "quoteSource": "hyperliquid fallback batch",
+    "durationSeconds": 12,
+    "artificialLatency": false
+  },
+  "beforeDeploymentIdleSnapshot": {
+    "vCpu": 2,
+    "hostMemoryMiB": 916,
+    "containerCpuPercent": 1.40,
+    "containerMemoryMiB": 231.3,
+    "sampleType": "single docker stats snapshot"
+  },
+  "afterDeploymentIdleSample": {
+    "sampleWindowSeconds": 10,
+    "containerCpuPercent": 1.02,
+    "containerMemoryMiBMean": 275.07,
+    "sseConnections": 0,
+    "activeUniqueSymbols": 0,
+    "sampleType": "cgroup counter and three memory samples after 400-client cleanup"
+  },
+  "scenarios": [
+    {
+      "usersRequested": 200,
+      "connectionsMax": 200,
+      "activeUniqueSymbolsMax": 2,
+      "connectionErrorRate": 0.0,
+      "eventsReceived": 367,
+      "deliveryLatencyP95Ms": null,
+      "processCpuPercent": 2.85,
+      "jvmMemoryMiBMean": 149.00,
+      "jvmMemoryMiBMax": 153.19,
+      "openFilesMax": 220,
+      "calls": {"kis": 0, "alpaca": 0, "hyperliquid": 1},
+      "finalCleanup": {"connections": 0, "activeSymbols": 0, "orphanEmitters": 0}
+    },
+    {
+      "measuredAt": "2026-08-02T04:54:02.217987Z",
+      "usersRequested": 400,
+      "connectionsMax": 400,
+      "activeUniqueSymbolsMax": 2,
+      "connectionErrorRate": 0.0,
+      "eventsReceived": 400,
+      "deliveryLatencyP95Ms": 849.65,
+      "processCpuPercent": 7.48,
+      "containerCpuPercent": 7.49,
+      "jvmMemoryMiBMean": 147.81,
+      "jvmMemoryMiBMax": 152.99,
+      "containerMemoryMiBMean": 268.23,
+      "containerMemoryMiBMax": 273.52,
+      "openFilesMax": 421,
+      "calls": {"kis": 0, "alpaca": 0, "hyperliquid": 1},
+      "finalCleanup": {"connections": 0, "activeSymbols": 0, "orphanEmitters": 0}
+    },
+    {
+      "usersRequested": 600,
+      "connectionsMax": 600,
+      "activeUniqueSymbolsMax": 2,
+      "connectionErrorRate": 0.0,
+      "eventsReceived": 1037,
+      "deliveryLatencyP95Ms": 222.80,
+      "processCpuPercent": 4.00,
+      "jvmMemoryMiBMean": 178.20,
+      "jvmMemoryMiBMax": 182.98,
+      "openFilesMax": 620,
+      "calls": {"kis": 0, "alpaca": 0, "hyperliquid": 1},
+      "finalCleanup": {"connections": 0, "activeSymbols": 0, "orphanEmitters": 0}
+    }
+  ],
+  "claims": {
+    "verifiedCurrentConnectionCapacityLowerBound": 600,
+    "absoluteMaximumMeasured": false,
+    "beforeMaximumMeasured": false,
+    "maximumConnectionIncrease": null,
+    "fixedMonthlyAwsSavingsKrw": 0,
+    "containerCpuIdleChangePercent": -27.0,
+    "containerMemoryIdleChangePercent": 18.9
+  }
+}

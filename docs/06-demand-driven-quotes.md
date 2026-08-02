@@ -72,6 +72,8 @@ GET /api/stream?symbols=005930,000660
 | `chipthrone_quote_collection_duration_seconds` | 시세 수집 시간 |
 | `chipthrone_quote_delivery_latency_seconds` | snapshot 시각부터 SSE send까지 지연 |
 | `chipthrone_sse_orphan_emitters` | closed 상태인데 broadcaster에 남은 Emitter |
+| `chipthrone_container_cpu_usage_seconds` | cgroup 컨테이너 CPU 누적 사용 시간 |
+| `chipthrone_container_memory_current_bytes` | cgroup 컨테이너 현재 메모리 |
 
 사용자 ID, 연결 ID, 임의 입력값은 태그에 넣지 않았다. `symbol` 태그도 서버 설정의 유한한 지원 목록에 대해서만 시작 시 등록한다. 지원 목록이 수천 개로 커지면 종목별 gauge를 제거하고 상위 집계/로그로 바꿔야 한다.
 
@@ -105,9 +107,9 @@ KIS 호출 제한을 건드리지 않도록 `loadtest/fake_quote_server.py`가 K
 
 고정 20종목 대비 활성 2종목은 KIS 현재가 호출 90%, 로컬 JVM CPU 평균 67.2%가 감소했다. RSS는 1.3%, 전달 p95는 17.2% 낮았다. 전원 종료 테스트는 400개 symbol subscription을 정리했고, 15초 grace 뒤 활성 종목 0, 불필요한 호출 0을 측정했다. 미장 시나리오는 200개 연결이 같은 2종목을 구독해도 polling 5회에 Alpaca batch 5회만 발생했다. 원본 수치는 [load-test-results.json](load-test-results.json)에 있다.
 
-## 6. EC2 읽기 전용 표본과 비용 표현 범위
+## 6. 운영 EC2 배포·SSE 검증과 비용 표현 범위
 
-2026-08-02 10:34 KST에 운영 EC2를 한 번 읽기 전용으로 확인했다.
+2026-08-02 10:34 KST에 배포 전 운영 EC2를 한 번 읽기 전용으로 확인했다.
 
 - 2 vCPU, 메모리 916 MiB, swap 없음
 - 호스트 메모리 used 400 MiB, available 378 MiB
@@ -116,21 +118,42 @@ KIS 호출 제한을 건드리지 않도록 `loadtest/fake_quote_server.py`가 K
 - `vmstat` 표본 CPU idle 98–100%, 8080 established connection 1
 - `/api/health`는 `UP`
 
-승인 없이 운영 배포를 하지 않았으므로 개선 후 EC2 수치와 최대 연결 수는 아직 없다. 한 시점 표본을 전후 비교처럼 사용하지 않는다. 고정 EC2 요금도 변하지 않았으므로 “AWS 비용 절감”이나 월 절감률은 주장하지 않는다.
+사용자 승인 후 기존 `main` 배포 경로만 사용했다. GitHub Actions가 기존 GHCR 이미지에 push했고, 기존 EC2 Watchtower가 교체했다. 새 EC2, 로드 밸런서, 데이터베이스, 유료 모니터링은 만들지 않았다. 배포 뒤 `/api/health=UP`, `/api/assets` 5종목, Prometheus cgroup 지표 노출을 확인했다.
 
-현재 주장 가능한 범위는 불필요한 외부 API 호출 감소, 로컬 부하에서 확인한 서버 CPU 감소, 동일 인스턴스의 연결 수용 여력 증가 가능성, 트래픽 증가 시 조기 scale-out 비용 회피다. 실제 EC2 전후 수치와 수용 가능한 최대 연결 수는 승인 후 동일 이미지·동일 트래픽으로 배포 전후 반복 측정해야 한다.
+실제 KIS 대신 운영 서버가 장 마감 미국 종목 `SNDK,MU`를 Hyperliquid batch로 한 번 갱신하도록 모든 연결이 같은 두 종목을 구독했다. 연결은 로컬 표준 라이브러리 SSE 클라이언트에서 열었고, 연결 생성 뒤 12초 동안 측정했다.
+
+| 운영 EC2 시나리오 | 최대 SSE | 활성 고유 종목 | 오류율 | 외부 호출 | CPU | 메모리 | 전달 p95 |
+|---|---:|---:|---:|---|---:|---:|---:|
+| 200개 연결 | 200 | 2 | 0% | KIS 0, Hyper 1 | JVM process 2.85% | JVM 평균 149.00 MiB | 초기 event 제외로 미산출 |
+| 400개 연결·cgroup 계측 | 400 | 2 | 0% | KIS 0, Hyper 1 | container 7.49% | container 평균 268.23 MiB | 849.65 ms |
+| 600개 연결 | 600 | 2 | 0% | KIS 0, Hyper 1 | JVM process 4.00% | JVM 평균 178.20 MiB | 222.80 ms |
+
+600개까지 실패가 없었으므로 현재 수용량은 **최소 600 SSE 연결**이다. 포화·실패점까지 올리지 않아 절대 최대치는 아니다. 개선 전 최대 연결 수도 측정하지 않았으므로 “최대 연결 수 증가량”은 산출할 수 없다. 이를 만들려면 이전 이미지를 운영에 되돌리거나 같은 사양의 추가 인스턴스가 필요해 이번 무중단·무비용 범위에서 제외했다.
+
+400개 종료 뒤 heartbeat cleanup과 15초 grace가 지난 시점에 SSE 연결 0, 활성 종목 0, 구독 활성 종목 0, orphan Emitter 0을 확인했다. 구독자가 없을 때 추가 KIS·Hyperliquid 호출도 없었다. 원본 결과는 [ec2-load-test-results.json](ec2-load-test-results.json)에 있다.
+
+배포 전 idle Docker 표본은 CPU 1.40%, 메모리 231.3 MiB였다. 배포 후 400개 연결을 정리한 10초 cgroup 표본은 CPU 1.02%, 메모리 평균 275.07 MiB였다. CPU는 27.0% 낮았지만 서로 다른 짧은 관측창이므로 추세 참고값이다. 메모리는 18.9% 높아 **메모리 감소를 주장할 수 없다**. 새 컨테이너 기동 직후 214.70 MiB도 관측됐지만 cold/warm 상태가 달라 감소율 근거에서 제외했다.
+
+고정 EC2 사양과 요금은 바뀌지 않았으므로 확인 가능한 월 AWS 비용 절감액은 **0원**이다. 새 유료 리소스는 생성하지 않았고, 짧은 테스트는 기존 인스턴스에서 수행했다. AWS Billing/크레딧에는 접근하지 못했으므로 최종 청구 여부는 콘솔에서 확인해야 한다. 주장 가능한 효과는 다음뿐이다.
+
+- 사용자 수와 무관하게 Hyperliquid batch가 polling당 1회인 구조 확인
+- 활성 고유 종목에 비례하는 KIS 호출 구조와 구독자 0일 때 불필요한 호출 0
+- 현 EC2에서 최소 600개 SSE 연결 수용 확인
+- 트래픽 증가에 따른 조기 scale-out 비용 회피 가능성
 
 ## 7. 검증과 남은 한계
 
 완료한 검증:
 
-- 백엔드 `./gradlew clean test bootJar`: 성공. 53개 테스트에 구독 concurrency/중복 close/grace cleanup, polling, KIS·Alpaca·Hyperliquid fallback, Slack 상태 전이가 포함된다.
+- 백엔드 `./gradlew clean test bootJar`: 성공. 55개 테스트에 구독 concurrency/중복 close/grace cleanup, polling, KIS·Alpaca·Hyperliquid fallback, Slack 상태 전이, cgroup v1/v2 계측이 포함된다.
 - 프론트 `npm test`, `npm run lint`, `npm run build`: 성공.
 - Docker capture stack 5개 서비스: backend healthy, frontend, fake quotes, Prometheus, Grafana 실행 확인.
 - 실제 브라우저: Local Storage 선택 유지, live/estimate 상태, 마지막 갱신, backend 중단 시 `재연결 중`, 재기동 뒤 `SSE 연결됨` 복구 확인.
 - 미지원 종목 `/api/stream?symbols=999999`: HTTP 400.
 - Prometheus: SSE 연결 1, orphan Emitter 0 확인.
 - Fake 부하 일곱 시나리오: 최대 SSE 200개, 오류율 0%, polling 실패 0.
+- GitHub CI 백엔드·프론트·복구 스크립트: 성공.
+- 운영 EC2: 최대 600 SSE 연결, 연결 오류 0%, KIS 호출 0, 종료 후 SSE/활성 종목/orphan Emitter 0.
 
 남은 한계:
 
@@ -139,7 +162,7 @@ KIS 호출 제한을 건드리지 않도록 `loadtest/fake_quote_server.py`가 K
 - Hyperliquid는 원천 특성상 batch 1회가 필요해 KIS처럼 활성 종목 수와 정확히 비례하지 않는다.
 - 공휴일은 정적 목록이고 종가의 최근 거래일 계산은 주말 중심이라 연도별 거래일 캘린더가 필요하다.
 - 미국 정규장은 뉴욕시간·DST만 반영하며 휴장일·조기폐장 캘린더가 없다. Alpaca Basic은 IEX 범위라 전체 SIP 시세와 차이가 날 수 있다.
-- 운영 EC2 전후 부하, 장시간 soak, 브라우저별 모바일 접근성, 프록시 idle timeout은 배포 전 추가 확인이 필요하다.
+- 개선 전 EC2 최대 연결 수, 장시간 soak, 브라우저별 모바일 접근성, 프록시 idle timeout은 아직 측정하지 않았다.
 
 ## 8. 부분 캡처
 

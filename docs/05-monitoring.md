@@ -4,6 +4,11 @@
 
 Actuator `/actuator/prometheus`에서 SSE 연결, 활성 고유 종목, 종목별 구독자, 외부 API 실제 호출, 시장 상태별 polling 성공·실패, 수집 시간, SSE 전달 지연, 미정리 Emitter를 제공한다. 로컬 Grafana capture stack은 다음으로 실행한다.
 
+운영 컨테이너를 SSH 없이 같은 기준으로 확인할 수 있도록 cgroup v2/v1의 CPU 누적 사용량과 현재 메모리도 노출한다.
+
+- `chipthrone_container_cpu_usage_seconds`: 컨테이너 CPU 누적 사용 시간
+- `chipthrone_container_memory_current_bytes`: 컨테이너 현재 메모리
+
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
 ```
