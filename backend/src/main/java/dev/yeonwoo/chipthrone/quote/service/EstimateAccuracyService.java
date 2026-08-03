@@ -109,7 +109,8 @@ public class EstimateAccuracyService {
         Instant closedAt = closeDate.atTime(KRX_CLOSE).atZone(KST).toInstant();
         return marketDataClient.fetchCloseAt(asset.symbol(), closedAt)
                 .map(estimateUsd -> {
-                    BigDecimal fxRate = exchangeRateClient.fetchUsdKrw(closeDate).rate();
+                    // 캔들과 같은 순간의 환율을 쓴다. 그날 종일 고정된 값을 쓰면 환율 변동이 오차에 섞인다.
+                    BigDecimal fxRate = exchangeRateClient.fetchUsdKrw(closedAt).rate();
                     BigDecimal estimateKrw = estimateUsd.multiply(fxRate);
                     BigDecimal divergencePct = estimateKrw
                             .divide(official.close(), SCALE, RoundingMode.HALF_UP)

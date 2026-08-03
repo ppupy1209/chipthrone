@@ -30,6 +30,10 @@ export type Company = {
   officialCloseEstimate: number | null
   /** 확정 종가 대비 같은 시점 추정가의 괴리율(%) */
   officialDivergencePct: number | null
+  /** 미국 종목 전용. 직전 정규장 마감(16:00 ET) 시점 추정가(달러) */
+  sessionCloseUsd: number | null
+  /** 미국 종목 전용. 그 마감 기준일(ET 기준 yyyy-MM-dd) */
+  sessionCloseDate: string | null
   market: 'KRX' | 'US'
   source: 'HYPERLIQUID'
   status: 'ESTIMATE'
@@ -44,7 +48,7 @@ export type MarketSnapshot = {
   fxAsOfDate: string | null
   /** 환율을 마지막으로 조회한 시각 (ISO-8601). 설정 기준값이면 null */
   fxFetchedAt: string | null
-  fxSource: 'KOREA_EXIMBANK' | 'CONFIG_FALLBACK'
+  fxSource: 'PYTH' | 'CONFIG_FALLBACK'
   stocks: Company[]
 }
 

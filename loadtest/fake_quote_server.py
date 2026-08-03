@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hyperliquid/금융위원회/수출입은행 호환 Fake 서버와 정확한 호출 카운터."""
+"""Hyperliquid/금융위원회/Pyth 호환 Fake 서버와 정확한 호출 카운터."""
 
 import json
 import os
@@ -71,12 +71,16 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/__counts":
             with LOCK:
                 return self.json_response(dict(COUNTS))
-        if parsed.path == "/exchangeJSON":
-            increment("korea_exim_fx")
-            return self.json_response([{"cur_unit": "USD", "deal_bas_r": "1,450.00"}])
+        # Pyth Hermes: /v2/updates/price/latest 와 /v2/updates/price/{epochSeconds} 둘 다 같은 형식이다.
+        if parsed.path.startswith("/v2/updates/price/"):
+            increment("pyth_fx")
+            return self.json_response({"parsed": [{
+                "price": {"price": "145000000", "conf": "80000", "expo": -5, "publish_time": 1785472200}
+            }]})
         if parsed.path == "/getStockPriceInfo":
             increment("fsc_daily_stock")
-            code = query.get("srtnCd", ["100001"])[0]
+            # srtnCd는 실제 API가 무시한다. 클라이언트와 같이 likeSrtnCd를 본다.
+            code = query.get("likeSrtnCd", ["100001"])[0]
             if code == "005930":
                 close, shares = 262500, 5919637922
             elif code == "000660":

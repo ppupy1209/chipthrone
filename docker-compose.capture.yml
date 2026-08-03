@@ -16,8 +16,8 @@ services:
       CHIPTHRONE_SOURCE_HYPERLIQUID_URL: http://fake-quotes:19090/info
       CHIPTHRONE_SOURCE_FSC_STOCK_URL: http://fake-quotes:19090/getStockPriceInfo
       CHIPTHRONE_SOURCE_PUBLIC_DATA_SERVICE_KEY: fake-capture-key
-      CHIPTHRONE_SOURCE_KOREA_EXIM_URL: http://fake-quotes:19090/exchangeJSON
-      CHIPTHRONE_SOURCE_KOREA_EXIM_AUTH_KEY: fake-capture-key
+      CHIPTHRONE_SOURCE_PYTH_HERMES_URL: http://fake-quotes:19090
+      CHIPTHRONE_SOURCE_PYTH_USD_KRW_FEED_ID: fake-capture-feed
     depends_on:
       - fake-quotes
 

@@ -6,8 +6,8 @@ chipthrone:
     hyperliquid-url: http://127.0.0.1:19090/info
     fsc-stock-url: http://127.0.0.1:19090/getStockPriceInfo
     public-data-service-key: fake-loadtest-key
-    korea-exim-url: http://127.0.0.1:19090/exchangeJSON
-    korea-exim-auth-key: fake-loadtest-key
+    pyth-hermes-url: http://127.0.0.1:19090
+    pyth-usd-krw-feed-id: fake-loadtest-feed
   alert:
     slack-webhook-url: ""
   demand:

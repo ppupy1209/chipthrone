@@ -15,6 +15,7 @@ import dev.yeonwoo.chipthrone.quote.model.MarketAssetPrice;
 import dev.yeonwoo.chipthrone.quote.model.MarketMode;
 import dev.yeonwoo.chipthrone.quote.model.OfficialStockPrice;
 import dev.yeonwoo.chipthrone.quote.model.QuoteSnapshot;
+import dev.yeonwoo.chipthrone.quote.model.SessionClose;
 import dev.yeonwoo.chipthrone.quote.model.StockQuote;
 
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class QuoteSnapshotFactory {
     }
 
     public QuoteSnapshot create(List<MarketAssetPrice> prices, ExchangeRateQuote fxRate) {
-        return create(prices, fxRate, Map.of(), Map.of(), properties.assets());
+        return create(prices, fxRate, Map.of(), Map.of(), Map.of(), properties.assets());
     }
 
     public QuoteSnapshot create(
@@ -39,6 +40,7 @@ public class QuoteSnapshotFactory {
             ExchangeRateQuote fxRate,
             Map<String, OfficialStockPrice> officialByCode,
             Map<String, EstimateAccuracy> accuracyByCode,
+            Map<String, SessionClose> sessionCloseByCode,
             List<QuoteProperties.Asset> assets
     ) {
         Map<String, MarketAssetPrice> priceBySymbol = prices.stream()
@@ -49,6 +51,7 @@ public class QuoteSnapshotFactory {
                         requirePrice(priceBySymbol, asset.symbol()),
                         officialByCode.get(asset.code()),
                         accuracyByCode.get(asset.code()),
+                        sessionCloseByCode.get(asset.code()),
                         fxRate.rate()
                 ))
                 .toList();
@@ -76,6 +79,7 @@ public class QuoteSnapshotFactory {
             MarketAssetPrice price,
             OfficialStockPrice official,
             EstimateAccuracy accuracy,
+            SessionClose sessionClose,
             BigDecimal fxRate
     ) {
         BigDecimal priceKrw = price.markPx().multiply(fxRate);
@@ -106,7 +110,9 @@ public class QuoteSnapshotFactory {
                 "HYPERLIQUID",
                 "ESTIMATE",
                 accuracy == null ? null : accuracy.estimateKrw().doubleValue(),
-                accuracy == null ? null : accuracy.divergencePct().doubleValue()
+                accuracy == null ? null : accuracy.divergencePct().doubleValue(),
+                sessionClose == null ? null : sessionClose.closeUsd().doubleValue(),
+                sessionClose == null ? null : sessionClose.closeDate()
         );
     }
 }

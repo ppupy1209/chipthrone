@@ -20,6 +20,16 @@ body {
     stroke 0.3s ease;
 }
 
+/* 미국 카드 상단 스트립의 종목별 시그니처 색.
+   테마 전환이 .dark 클래스 토글이라 인라인 style만으로는 두 색을 못 고른다.
+   레이어 밖 규칙이라 Tailwind border 유틸리티보다 항상 우선한다. */
+.brand-strip {
+  border-top-color: var(--brand);
+}
+.dark .brand-strip {
+  border-top-color: var(--brand-dark);
+}
+
 /* 접근성: 모션 최소화 설정 시 전환 끔 */
 @media (prefers-reduced-motion: reduce) {
   *,

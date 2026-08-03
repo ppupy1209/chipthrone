@@ -38,9 +38,10 @@ class QuoteSnapshotFactoryTest {
 
         StockQuote stock = factory.create(
                 List.of(new MarketAssetPrice("xyz:SMSN", new BigDecimal("240"), new BigDecimal("235"))),
-                new ExchangeRateQuote(new BigDecimal("1450"), "2026-06-19", "KOREA_EXIMBANK"),
+                new ExchangeRateQuote(new BigDecimal("1450"), "2026-06-19", "PYTH"),
                 Map.of("005930", official),
                 Map.of("005930", accuracy),
+                Map.of(),
                 properties.assets()
         ).stocks().getFirst();
 

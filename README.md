@@ -7,7 +7,7 @@
 ## 화면 구성
 
 - **전일 확정 시세**: 금융위원회 주식시세정보의 종가·시가총액·기준일과 왕좌 교체 조건
-- **365일·24시간 추정 시세**: Hyperliquid 파생시장 가격을 공식 USD/KRW 고시환율로 환산
+- **365일·24시간 추정 시세**: Hyperliquid 파생시장 가격을 Pyth Network의 USD/KRW 실시간 시세로 환산
 - **미국 반도체·AI**: 반도체·M7 목록에서 개수 제한 없이 선택, 브라우저 Local Storage에 유지
 - **괴리율**: 국내 두 종목은 공식 종가와 **같은 시점(15:30 KST)의 추정가**를 맞대어 계산. 미국 종목은 대조할 공식 종가가 없어 24시간 등락률 표시
 - **수요 기반 수집**: 사용자별 polling 없이 활성 고유 종목만 단일 polling하고 SSE로 공유
@@ -20,7 +20,7 @@
 |---|---|---|
 | 삼성전자·SK하이닉스 확정 종가/시총 | 금융위원회 일별 주식시세정보 | 활성 국내 종목만 일 단위 캐시 |
 | 국내·미국 24시간 추정 가격 | Hyperliquid `metaAndAssetCtxs` | 활성 종목이 있을 때 3초마다 batch 1회 |
-| USD/KRW | 한국수출입은행 고시환율 | 일 단위 캐시 |
+| USD/KRW | Pyth Network `FX.USD/KRW` | 1분 캐시 · 키 불필요 |
 
 KIS와 Alpaca는 사용하지 않는다. 토스증권 Open API는 이용 조건과 시세 재배포 권한을 확인한 뒤 별도 작업으로 검토한다.
 
@@ -45,10 +45,10 @@ npm install
 npm run dev
 ```
 
-공식 확정 데이터와 고시환율을 사용하려면 키를 환경변수로만 주입한다. 키가 없으면 UI는 Hyperliquid 추정값과 설정 환율을 사용하며 공식 확정값은 비워 둔다.
+환율은 키 없이 바로 붙는다. 국내 확정 종가만 공공데이터포털 키가 필요하며, 키가 없으면 확정값 칸을 비워 둔다.
 
 ```bash
-PUBLIC_DATA_SERVICE_KEY=... KOREA_EXIM_AUTH_KEY=... docker compose up --build
+PUBLIC_DATA_SERVICE_KEY=... docker compose up --build
 ```
 
 프론트가 다른 백엔드를 바라보게 하려면 `frontend/.env`에 `VITE_API_URL`을 지정한다.
@@ -62,7 +62,7 @@ PUBLIC_DATA_SERVICE_KEY=... KOREA_EXIM_AUTH_KEY=... docker compose up --build
 ## 부분 캡처
 
 - [전일 확정 시세와 왕좌 교체 조건](docs/images/official-confirmed-prices.jpg)
-- [24시간 추정 시세와 공식 고시환율](docs/images/hyperliquid-estimates-fx.jpg)
+- [24시간 추정 시세와 USD/KRW](docs/images/hyperliquid-estimates-fx.jpg)
 - [미국 반도체 종목 선택](docs/images/us-watchlist-picker.jpg)
 - [M7·AI 관련 종목 목록](docs/images/us-watchlist-categories.jpg)
 - [미국 Hyperliquid 추정 카드](docs/images/us-hyperliquid-cards.jpg)

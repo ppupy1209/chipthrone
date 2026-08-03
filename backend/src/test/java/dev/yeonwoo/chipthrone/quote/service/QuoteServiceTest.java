@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -48,7 +47,7 @@ class QuoteServiceTest {
         assertThat(fx.calls).isOne();
         assertThat(first.stocks()).allMatch(stock -> "HYPERLIQUID".equals(stock.source()));
         assertThat(first.stocks()).allMatch(stock -> stock.officialMarketCap() != null);
-        assertThat(second.fxSource()).isEqualTo("KOREA_EXIMBANK");
+        assertThat(second.fxSource()).isEqualTo("PYTH");
     }
 
     @Test
@@ -77,11 +76,11 @@ class QuoteServiceTest {
         QuoteService service = newService(market, official, fx, clock);
 
         service.refresh(Set.of("005930"));
-        clock.advance(Duration.ofMinutes(20));
+        clock.advance(Duration.ofSeconds(30));
         service.refresh(Set.of("005930"));
         assertThat(fx.calls).isOne();
 
-        clock.advance(Duration.ofMinutes(15));
+        clock.advance(Duration.ofSeconds(40));
         QuoteSnapshot refreshed = service.refresh(Set.of("005930")).orElseThrow();
 
         assertThat(fx.calls).isEqualTo(2);
@@ -152,6 +151,7 @@ class QuoteServiceTest {
                 official,
                 fx,
                 new EstimateAccuracyService(market, fx, clock),
+                new UsSessionCloseService(market, clock),
                 properties,
                 new AssetCatalog(properties),
                 new QuoteSnapshotFactory(properties, clock),
@@ -277,12 +277,12 @@ class QuoteServiceTest {
         @Override
         public ExchangeRateQuote fetchUsdKrw() {
             calls++;
-            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "KOREA_EXIMBANK", fetchedAt());
+            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "PYTH", fetchedAt());
         }
 
         @Override
-        public ExchangeRateQuote fetchUsdKrw(LocalDate date) {
-            return new ExchangeRateQuote(new BigDecimal("1476.8"), date.toString(), "KOREA_EXIMBANK", fetchedAt());
+        public ExchangeRateQuote fetchUsdKrw(Instant at) {
+            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "PYTH", fetchedAt());
         }
 
         private Instant fetchedAt() {

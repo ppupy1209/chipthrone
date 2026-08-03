@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,8 @@ class EstimateAccuracyServiceTest {
     void comparesCloseTimeEstimateAgainstOfficialClose() {
         // 15:30 KST 추정 50 USD × 1450 = 72,500원, 확정 종가 71,000원 → +2.11%
         StubMarketDataClient market = new StubMarketDataClient(new BigDecimal("50"));
-        EstimateAccuracyService service = new EstimateAccuracyService(market, new StubFxClient(true), CLOCK);
+        StubFxClient fx = new StubFxClient(true);
+        EstimateAccuracyService service = new EstimateAccuracyService(market, fx, CLOCK);
 
         Map<String, EstimateAccuracy> accuracies =
                 service.accuracies(List.of(SAMSUNG), Map.of("005930", official("71000", "2026-06-19")));
@@ -44,6 +45,8 @@ class EstimateAccuracyServiceTest {
         // 2026-06-19 15:30 KST == 06:30 UTC
         assertThat(market.requestedAt).isEqualTo(Instant.parse("2026-06-19T06:30:00Z"));
         assertThat(market.requestedSymbol).isEqualTo("xyz:SMSN");
+        // 캔들과 환율은 반드시 같은 순간이어야 한다. 어긋나면 환율 변동이 괴리율에 섞인다.
+        assertThat(fx.requestedAt).isEqualTo(market.requestedAt);
     }
 
     @Test
@@ -123,6 +126,7 @@ class EstimateAccuracyServiceTest {
 
     private static final class StubFxClient implements ExchangeRateClient {
         private final boolean enabled;
+        private Instant requestedAt;
 
         private StubFxClient(boolean enabled) {
             this.enabled = enabled;
@@ -135,13 +139,14 @@ class EstimateAccuracyServiceTest {
 
         @Override
         public dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote fetchUsdKrw() {
-            return fetchUsdKrw(LocalDate.of(2026, 6, 19));
+            return fetchUsdKrw(Instant.parse("2026-06-19T06:30:00Z"));
         }
 
         @Override
-        public dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote fetchUsdKrw(LocalDate date) {
+        public dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote fetchUsdKrw(Instant at) {
+            requestedAt = at;
             return new dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote(
-                    new BigDecimal("1450"), date.toString(), "KOREA_EXIMBANK");
+                    new BigDecimal("1450"), at.atZone(ZoneId.of("Asia/Seoul")).toLocalDate().toString(), "PYTH");
         }
     }
 }

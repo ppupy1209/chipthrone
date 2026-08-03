@@ -10,6 +10,30 @@ export function officialMarketCap(c: Company): number {
   return (c.regularClose ?? 0) * c.sharesOutstanding
 }
 
+/**
+ * 확정 종가 대비 현재 추정가의 등락률(%). 증권앱이 보여주는 등락률과 같은 기준이다.
+ * Hyperliquid `prevDayPx` 기준 24시간 등락률과는 기준점이 달라 값이 크게 벌어질 수 있다.
+ * 확정 종가가 없으면(공공데이터 미연동) null.
+ */
+export function closeChangePct(c: Company): number | null {
+  if (c.regularClose == null || c.regularClose <= 0) return null
+  return (c.price / c.regularClose - 1) * 100
+}
+
+/**
+ * 미국 종목의 직전 정규장 마감(16:00 ET) 대비 등락률(%).
+ * 양쪽 다 달러라 환율 변동이 섞이지 않는다. 미국 현지에서 보는 등락률과 같은 기준이다.
+ */
+export function sessionCloseChangePct(c: Company): number | null {
+  if (c.sessionCloseUsd == null || c.sessionCloseUsd <= 0) return null
+  return (c.priceUsd / c.sessionCloseUsd - 1) * 100
+}
+
+/** 달러 금액을 "$183.52" 형식으로 */
+export function formatUsdAmount(usd: number): string {
+  return `$${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 /** 시총을 "552.3조" 형식으로 */
 export function formatCap(cap: number): string {
   return `${(cap / 1e12).toFixed(1)}조`
