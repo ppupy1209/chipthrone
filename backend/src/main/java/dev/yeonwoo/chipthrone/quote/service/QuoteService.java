@@ -25,6 +25,7 @@ import dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote;
 import dev.yeonwoo.chipthrone.quote.model.MarketMode;
 import dev.yeonwoo.chipthrone.quote.model.OfficialStockPrice;
 import dev.yeonwoo.chipthrone.quote.model.QuoteSnapshot;
+import dev.yeonwoo.chipthrone.quote.model.SessionClose;
 import dev.yeonwoo.chipthrone.quote.model.StockQuote;
 import dev.yeonwoo.chipthrone.quote.web.QuoteBroadcaster;
 
@@ -39,13 +40,15 @@ public class QuoteService {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final Duration DAILY_SOURCE_RETRY_BACKOFF = Duration.ofMinutes(10);
     private static final LocalTime FSC_PUBLISH_TIME = LocalTime.of(13, 5);
-    // 고시환율은 하루 여러 차례 갱신될 수 있다. 일 1000회 한도 대비 48회/일 수준으로 잡는다.
-    private static final Duration FX_REFRESH_INTERVAL = Duration.ofMinutes(30);
+    // Pyth는 초 단위로 갱신되고 키·호출 한도가 없다. 환율 지연이 추정가 오차의 가장 큰 항이라
+    // 1분까지 좁힌다. 시세 batch와 합치지 않는 이유는 polling cycle당 호출 1회 원칙을 지키기 위해서다.
+    private static final Duration FX_REFRESH_INTERVAL = Duration.ofMinutes(1);
 
     private final MarketDataClient marketDataClient;
     private final OfficialStockPriceClient officialStockPriceClient;
     private final ExchangeRateClient exchangeRateClient;
     private final EstimateAccuracyService estimateAccuracyService;
+    private final UsSessionCloseService usSessionCloseService;
     private final String dex;
     private final AssetCatalog catalog;
     private final QuoteSnapshotFactory snapshotFactory;
@@ -68,6 +71,7 @@ public class QuoteService {
             OfficialStockPriceClient officialStockPriceClient,
             ExchangeRateClient exchangeRateClient,
             EstimateAccuracyService estimateAccuracyService,
+            UsSessionCloseService usSessionCloseService,
             QuoteProperties properties,
             AssetCatalog catalog,
             QuoteSnapshotFactory snapshotFactory,
@@ -80,6 +84,7 @@ public class QuoteService {
         this.officialStockPriceClient = officialStockPriceClient;
         this.exchangeRateClient = exchangeRateClient;
         this.estimateAccuracyService = estimateAccuracyService;
+        this.usSessionCloseService = usSessionCloseService;
         this.dex = properties.dex();
         this.catalog = catalog;
         this.snapshotFactory = snapshotFactory;
@@ -127,7 +132,9 @@ public class QuoteService {
             ExchangeRateQuote fxRate = fetchFxRateOrFallback();
             Map<String, OfficialStockPrice> official = fetchOfficialPrices(assets);
             Map<String, EstimateAccuracy> accuracy = estimateAccuracyService.accuracies(assets, official);
-            QuoteSnapshot refreshed = snapshotFactory.create(prices, fxRate, official, accuracy, assets);
+            Map<String, SessionClose> sessionCloses = usSessionCloseService.sessionCloses(assets);
+            QuoteSnapshot refreshed =
+                    snapshotFactory.create(prices, fxRate, official, accuracy, sessionCloses, assets);
             refreshed.stocks().forEach(stock -> {
                 latestStockByCode.put(stock.code(), stock);
                 latestStockAtByCode.put(stock.code(), refreshed.at());
@@ -192,7 +199,7 @@ public class QuoteService {
             return fxRate;
         } catch (RuntimeException ex) {
             nextFxRetryAt.set(now.plus(DAILY_SOURCE_RETRY_BACKOFF));
-            log.warn("Failed to fetch official USD/KRW rate. Using last rate: {}", latestFxRate.get().rate(), ex);
+            log.warn("Failed to fetch Pyth USD/KRW rate. Using last rate: {}", latestFxRate.get().rate(), ex);
             return latestFxRate.get();
         }
     }

@@ -26,7 +26,7 @@ export const mockSnapshot: MarketSnapshot = {
   fxRate: 1531,
   fxAsOfDate: '2026-06-19',
   fxFetchedAt: null,
-  fxSource: 'KOREA_EXIMBANK',
+  fxSource: 'PYTH',
   stocks: [
     {
       code: '005930',
@@ -45,6 +45,8 @@ export const mockSnapshot: MarketSnapshot = {
       officialMarketCap: 2_095_551_424_388_000,
       officialCloseEstimate: 358_900,
       officialDivergencePct: 1.4,
+      sessionCloseUsd: null,
+      sessionCloseDate: null,
       market: 'KRX',
       source: 'HYPERLIQUID',
       status: 'ESTIMATE',
@@ -66,6 +68,8 @@ export const mockSnapshot: MarketSnapshot = {
       officialMarketCap: 2_012_838_537_860_000,
       officialCloseEstimate: 2_742_900,
       officialDivergencePct: -0.8,
+      sessionCloseUsd: null,
+      sessionCloseDate: null,
       market: 'KRX',
       source: 'HYPERLIQUID',
       status: 'ESTIMATE',

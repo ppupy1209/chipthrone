@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import dev.yeonwoo.chipthrone.quote.model.OfficialStockPrice;
 import dev.yeonwoo.chipthrone.quote.service.QuoteMetrics;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -21,6 +23,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 public class FinancialServicesCommissionStockPriceClient implements OfficialStockPriceClient {
 
+    private static final Logger log = LoggerFactory.getLogger(FinancialServicesCommissionStockPriceClient.class);
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
@@ -63,7 +66,9 @@ public class FinancialServicesCommissionStockPriceClient implements OfficialStoc
                         .queryParam("pageNo", 1)
                         .queryParam("numOfRows", 20)
                         .queryParam("beginBasDt", beginDate)
-                        .queryParam("srtnCd", code)
+                        // srtnCd는 이 엔드포인트에서 조용히 무시된다(전 종목이 그대로 돌아옴).
+                        // likeSrtnCd만 실제로 필터링하므로 이걸 쓰고, 정확 일치는 아래에서 다시 거른다.
+                        .queryParam("likeSrtnCd", code)
                         .build()
                         .encode()
                         .toUri())
@@ -76,7 +81,7 @@ public class FinancialServicesCommissionStockPriceClient implements OfficialStoc
         if (items == null || !items.isArray()) {
             throw new IllegalStateException("Unexpected Financial Services Commission stock response");
         }
-        return StreamSupport.stream(items.spliterator(), false)
+        Optional<OfficialStockPrice> latest = StreamSupport.stream(items.spliterator(), false)
                 .filter(item -> code.equals(item.path("srtnCd").asText()))
                 .max(Comparator.comparing(item -> item.path("basDt").asText()))
                 .map(item -> new OfficialStockPrice(
@@ -87,6 +92,11 @@ public class FinancialServicesCommissionStockPriceClient implements OfficialStoc
                         decimal(item, "lstgStCnt").longValueExact(),
                         decimal(item, "mrktTotAmt")
                 ));
+        if (latest.isEmpty()) {
+            // 응답은 정상인데 해당 종목이 없는 경우. 조용히 비면 원인을 못 찾으니 남긴다.
+            log.warn("No Financial Services Commission row matched {} in {} items.", code, items.size());
+        }
+        return latest;
     }
 
     private BigDecimal decimal(JsonNode item, String field) {

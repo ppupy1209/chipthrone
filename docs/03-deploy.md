@@ -134,12 +134,11 @@ sudo certbot --nginx -d api.chipthrone.com
 
 ## 7. 공식 데이터 키 주입
 
-공공데이터포털과 한국수출입은행 인증키는 **시크릿**이므로 레포·이미지에 넣지 않고 EC2 환경변수로 주입한다. KIS·Alpaca 키는 더 이상 사용하지 않는다.
+공공데이터포털 인증키는 **시크릿**이므로 레포·이미지에 넣지 않고 EC2 환경변수로 주입한다. 환율(Pyth)은 키가 없다. KIS·Alpaca 키는 더 이상 사용하지 않는다.
 
 1. EC2에서 env 파일 생성 (`~/chipthrone.env`):
    ```
    PUBLIC_DATA_SERVICE_KEY=공공데이터포털_DECODING_인증키
-   KOREA_EXIM_AUTH_KEY=한국수출입은행_인증키
    ```
 2. 컨테이너를 env 파일로 재실행:
    ```bash
@@ -151,4 +150,4 @@ sudo certbot --nginx -d api.chipthrone.com
    - watchtower가 이후 업데이트 시 이 환경변수를 그대로 유지한다.
    - 키가 비면 Hyperliquid 추정 시세는 계속 동작한다.
    - 공공데이터 키가 비면 국내 확정 종가·시총이 비어 있고, 환율 키가 비면 설정 기준 환율을 표시한다.
-3. 확인: `/api/quotes?symbols=005930,SNDK`에서 `source=HYPERLIQUID`, 국내 종목의 `regularClose/officialMarketCap`, `fxSource=KOREA_EXIMBANK`를 확인한다.
+3. 확인: `/api/quotes?symbols=005930,SNDK`에서 `source=HYPERLIQUID`, 국내 종목의 `regularClose/officialMarketCap`, `fxSource=PYTH`를 확인한다.

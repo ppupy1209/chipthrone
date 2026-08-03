@@ -31,7 +31,7 @@
   "at": "2026-08-02T06:00:00Z",
   "fxRate": 1450.0,
   "fxAsOfDate": "2026-08-01",
-  "fxSource": "KOREA_EXIMBANK",
+  "fxSource": "PYTH",
   "fxFetchedAt": "2026-08-02T05:41:12Z",
   "stocks": [
     {

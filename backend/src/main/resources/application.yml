@@ -8,7 +8,9 @@ chipthrone:
     cooldown-minutes: 10
   source:
     public-data-service-key: ${PUBLIC_DATA_SERVICE_KEY:}
-    korea-exim-auth-key: ${KOREA_EXIM_AUTH_KEY:}
+    # Pyth Hermes는 키가 없다. Hyperliquid HIP-3 오라클과 같은 USD/KRW 피드를 쓴다.
+    pyth-hermes-url: ${PYTH_HERMES_URL:https://hermes.pyth.network}
+    pyth-usd-krw-feed-id: ${PYTH_USD_KRW_FEED_ID:e539120487c29b4defdf9a53d337316ea022a2688978a468f9efd847201be7e3}
   quote:
     polling-enabled: true
     dex: xyz

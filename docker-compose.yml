@@ -1,8 +1,8 @@
 # 로컬에서 백엔드 + 프론트엔드를 한 번에 실행.
 #   docker compose up --build
 # 프론트: http://localhost:5173 · 백엔드: http://localhost:8080
-# 공공데이터·수출입은행 키는 선택(없으면 확정값/공식 환율만 미표시):
-#   PUBLIC_DATA_SERVICE_KEY=... KOREA_EXIM_AUTH_KEY=... docker compose up --build
+# 공공데이터 키는 선택(없으면 확정 종가만 미표시). 환율(Pyth)은 키가 필요 없다:
+#   PUBLIC_DATA_SERVICE_KEY=... docker compose up --build
 services:
   backend:
     build: ./backend
@@ -10,7 +10,6 @@ services:
       - "8080:8080"
     environment:
       PUBLIC_DATA_SERVICE_KEY: ${PUBLIC_DATA_SERVICE_KEY:-}
-      KOREA_EXIM_AUTH_KEY: ${KOREA_EXIM_AUTH_KEY:-}
 
   frontend:
     build:

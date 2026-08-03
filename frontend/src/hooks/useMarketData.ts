@@ -26,6 +26,8 @@ type BackendStock = {
   high: number | null
   officialCloseEstimate: number | null
   officialDivergencePct: number | null
+  sessionCloseUsd: number | null
+  sessionCloseDate: string | null
   market: Company['market']
   source: Company['source']
   status: Company['status']
@@ -59,6 +61,8 @@ function toCompany(stock: BackendStock, index: number): Company {
     officialMarketCap: stock.officialMarketCap,
     officialCloseEstimate: stock.officialCloseEstimate,
     officialDivergencePct: stock.officialDivergencePct,
+    sessionCloseUsd: stock.sessionCloseUsd,
+    sessionCloseDate: stock.sessionCloseDate,
     market: stock.market,
     source: stock.source,
     status: stock.status,
