@@ -27,7 +27,7 @@ function closeChangeHint(company: Company): string | undefined {
  */
 function sessionCloseHint(company: Company): string | undefined {
   if (company.sessionCloseUsd == null) return undefined
-  return `${formatDateWithDay(company.sessionCloseDate)} 16:00 ET 마감 `
+  return `${formatDateWithDay(company.sessionCloseDate)} 16:00 ET 마감 추정가 `
     + `${formatUsdAmount(company.sessionCloseUsd)} 대비`
 }
 
