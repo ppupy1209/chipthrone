@@ -112,9 +112,6 @@ function App() {
             onRemove={remove}
           />
           <div className="mt-4">
-            <div className="mb-2">
-              <h2 className="text-[14px] font-medium">미국 AI·반도체</h2>
-            </div>
             {usCompanies.length > 0 ? (
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {usCompanies.map((company) => (
