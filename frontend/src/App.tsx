@@ -17,14 +17,6 @@ import { MAX_WATCHLIST, MIN_WATCHLIST, normalizeWatchlist } from './lib/watchlis
 const STORAGE_KEY = 'chipthrone.watchlist.v1'
 const CORE_SYMBOLS = ['005930', '000660']
 
-/** ISO-8601 시각을 "14:32" 형식으로. 값이 없으면 "-" */
-function formatClock(iso: string | null): string {
-  if (!iso) return '-'
-  const at = new Date(iso)
-  if (Number.isNaN(at.getTime())) return '-'
-  return at.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
 function storedWatchlist(): unknown {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
@@ -95,16 +87,14 @@ function App() {
             <div>
               <h2 className="text-[14px] font-medium">해외 추정 시세</h2>
             </div>
-            <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-right dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium tabular-nums dark:border-neutral-800 dark:bg-neutral-900">
+              {snapshot.fxSource === 'PYTH' && (
+                <span aria-hidden="true" className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+              )}
               {/* Pyth는 소수 5자리로 온다. 통화 표시는 2자리로 끊는다. */}
-              <div className="text-[12px] font-medium tabular-nums">
+              <span>
                 USD/KRW {snapshot.fxRate.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              <div className="mt-0.5 text-[9px] text-neutral-400">
-                {snapshot.fxSource === 'PYTH'
-                  ? `Pyth 실시간 · 갱신 ${formatClock(snapshot.fxFetchedAt)}`
-                  : '실시간 환율 연결 대기 · 설정 기준값'}
-              </div>
+              </span>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
