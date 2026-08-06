@@ -16,6 +16,7 @@ import { MAX_WATCHLIST, MIN_WATCHLIST, normalizeWatchlist } from './lib/watchlis
 
 const STORAGE_KEY = 'chipthrone.watchlist.v1'
 const CORE_SYMBOLS = ['005930', '000660']
+const SECTION_TITLE_CLASS = "flex items-center gap-2 text-[14px] font-semibold tracking-[-0.01em] text-neutral-800 before:h-3.5 before:w-[3px] before:rounded-full before:bg-neutral-300 before:content-[''] dark:text-neutral-100 dark:before:bg-neutral-700"
 
 function storedWatchlist(): unknown {
   try {
@@ -67,7 +68,7 @@ function App() {
         <Header />
 
         <section data-testid="official-krx" className="mt-5">
-          <h2 className="mb-2 text-[14px] font-medium tabular-nums">
+          <h2 className={`${SECTION_TITLE_CLASS} mb-2 tabular-nums`}>
             <OfficialCloseTitle date={officialDate} />
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -84,9 +85,7 @@ function App() {
 
         <section data-testid="estimate-krx" className="mt-7">
           <div className="mb-2 flex items-end justify-between gap-3">
-            <div>
-              <h2 className="text-[14px] font-medium">해외 추정 시세</h2>
-            </div>
+            <h2 className={SECTION_TITLE_CLASS}>해외 추정 시세</h2>
             <div className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium tabular-nums dark:border-neutral-800 dark:bg-neutral-900">
               {snapshot.fxSource === 'PYTH' && (
                 <span aria-hidden="true" className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
@@ -105,6 +104,7 @@ function App() {
         </section>
 
         <section data-testid="us-watchlist" className="mt-7">
+          <h2 className={`${SECTION_TITLE_CLASS} mb-2`}>미국 반도체·AI</h2>
           <WatchlistPicker
             assets={assets}
             selected={symbols}

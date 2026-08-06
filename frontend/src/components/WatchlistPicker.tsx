@@ -49,10 +49,8 @@ export function WatchlistPicker({
     .filter((group) => group.assets.length > 0)
 
   return (
-    <section data-testid="watchlist" className="mt-5 rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-[13px] font-medium">미국 반도체·AI</h2>
-
-      <div className="mt-3 space-y-3">
+    <div data-testid="watchlist" className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="space-y-3">
         {groups.map((group) => (
           <section key={group.id} aria-labelledby={`asset-group-${group.id}`} className="overflow-hidden rounded-lg border border-neutral-100 dark:border-neutral-800">
             <div className="flex items-baseline gap-2 bg-neutral-50 px-3 py-2 dark:bg-neutral-950/50">
@@ -84,6 +82,6 @@ export function WatchlistPicker({
           </section>
         ))}
       </div>
-    </section>
+    </div>
   )
 }

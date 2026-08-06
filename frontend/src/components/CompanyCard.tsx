@@ -97,7 +97,7 @@ export function OfficialCompanyCard({ company, isLeader }: { company: Company; i
   const c = COLOR[company.color]
   const close = company.regularClose
   return (
-    <div data-testid="official-company-card" className={`relative rounded-xl border border-t-[3px] border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900 ${c.top}`}>
+    <div data-testid="official-company-card" className={`relative rounded-xl border border-t-[3px] border-neutral-200 bg-white p-5 dark:border-x-neutral-800 dark:border-b-neutral-800 dark:bg-neutral-900 ${c.top}`}>
       {isLeader && (
         <span className="absolute -top-2.5 right-3.5 rounded-md bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-700">
           ♛ 현재 왕좌
@@ -128,7 +128,7 @@ export function OfficialCompanyCard({ company, isLeader }: { company: Company; i
 export function EstimateCompanyCard({ company, fxRate }: { company: Company; fxRate: number }) {
   const c = COLOR[company.color]
   return (
-    <div data-testid="estimate-company-card" className={`rounded-xl border border-t-[3px] border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900 ${c.top}`}>
+    <div data-testid="estimate-company-card" className={`rounded-xl border border-t-[3px] border-neutral-200 bg-white p-5 dark:border-x-neutral-800 dark:border-b-neutral-800 dark:bg-neutral-900 ${c.top}`}>
       <div className="flex items-baseline gap-2">
         <span className="text-[15px] font-medium">{company.name}</span>
         <span className="text-[11px] text-neutral-400">{company.code}</span>
