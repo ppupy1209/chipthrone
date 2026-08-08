@@ -139,6 +139,10 @@ chipthrone:
     emitter-timeout-ms: 300000
 
 management:
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
   endpoints:
     web:
       exposure:

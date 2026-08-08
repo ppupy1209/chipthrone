@@ -19,6 +19,30 @@
       "targets": [{ "expr": "chipthrone_sse_orphan_emitters", "refId": "A" }]
     },
     {
+      "type": "timeseries", "title": "시세 최신 성공 이후", "id": 9,
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [{ "expr": "chipthrone_quote_freshness_age_seconds", "refId": "A" }]
+    },
+    {
+      "type": "stat", "title": "API 성공률 (5m)", "id": 10,
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "targets": [{
+        "expr": "100 * sum(rate(http_server_requests_seconds_count{uri=~\"/api/.*\",uri!=\"/api/stream\",status=~\"2..\"}[5m])) / sum(rate(http_server_requests_seconds_count{uri=~\"/api/.*\",uri!=\"/api/stream\"}[5m]))",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "stat", "title": "API 응답 p95 (5m)", "id": 11,
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri=~\"/api/.*\",uri!=\"/api/stream\"}[5m])))",
+        "refId": "A"
+      }]
+    },
+    {
       "type": "timeseries", "title": "외부 API 호출률", "id": 4,
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
       "targets": [{

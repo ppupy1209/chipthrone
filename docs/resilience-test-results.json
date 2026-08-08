@@ -1,0 +1,25 @@
+{
+  "measured_at": "2026-08-08T23:32:46.817717+00:00",
+  "environment": "local backend + localhost fake APIs",
+  "fault": "Hyperliquid-compatible endpoint HTTP 503",
+  "actual_external_api_calls": 0,
+  "fake_api_attempts": {
+    "hyperliquid_batch": 13
+  },
+  "mttd_seconds": 15.101,
+  "recovery_detection_seconds": 2.904,
+  "incident_duration_seconds": 18.125,
+  "health_availability_percent": 100.0,
+  "health_probes": {
+    "success": 89,
+    "failure": 0
+  },
+  "failed_polls_at_detection": 5,
+  "quote_freshness_age_at_detection_seconds": 15.185,
+  "successful_polls_after_recovery": 2,
+  "assertions": {
+    "all_quote_sources_are_localhost": true,
+    "health_remained_available_during_source_failure": true,
+    "failure_and_recovery_notifications_received": true
+  }
+}

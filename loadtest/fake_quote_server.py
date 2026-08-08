@@ -4,12 +4,15 @@
 import json
 import os
 import threading
+import time
 from collections import Counter
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 
 COUNTS = Counter()
+FAULTS = set()
+SLACK_EVENTS = []
 LOCK = threading.Lock()
 UNIVERSE = (
     ["xyz:SMSN", "xyz:SKHX"]
@@ -50,10 +53,13 @@ def increment(name):
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         path = urlparse(self.path).path
-        length = int(self.headers.get("Content-Length", "0"))
-        self.rfile.read(length)
+        body = self.request_body()
         if path == "/info":
             increment("hyperliquid_batch")
+            with LOCK:
+                failing = "hyperliquid" in FAULTS
+            if failing:
+                return self.json_response({"error": "injected hyperliquid failure"}, status=503)
             contexts = []
             for index, symbol in enumerate(UNIVERSE, 1):
                 mark, previous = USD_PRICES.get(symbol, (100 + index, 99 + index))
@@ -62,8 +68,39 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/__reset":
             with LOCK:
                 COUNTS.clear()
+                FAULTS.clear()
+                SLACK_EVENTS.clear()
+            return self.json_response({"ok": True, "at_monotonic": time.monotonic()})
+        if path == "/__fault":
+            request = json.loads(body or b"{}")
+            if request.get("source") != "hyperliquid" or not isinstance(request.get("enabled"), bool):
+                return self.json_response({"error": "source=hyperliquid and boolean enabled are required"}, status=400)
+            changed_at = time.monotonic()
+            with LOCK:
+                if request["enabled"]:
+                    FAULTS.add("hyperliquid")
+                else:
+                    FAULTS.discard("hyperliquid")
+            return self.json_response({"ok": True, "enabled": request["enabled"], "at_monotonic": changed_at})
+        if path == "/slack":
+            event = {"at_monotonic": time.monotonic(), "payload": json.loads(body or b"{}")}
+            with LOCK:
+                SLACK_EVENTS.append(event)
             return self.json_response({"ok": True})
         return self.send_error(404)
+
+    def request_body(self):
+        if "chunked" not in self.headers.get("Transfer-Encoding", "").lower():
+            return self.rfile.read(int(self.headers.get("Content-Length", "0")))
+
+        chunks = []
+        while True:
+            size = int(self.rfile.readline().split(b";", 1)[0].strip(), 16)
+            if size == 0:
+                self.rfile.readline()
+                return b"".join(chunks)
+            chunks.append(self.rfile.read(size))
+            self.rfile.read(2)
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -71,6 +108,13 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/__counts":
             with LOCK:
                 return self.json_response(dict(COUNTS))
+        if parsed.path == "/__state":
+            with LOCK:
+                return self.json_response({
+                    "counts": dict(COUNTS),
+                    "faults": sorted(FAULTS),
+                    "slack_events": list(SLACK_EVENTS),
+                })
         # Pyth Hermes: /v2/updates/price/latest 와 /v2/updates/price/{epochSeconds} 둘 다 같은 형식이다.
         if parsed.path.startswith("/v2/updates/price/"):
             increment("pyth_fx")
@@ -97,9 +141,9 @@ class Handler(BaseHTTPRequestHandler):
             }]}}}})
         return self.send_error(404)
 
-    def json_response(self, value):
+    def json_response(self, value, status=200):
         body = json.dumps(value, ensure_ascii=False).encode()
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Connection", "close")

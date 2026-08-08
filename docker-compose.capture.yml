@@ -5,6 +5,8 @@ services:
     command: ["python", "fake_quote_server.py"]
     environment:
       FAKE_QUOTE_HOST: 0.0.0.0
+    ports:
+      - "127.0.0.1:19090:19090"
     volumes:
       - ./loadtest/fake_quote_server.py:/app/fake_quote_server.py:ro
 
@@ -18,6 +20,7 @@ services:
       CHIPTHRONE_SOURCE_PUBLIC_DATA_SERVICE_KEY: fake-capture-key
       CHIPTHRONE_SOURCE_PYTH_HERMES_URL: http://fake-quotes:19090
       CHIPTHRONE_SOURCE_PYTH_USD_KRW_FEED_ID: fake-capture-feed
+      CHIPTHRONE_ALERT_SLACK_WEBHOOK_URL: http://fake-quotes:19090/slack
     depends_on:
       - fake-quotes
 

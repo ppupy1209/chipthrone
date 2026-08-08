@@ -58,6 +58,7 @@ PUBLIC_DATA_SERVICE_KEY=... docker compose up --build
 - [아키텍처](docs/01-architecture.md)
 - [데이터 소스](docs/02-data-sources.md)
 - [수요 기반 수집과 측정](docs/06-demand-driven-quotes.md)
+- [SLO와 외부 시세 장애 복구 실험](docs/07-slo-resilience.md)
 
 ## 부분 캡처
 
@@ -68,5 +69,7 @@ PUBLIC_DATA_SERVICE_KEY=... docker compose up --build
 - [미국 Hyperliquid 추정 카드](docs/images/us-hyperliquid-cards.jpg)
 - [Grafana 외부 API 호출률 패널](docs/images/grafana-external-api-calls-current.jpg)
 - [Grafana SSE 전달 지연 p95 패널](docs/images/grafana-sse-delivery-p95-current.jpg)
+- [Grafana 시세 freshness 장애·복구 패널](docs/images/grafana-quote-freshness-failure-recovery.png)
+- [Grafana polling 실패·복구 패널](docs/images/grafana-polling-failure-recovery.png)
 
 본 서비스는 투자 권유나 자문이 아니다.

@@ -22,7 +22,10 @@ from fake_quote_server import Handler, ThreadingHTTPServer
 
 
 ROOT = Path(__file__).resolve().parents[1]
-JAR = next(iter((ROOT / "backend/build/libs").glob("*.jar")), ROOT / "backend/build/libs/chipthrone-api-0.0.1.jar")
+JAR = next(
+    (path for path in (ROOT / "backend/build/libs").glob("*.jar") if not path.name.endswith("-plain.jar")),
+    ROOT / "backend/build/libs/chipthrone-api-0.0.1.jar",
+)
 BACKEND_PORT = 18080
 FAKE_PORT = 19090
 USERS = 200

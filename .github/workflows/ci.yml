@@ -29,6 +29,7 @@ jobs:
           cache: gradle
       - run: chmod +x gradlew
       - run: ./gradlew build
+      - run: python3 ../loadtest/run_resilience_test.py
 
   frontend:
     name: 프론트엔드 빌드

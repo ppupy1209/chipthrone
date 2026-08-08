@@ -124,6 +124,7 @@ cd frontend && npm run lint
 
 - 완료:
   - 수요 기반 단일 polling + SSE fan-out, 컨테이너 자원 계측, EC2 부하 테스트 실측(`docs/ec2-load-test-results.json`)
+  - localhost Fake API 장애 주입, quote freshness SLI, MTTD·복구 감지 실측(`docs/07-slo-resilience.md`)
   - 공공데이터 기반 확정 시세와 같은 시점 괴리율 산출(`EstimateAccuracyService`)
   - 환율 30분 주기 갱신, 미국 종목 선택 개수 제한 해제
   - 미국 카드 종목별 시그니처 색 + 숫자 본문색 통일 (`brandColor.ts`, `.brand-strip`)
@@ -139,3 +140,4 @@ cd frontend && npm run lint
 
 - [아키텍처](docs/01-architecture.md) · [데이터 소스](docs/02-data-sources.md) · [배포](docs/03-deploy.md)
 - [API](docs/04-api.md) · [모니터링](docs/05-monitoring.md) · [수요 기반 수집과 측정](docs/06-demand-driven-quotes.md)
+- [SLO와 외부 시세 장애 복구 실험](docs/07-slo-resilience.md)
