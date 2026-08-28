@@ -24,22 +24,22 @@ Hyperliquid의 해외 파생 가격을 Pyth Network의 USD/KRW 환율로 원화 
 
 <img width="896" height="543" alt="CHIPTHRONE 배포 및 운영 아키텍처" src="https://github.com/user-attachments/assets/6b5a74d0-9151-4ed3-ba9b-8933f7df6d91" />
 
-GitHub Actions가 테스트와 빌드를 수행해 이미지를 GHCR에 저장하면, EC2 내부의 Watchtower가 새 이미지를 감지해 컨테이너를 교체합니다. 서비스 외부 응답과 애플리케이션 내부 이벤트는 서로 다른 층에서 감시하고 Slack으로 알립니다.
+GitHub Actions에서 테스트와 빌드를 마친 이미지는 GHCR에 저장됩니다. EC2의 Watchtower는 60초마다 새 이미지를 확인해 변경 사항이 있으면 실행 중인 컨테이너를 교체합니다. 서비스 외부 응답과 애플리케이션 내부 이벤트는 각각 따로 감시해 문제가 생기면 Slack으로 알립니다.
 
 ## CI/CD
 
-PR과 `main` 반영 시 인프라 스크립트, 백엔드 빌드·테스트, 프론트엔드 빌드를 검증합니다. `main`의 백엔드 변경은 Docker 이미지로 만들어 `latest`와 커밋 SHA 태그를 붙여 GHCR에 저장합니다.
+PR과 `main` 반영 시 인프라 스크립트를 검사하고 백엔드 빌드와 테스트, 프론트엔드 빌드를 실행합니다. `main`에 백엔드 변경이 반영되면 Docker 이미지를 만들고 `latest`와 커밋 SHA 태그를 붙여 GHCR에 저장합니다.
 
-- [CI 워크플로 — 인프라·백엔드·프론트엔드 검증 →](https://github.com/ppupy1209/chipthrone/blob/main/.github/workflows/ci.yml)
-- [배포 워크플로 — Docker 이미지 빌드와 GHCR 저장 →](https://github.com/ppupy1209/chipthrone/blob/main/.github/workflows/deploy-backend.yml)
+- [CI 워크플로에서 검증 과정 보기](https://github.com/ppupy1209/chipthrone/blob/main/.github/workflows/ci.yml)
+- [배포 워크플로에서 이미지 빌드 과정 보기](https://github.com/ppupy1209/chipthrone/blob/main/.github/workflows/deploy-backend.yml)
 
-## 문제 해결: SSH 접속 없는 자동 배포
+## SSH 접속 없이 자동 배포하기
 
-GitHub Actions 러너가 EC2에 SSH로 접속해 재배포하는 단계에서 `i/o timeout`이 발생했습니다. 22번 포트는 개인 IP만 허용하고 있었지만, GitHub Actions 러너의 IP는 실행할 때마다 달라 고정된 허용 목록으로 관리할 수 없었습니다.
+처음에는 GitHub Actions 러너가 EC2에 SSH로 접속해 재배포하도록 구성했습니다. 하지만 이 단계에서 `i/o timeout`이 발생했습니다. 22번 포트는 개인 IP만 허용한 상태였습니다. 실행할 때마다 달라지는 GitHub Actions 러너의 IP를 허용 목록에 계속 추가하기도 어려웠습니다.
 
-22번 포트를 전체 공개하는 대신 배포 방향을 push에서 pull로 바꿨습니다. GitHub Actions는 GHCR에 이미지를 저장하는 역할까지만 맡고, EC2의 Watchtower가 60초마다 새 이미지를 확인해 컨테이너를 교체하도록 구성했습니다.
+22번 포트를 외부에 모두 열지 않고 배포 방식을 push에서 pull로 바꿨습니다. GitHub Actions는 이미지를 GHCR에 저장하는 데까지만 관여합니다. 이후 EC2의 Watchtower가 60초마다 새 이미지를 확인해 컨테이너를 교체합니다.
 
-그 결과 22번 포트는 개인 IP만 허용한 상태로 유지하면서도 `main` 반영 후 최대 60초 안에 자동 배포할 수 있게 되었고, 배포 경로에서 SSH 키와 러너 IP를 관리할 필요도 없어졌습니다.
+이 방식으로 22번 포트는 계속 개인 IP에만 허용할 수 있었습니다. `main` 반영 후 최대 60초 안에 자동으로 배포됩니다. 배포 과정에서 SSH 키와 러너 IP를 따로 관리할 필요도 없어졌습니다.
 
 ## 로컬 실행
 
