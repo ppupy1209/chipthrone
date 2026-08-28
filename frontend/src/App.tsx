@@ -68,9 +68,14 @@ function App() {
         <Header />
 
         <section data-testid="official-krx" className="mt-5">
-          <h2 className={`${SECTION_TITLE_CLASS} mb-2 tabular-nums`}>
-            <OfficialCloseTitle date={officialDate} />
-          </h2>
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2 className={`${SECTION_TITLE_CLASS} tabular-nums`}>
+              <OfficialCloseTitle date={officialDate} />
+            </h2>
+            <p className="text-[10px] text-neutral-400 dark:text-neutral-500">
+              금융위원회 일별 데이터 · 영업일 13:05 이후 갱신
+            </p>
+          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {krxCompanies.map((company) => (
               <OfficialCompanyCard
