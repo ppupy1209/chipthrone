@@ -52,7 +52,7 @@
 
 ## Fake 부하 테스트
 
-실제 금융위원회·한국수출입은행·Hyperliquid 쿼터와 운영 트래픽을 건드리지 않도록 `loadtest/fake_quote_server.py`가 같은 응답 형식과 호출 counter를 제공한다. 인위적 지연은 넣지 않는다. 표준 라이브러리 SSE 클라이언트가 연결을 실제로 유지한다.
+실제 금융위원회, 업비트, Hyperliquid 호출 한도와 운영 트래픽을 건드리지 않도록 `loadtest/fake_quote_server.py`가 같은 응답 형식과 호출 counter를 제공한다. 인위적 지연은 넣지 않는다. 표준 라이브러리 SSE 클라이언트가 연결을 실제로 유지한다.
 
 측정 시나리오:
 

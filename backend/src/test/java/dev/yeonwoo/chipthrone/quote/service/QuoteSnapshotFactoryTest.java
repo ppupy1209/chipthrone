@@ -38,7 +38,7 @@ class QuoteSnapshotFactoryTest {
 
         StockQuote stock = factory.create(
                 List.of(new MarketAssetPrice("xyz:SMSN", new BigDecimal("240"), new BigDecimal("235"))),
-                new ExchangeRateQuote(new BigDecimal("1450"), "2026-06-19", "PYTH"),
+                new ExchangeRateQuote(new BigDecimal("1450"), "2026-06-19", "UPBIT_USDC"),
                 Map.of("005930", official),
                 Map.of("005930", accuracy),
                 Map.of(),
@@ -62,7 +62,7 @@ class QuoteSnapshotFactoryTest {
         QuoteProperties properties = properties();
         StockQuote stock = new QuoteSnapshotFactory(properties, Clock.systemUTC()).create(
                 List.of(new MarketAssetPrice("xyz:SMSN", new BigDecimal("240"), new BigDecimal("235"))),
-                new ExchangeRateQuote(new BigDecimal("1450"), null, "CONFIG_FALLBACK")
+                new ExchangeRateQuote(new BigDecimal("1450"), null, "UPBIT_USDC")
         ).stocks().getFirst();
 
         assertThat(stock.sharesOutstanding()).isEqualTo(5_919_637_922L);
@@ -71,7 +71,7 @@ class QuoteSnapshotFactoryTest {
     }
 
     private QuoteProperties properties() {
-        return new QuoteProperties("xyz", 1450, List.of(
+        return new QuoteProperties("xyz", List.of(
                 new QuoteProperties.Asset(
                         "005930", "삼성전자", "xyz:SMSN", 5_919_637_922L, QuoteProperties.Market.KRX)
         ));

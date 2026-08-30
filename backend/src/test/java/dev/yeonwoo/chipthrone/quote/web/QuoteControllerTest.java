@@ -45,8 +45,8 @@ class QuoteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mode").value("ESTIMATE"))
                 .andExpect(jsonPath("$.at").value("2026-06-21T05:00:00Z"))
-                .andExpect(jsonPath("$.fxRate").value(1476.8))
-                .andExpect(jsonPath("$.fxSource").value("CONFIG_FALLBACK"))
+                .andExpect(jsonPath("$.fxRate").doesNotExist())
+                .andExpect(jsonPath("$.fxSource").doesNotExist())
                 .andExpect(jsonPath("$.stocks[0].code").value("005930"))
                 .andExpect(jsonPath("$.stocks[0].name").value("삼성전자"))
                 .andExpect(jsonPath("$.stocks[0].priceKrw").value(356208.0))
@@ -120,7 +120,6 @@ class QuoteControllerTest {
         return new QuoteSnapshot(
                 MarketMode.ESTIMATE,
                 Instant.parse("2026-06-21T05:00:00Z"),
-                1476.8,
                 List.of(new StockQuote(
                         "005930",
                         "삼성전자",

@@ -7,7 +7,6 @@ import {
   formatDateWithDay,
   formatPct,
   formatPrice,
-  formatUsd,
   formatUsdAmount,
   marketCap,
   officialMarketCap,
@@ -125,7 +124,7 @@ export function OfficialCompanyCard({ company, isLeader }: { company: Company; i
   )
 }
 
-export function EstimateCompanyCard({ company, fxRate }: { company: Company; fxRate: number }) {
+export function EstimateCompanyCard({ company }: { company: Company }) {
   const c = COLOR[company.color]
   return (
     <div data-testid="estimate-company-card" className={`rounded-xl border border-t-[3px] border-neutral-200 bg-white p-5 dark:border-x-neutral-800 dark:border-b-neutral-800 dark:bg-neutral-900 ${c.top}`}>
@@ -138,7 +137,7 @@ export function EstimateCompanyCard({ company, fxRate }: { company: Company; fxR
         <AnimatedNumber value={company.price} format={formatPrice} className="text-2xl font-semibold tabular-nums" />
         <span className="text-xs text-neutral-400">원</span>
       </div>
-      <div className="mt-1 text-[12px] tabular-nums text-neutral-400">≈ {formatUsd(company.price, fxRate)}</div>
+      <div className="mt-1 text-[12px] tabular-nums text-neutral-400">≈ {formatUsdAmount(company.priceUsd)}</div>
       <div className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-2.5 text-[13px] dark:border-neutral-800">
         <span className="text-neutral-500">추정 시가총액</span>
         <AnimatedNumber value={marketCap(company)} format={formatCap} className="font-medium tabular-nums" />

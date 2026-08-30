@@ -251,7 +251,7 @@ def run_scenario(name, demand_enabled, mode, pattern, duration, disconnect_check
                 "fake_external_calls": connected_counts,
                 "fsc_daily_stock_calls": connected_counts.get("fsc_daily_stock", 0),
                 "hyperliquid_batch_calls": connected_counts.get("hyperliquid_batch", 0),
-                "pyth_fx_calls": connected_counts.get("pyth_fx", 0),
+                "upbit_fx_calls": connected_counts.get("upbit_fx", 0),
                 "cpu_percent_mean": round(statistics.mean(cpu_samples), 2),
                 "cpu_percent_max": round(max(cpu_samples), 2),
                 "rss_mib_mean": round(statistics.mean(rss_samples), 2),

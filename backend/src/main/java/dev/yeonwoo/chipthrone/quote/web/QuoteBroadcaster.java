@@ -73,7 +73,6 @@ public class QuoteBroadcaster {
                 connection.emitter.send(SseEmitter.event().comment("keepalive"));
             } catch (IOException | IllegalStateException ex) {
                 cleanup(connection);
-                connection.emitter.complete();
             }
         }
     }
@@ -93,15 +92,12 @@ public class QuoteBroadcaster {
         if (stocks.isEmpty()) {
             return;
         }
-        QuoteSnapshot filtered = new QuoteSnapshot(
-                snapshot.mode(), snapshot.at(), snapshot.fxRate(),
-                snapshot.fxAsOfDate(), snapshot.fxSource(), snapshot.fxFetchedAt(), stocks);
+        QuoteSnapshot filtered = new QuoteSnapshot(snapshot.mode(), snapshot.at(), stocks);
         try {
             connection.emitter.send(SseEmitter.event().name("quotes").data(filtered));
             metrics.recordDelivery(snapshot.at(), clock.instant());
         } catch (IOException | IllegalStateException ex) {
             cleanup(connection);
-            connection.emitter.complete();
         }
     }
 

@@ -146,7 +146,7 @@ class EstimateAccuracyServiceTest {
         public dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote fetchUsdKrw(Instant at) {
             requestedAt = at;
             return new dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote(
-                    new BigDecimal("1450"), at.atZone(ZoneId.of("Asia/Seoul")).toLocalDate().toString(), "PYTH");
+                    new BigDecimal("1450"), at.atZone(ZoneId.of("Asia/Seoul")).toLocalDate().toString(), "UPBIT_USDC");
         }
     }
 }

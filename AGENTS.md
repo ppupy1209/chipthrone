@@ -16,7 +16,7 @@
 | 프론트 | React 19, TypeScript, Vite 8, Tailwind 4, 관심 종목은 Local Storage |
 | 인프라 | 프론트 Vercel / 백엔드 EC2 Docker(GitHub Actions → GHCR → Watchtower) / DNS·CDN Cloudflare |
 | 관측 | Prometheus + Grafana (`docs/05-monitoring.md`), Slack 장애 알림 |
-| 외부 API | 금융위원회 일별 주식시세정보, 한국수출입은행 고시환율, Hyperliquid 공개 `info` API |
+| 외부 API | 금융위원회 일별 주식시세정보, 업비트 공개 시세 조회, Hyperliquid 공개 `info` API |
 
 ## 실행·테스트 명령
 
@@ -52,8 +52,8 @@ cd frontend && npm test
 cd frontend && npm run lint
 ```
 
-환경변수(없으면 공식 확정값은 비우고 Hyperliquid 추정 + 설정 환율로 동작):
-`PUBLIC_DATA_SERVICE_KEY`(공공데이터포털 Decoding 키), `KOREA_EXIM_AUTH_KEY`, 프론트 `VITE_API_URL`.
+환경변수(없으면 공식 확정값은 비우고 Hyperliquid 추정만 동작):
+`PUBLIC_DATA_SERVICE_KEY`(공공데이터포털 Decoding 키), 프론트 `VITE_API_URL`.
 
 ## 아키텍처 결정 로그
 
@@ -66,7 +66,7 @@ cd frontend && npm run lint
   확정 종가 기준일 15:30 KST에 마감된 15분 캔들(`candleSnapshot`) × 그날 고시환율 ÷ 공식 종가.
   기준일이 바뀔 때만 재계산, 실패 시 30분 백오프.
 - **[이전] 왕좌 교체 판정과 1·2위 막대는 금융위원회 공식값만 사용.** 추정가의 환율·perp 오차가 순위를 뒤집지 않게 하기 위함.
-- **[2026-08-03] 환율 30분 주기 갱신.** 수출입은행 일 1000회 한도 대비 약 48회/일. 화면에 고시 기준일과 `fxFetchedAt`을 함께 표시하고 "실시간 환율"이라 쓰지 않는다.
+- **[이전, 2026-08-30 폐기] 환율 30분 주기 갱신.** 수출입은행 일 1000회 한도 대비 약 48회/일. 화면에 고시 기준일과 `fxFetchedAt`을 함께 표시하고 "실시간 환율"이라 쓰지 않는다.
 - **[2026-08-03] 추정 정확도 조사 결과(문서화만, 코드 변경 없음).** 아래 "알려진 한계" 참고.
 - **[2026-08-03] 미국 카드에 "종가 대비" 추가. 기준가는 Hyperliquid 자체 캔들로 만든다.**
   미국 종목엔 금융위 같은 확정 종가 소스가 없다. Yahoo 등은 재배포 조건이 걸려 공개 서비스에 쓰기 어렵다.
@@ -74,12 +74,17 @@ cd frontend && npm run lint
   0.03~0.09%(2026-08-03 실측, 5거래일 × NVDA/AAPL/TSLA/MU)라 등락률 기준으로 충분하고 새 키·소스가 없다.
   등락률은 **USD 기준**으로 계산한다(양쪽 다 달러라 환율 변동이 섞이지 않음). 국내 카드는 원화 기준 그대로다.
   한계: 미국 공휴일 캘린더가 없어 휴장일이면 그날 16:00 ET perp 가격이 기준가가 된다.
-- **[2026-08-03] USD/KRW를 한국수출입은행 고시환율 → Pyth Network `FX.USD/KRW`로 교체.**
+- **[이전, 2026-08-30 폐기] USD/KRW를 한국수출입은행 고시환율 → Pyth Network `FX.USD/KRW`로 교체.**
   `priceKrw = markPx × fxRate`가 선형이라 환율 오차가 곧 가격 오차인데, 실측에서 perp 자체 오차(0.05%)보다
   고시환율 지연(0.19%)이 3배 컸다. **Hyperliquid HIP-3 오라클이 쓰는 것과 같은 피드**라 perp을 만들 때 쓰인 환율과
   되돌릴 때 쓰는 환율이 일치한다. 키·호출 한도가 없어 갱신 주기도 30분 → 1분으로 좁혔다.
   괴리율용 과거 환율은 날짜가 아니라 **캔들과 같은 순간**(`fetchUsdKrw(Instant)`)으로 받는다 — 인터페이스를
   `LocalDate` → `Instant`로 바꾼 이유다. 대가: 공적 고시값이라는 근거를 잃으므로 면책조항에 민간 오라클임을 명시했다.
+- **[2026-08-30] Pyth 인증 실패로 업비트 KRW-USDC 서버 내부 환산으로 교체.**
+  인증키 없는 공개 시세 조회 API를 5분마다 호출해 최대 288회/일로 제한한다. 최근 체결이 15분보다 오래됐으면 거부하고,
+  실패 시 최근 30분 안의 마지막 성공값만 유지한다. 괴리율은 요청 시각 이전 30분 안의 마지막 분 캔들을 사용한다.
+  업비트 원본 응답과 환율 필드는 외부 API와 화면에서 제거하고 환산된 추정값만 제공한다. KRW-USDC는 공적 환율이 아니며
+  원화 프리미엄과 USDC 가격 변동이 반영될 수 있음을 면책조항에 밝힌다.
 - **[2026-08-03] 금융위 API 필터 파라미터를 `srtnCd` → `likeSrtnCd`로 교체(버그 수정).**
   `getStockPriceInfo`는 `srtnCd`를 **조용히 무시한다**. 실측: `srtnCd=005930`이면 `totalCount=4,365,916`에 첫 행이 딥커머스(900110),
   `likeSrtnCd=005930`이면 `totalCount=1,615`에 첫 행이 005930. 그동안 첫 20행에 해당 종목이 없어 클라이언트 필터가 늘 빈 결과를 냈고,
@@ -100,7 +105,7 @@ cd frontend && npm run lint
 ## 컨벤션
 
 - 문서·주석·커밋 메시지는 한국어. 커밋은 `feat:`/`fix:`/`perf:`/`docs:`/`tweak:` 접두어.
-- 값을 꾸미지 않는다. 외부 API 실패 시 마지막 성공값 또는 빈 값을 쓰고, 화면 문구로 출처·기준 시각을 명시한다.
+- 값을 꾸미지 않는다. 외부 API 실패 시 유효시간 안의 마지막 성공값 또는 빈 값을 쓴다. 원화 환산 소스는 면책조항에 명시하되 원본 환율은 노출하지 않는다.
 - 추정치와 확정치를 문구로 구분한다(`Hyperliquid 추정`, 실제 `basDt` 표시 등).
 - AWS 변경·유료 리소스 생성은 별도 승인 없이 하지 않는다.
 
@@ -109,8 +114,8 @@ cd frontend && npm run lint
 2026-08-03 12:51 KST 실측 기준.
 
 - **장중 추적 오차는 bp 단위다.** `xyz:SMSN` mark $169.22 / oracle $169.17(0.03%), KRW 환산값이 한국 실시간 가격 대비 +0.02%.
-- **최대 오차원은 perp이 아니라 환율이다.** `priceKrw = markPx × fxRate` 선형이라 고시환율이 실시간 은행간 환율보다
-  0.7% 뒤처지면 그대로 0.7% 오차가 된다. perp 자체 오차의 20배 규모.
+- **최대 오차원은 perp이 아니라 환산값이다.** `priceKrw = markPx × fxRate` 선형이라 KRW-USDC의 원화 프리미엄과
+  USDC 가격 변동이 그대로 추정가 오차에 반영된다.
 - **미국 종목이 국내 종목보다 훨씬 얇다.** 24h 거래대금 SKHX $436M / SMSN $68.6M vs NVDA $18.3M / AAPL $13.3M / TSLA $7.6M.
   게다가 한국 사용자가 보는 시간대는 미국 장 마감 시간이라 현물 앵커가 없다.
 - **`prevDayPx` 기준 등락률은 전일 종가 기준 등락률과 다르다.** 2026-08-03 12:51 KST에 SMSN 24h 등락률은 **+0.53%**,
@@ -126,7 +131,7 @@ cd frontend && npm run lint
   - 수요 기반 단일 polling + SSE fan-out, 컨테이너 자원 계측, EC2 부하 테스트 실측(`docs/ec2-load-test-results.json`)
   - localhost Fake API 장애 주입, quote freshness SLI, MTTD·복구 감지 실측(`docs/07-slo-resilience.md`)
   - 공공데이터 기반 확정 시세와 같은 시점 괴리율 산출(`EstimateAccuracyService`)
-  - 환율 30분 주기 갱신, 미국 종목 선택 개수 제한 해제
+  - 업비트 KRW-USDC 5분 주기 내부 환산, 원본 환율 비노출
   - 미국 카드 종목별 시그니처 색 + 숫자 본문색 통일 (`brandColor.ts`, `.brand-strip`)
   - 금융위 필터 파라미터 버그 수정(`likeSrtnCd`) — 확정 종가·확정 시총·괴리율이 실제로 채워지는 것 확인
 - 진행 중:

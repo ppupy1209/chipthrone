@@ -1,6 +1,7 @@
 package dev.yeonwoo.chipthrone.quote.service;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -40,9 +41,11 @@ public class QuoteService {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final Duration DAILY_SOURCE_RETRY_BACKOFF = Duration.ofMinutes(10);
     private static final LocalTime FSC_PUBLISH_TIME = LocalTime.of(13, 5);
-    // Pyth는 초 단위로 갱신되고 키·호출 한도가 없다. 환율 지연이 추정가 오차의 가장 큰 항이라
-    // 1분까지 좁힌다. 시세 batch와 합치지 않는 이유는 polling cycle당 호출 1회 원칙을 지키기 위해서다.
-    private static final Duration FX_REFRESH_INTERVAL = Duration.ofMinutes(1);
+    // 업비트 공개 시세는 서버에서만 조회한다. 5분 주기면 하루 최대 288회로 호출량을 제한하면서
+    // 원화 환산값이 장시간 고정되는 문제도 피할 수 있다.
+    private static final Duration FX_REFRESH_INTERVAL = Duration.ofMinutes(5);
+    private static final Duration MAX_LAST_FX_AGE = Duration.ofMinutes(30);
+    private static final BigDecimal MAX_FX_CHANGE_RATIO = new BigDecimal("0.05");
 
     private final MarketDataClient marketDataClient;
     private final OfficialStockPriceClient officialStockPriceClient;
@@ -57,7 +60,7 @@ public class QuoteService {
     private final QuoteMetrics metrics;
     private final Clock clock;
     private final AtomicReference<QuoteSnapshot> latestSnapshot = new AtomicReference<>();
-    private final AtomicReference<ExchangeRateQuote> latestFxRate;
+    private final AtomicReference<ExchangeRateQuote> latestFxRate = new AtomicReference<>();
     private final AtomicReference<Instant> latestFxFetchedAt = new AtomicReference<>();
     private final AtomicReference<Instant> nextFxRetryAt = new AtomicReference<>();
     private final Map<String, OfficialStockPrice> officialByCode = new ConcurrentHashMap<>();
@@ -92,8 +95,6 @@ public class QuoteService {
         this.alertService = alertService;
         this.metrics = metrics;
         this.clock = clock;
-        this.latestFxRate = new AtomicReference<>(new ExchangeRateQuote(
-                BigDecimal.valueOf(properties.initialFxRate()), null, "CONFIG_FALLBACK"));
     }
 
     public Optional<QuoteSnapshot> currentSnapshot() {
@@ -147,7 +148,7 @@ public class QuoteService {
         } catch (RuntimeException ex) {
             alertService.recordFailure(AlertEvent.QUOTE_SOURCE);
             metrics.poll(MarketMode.ESTIMATE, false, System.nanoTime() - startedNanos);
-            log.warn("Failed to refresh Hyperliquid estimate. Keeping last quote snapshot.", ex);
+            log.warn("Failed to refresh quote snapshot. Keeping last quote snapshot.", ex);
             return currentSnapshot(symbols);
         }
     }
@@ -199,24 +200,43 @@ public class QuoteService {
 
     private ExchangeRateQuote fetchFxRateOrFallback() {
         if (!exchangeRateClient.enabled()) {
-            return latestFxRate.get();
+            throw new IllegalStateException("Exchange rate source is disabled");
         }
         Instant now = clock.instant();
         Instant retryAt = nextFxRetryAt.get();
         Instant fetchedAt = latestFxFetchedAt.get();
-        if ((fetchedAt != null && now.isBefore(fetchedAt.plus(FX_REFRESH_INTERVAL)))
-                || (retryAt != null && now.isBefore(retryAt))) {
+        if (fetchedAt != null && now.isBefore(fetchedAt.plus(FX_REFRESH_INTERVAL))) {
+            return latestFxRate.get();
+        }
+        if (retryAt != null && now.isBefore(retryAt)) {
+            if (fetchedAt == null || now.isAfter(fetchedAt.plus(MAX_LAST_FX_AGE))) {
+                throw new IllegalStateException("No recent exchange rate is available");
+            }
             return latestFxRate.get();
         }
         try {
             ExchangeRateQuote fxRate = exchangeRateClient.fetchUsdKrw();
+            ExchangeRateQuote previous = latestFxRate.get();
+            if (previous != null && fetchedAt != null && !now.isAfter(fetchedAt.plus(MAX_LAST_FX_AGE))) {
+                BigDecimal changeRatio = fxRate.rate()
+                        .subtract(previous.rate())
+                        .abs()
+                        .divide(previous.rate(), MathContext.DECIMAL64);
+                if (changeRatio.compareTo(MAX_FX_CHANGE_RATIO) > 0) {
+                    throw new IllegalStateException("Exchange rate changed by more than 5% in one refresh");
+                }
+            }
             latestFxRate.set(fxRate);
             latestFxFetchedAt.set(now);
             nextFxRetryAt.set(null);
             return fxRate;
         } catch (RuntimeException ex) {
             nextFxRetryAt.set(now.plus(DAILY_SOURCE_RETRY_BACKOFF));
-            log.warn("Failed to fetch Pyth USD/KRW rate. Using last rate: {}", latestFxRate.get().rate(), ex);
+            Instant lastFetchedAt = latestFxFetchedAt.get();
+            if (lastFetchedAt == null || now.isAfter(lastFetchedAt.plus(MAX_LAST_FX_AGE))) {
+                throw new IllegalStateException("No recent exchange rate is available", ex);
+            }
+            log.warn("Failed to fetch Upbit KRW-USDC rate. Using recent rate: {}", latestFxRate.get().rate(), ex);
             return latestFxRate.get();
         }
     }
@@ -246,16 +266,7 @@ public class QuoteService {
         if (stocks.isEmpty()) {
             return Optional.empty();
         }
-        ExchangeRateQuote fxRate = latestFxRate.get();
-        return Optional.of(new QuoteSnapshot(
-                MarketMode.ESTIMATE,
-                at,
-                fxRate.rate().doubleValue(),
-                fxRate.asOfDate(),
-                fxRate.source(),
-                fxRate.fetchedAt(),
-                stocks
-        ));
+        return Optional.of(new QuoteSnapshot(MarketMode.ESTIMATE, at, stocks));
     }
 
     private QuoteSnapshot snapshotFromAllCached(Instant at) {

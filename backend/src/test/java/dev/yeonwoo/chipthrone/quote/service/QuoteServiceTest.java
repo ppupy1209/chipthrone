@@ -49,7 +49,7 @@ class QuoteServiceTest {
         assertThat(fx.calls).isOne();
         assertThat(first.stocks()).allMatch(stock -> "HYPERLIQUID".equals(stock.source()));
         assertThat(first.stocks()).allMatch(stock -> stock.officialMarketCap() != null);
-        assertThat(second.fxSource()).isEqualTo("PYTH");
+        assertThat(second.stocks()).hasSize(2);
     }
 
     @Test
@@ -78,15 +78,33 @@ class QuoteServiceTest {
         QuoteService service = newService(market, official, fx, clock);
 
         service.refresh(Set.of("005930"));
-        clock.advance(Duration.ofSeconds(30));
+        clock.advance(Duration.ofMinutes(4));
         service.refresh(Set.of("005930"));
         assertThat(fx.calls).isOne();
 
-        clock.advance(Duration.ofSeconds(40));
-        QuoteSnapshot refreshed = service.refresh(Set.of("005930")).orElseThrow();
+        clock.advance(Duration.ofMinutes(2));
+        service.refresh(Set.of("005930")).orElseThrow();
 
         assertThat(fx.calls).isEqualTo(2);
-        assertThat(refreshed.fxFetchedAt()).isEqualTo(clock.instant());
+    }
+
+    @Test
+    void stopsRefreshingWithAnExchangeRateOlderThanThirtyMinutes() {
+        MutableClock clock = new MutableClock(Instant.parse("2026-06-22T01:00:00Z"));
+        StubExchangeRateClient fx = new StubExchangeRateClient(true, clock);
+        QuoteService service = newService(new StubMarketDataClient(), new StubOfficialClient(false), fx, clock);
+
+        QuoteSnapshot first = service.refresh(Set.of("005930")).orElseThrow();
+        clock.advance(Duration.ofMinutes(6));
+        fx.fail = true;
+        QuoteSnapshot recentFallback = service.refresh(Set.of("005930")).orElseThrow();
+        assertThat(recentFallback.at()).isAfter(first.at());
+
+        clock.advance(Duration.ofMinutes(25));
+        QuoteSnapshot staleFallback = service.refresh(Set.of("005930")).orElseThrow();
+
+        assertThat(staleFallback.at()).isEqualTo(recentFallback.at());
+        assertThat(fx.calls).isEqualTo(3);
     }
 
     @Test
@@ -104,21 +122,19 @@ class QuoteServiceTest {
     }
 
     @Test
-    void disabledOfficialSourcesUseConfiguredFxAndLeaveDailyPriceEmpty() {
+    void disabledExchangeRateSourceDoesNotPublishAConfiguredEstimate() {
         QuoteService service = newService(
                 new StubMarketDataClient(), new StubOfficialClient(false), new StubExchangeRateClient(false));
 
-        QuoteSnapshot snapshot = service.refresh(Set.of("005930")).orElseThrow();
+        Optional<QuoteSnapshot> snapshot = service.refresh(Set.of("005930"));
 
-        assertThat(snapshot.fxRate()).isEqualTo(1450.0);
-        assertThat(snapshot.fxSource()).isEqualTo("CONFIG_FALLBACK");
-        assertThat(snapshot.stocks().getFirst().regularClose()).isNull();
+        assertThat(snapshot).isEmpty();
     }
 
     @Test
     void keepsLastSnapshotWhenHyperliquidFails() {
         StubMarketDataClient market = new StubMarketDataClient();
-        QuoteService service = newService(market, new StubOfficialClient(false), new StubExchangeRateClient(false));
+        QuoteService service = newService(market, new StubOfficialClient(false), new StubExchangeRateClient(true));
         QuoteSnapshot first = service.refresh(Set.of("005930")).orElseThrow();
         market.fail = true;
 
@@ -237,7 +253,7 @@ class QuoteServiceTest {
     }
 
     private QuoteProperties properties() {
-        return new QuoteProperties("xyz", 1450, List.of(
+        return new QuoteProperties("xyz", List.of(
                 new QuoteProperties.Asset(
                         "005930", "삼성전자", "xyz:SMSN", 5_919_637_922L, QuoteProperties.Market.KRX),
                 new QuoteProperties.Asset(
@@ -300,6 +316,7 @@ class QuoteServiceTest {
         private final boolean enabled;
         private final Clock clock;
         private int calls;
+        private boolean fail;
 
         private StubExchangeRateClient(boolean enabled) {
             this(enabled, null);
@@ -318,12 +335,15 @@ class QuoteServiceTest {
         @Override
         public ExchangeRateQuote fetchUsdKrw() {
             calls++;
-            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "PYTH", fetchedAt());
+            if (fail) {
+                throw new IllegalStateException("exchange failure");
+            }
+            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "UPBIT_USDC", fetchedAt());
         }
 
         @Override
         public ExchangeRateQuote fetchUsdKrw(Instant at) {
-            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "PYTH", fetchedAt());
+            return new ExchangeRateQuote(new BigDecimal("1476.8"), "2026-06-19", "UPBIT_USDC", fetchedAt());
         }
 
         private Instant fetchedAt() {

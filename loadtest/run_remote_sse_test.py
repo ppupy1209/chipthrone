@@ -215,8 +215,8 @@ def run(base_url, users, duration, symbols):
             external_calls(after, "financial_services_commission")
             - external_calls(before, "financial_services_commission")
         ),
-        "pyth_fx_calls": int(
-            external_calls(after, "pyth") - external_calls(before, "pyth")
+        "upbit_fx_calls": int(
+            external_calls(after, "upbit") - external_calls(before, "upbit")
         ),
         "hyperliquid_calls": int(
             external_calls(after, "hyperliquid") - external_calls(before, "hyperliquid")

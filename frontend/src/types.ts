@@ -43,12 +43,6 @@ export type MarketSnapshot = {
   mode: MarketMode
   /** 스냅샷 시각 (ISO-8601) */
   at: string
-  /** USD/KRW 환율 — 추정가(달러 환산)에 사용 */
-  fxRate: number
-  fxAsOfDate: string | null
-  /** 환율을 마지막으로 조회한 시각 (ISO-8601). 설정 기준값이면 null */
-  fxFetchedAt: string | null
-  fxSource: 'PYTH' | 'CONFIG_FALLBACK'
   stocks: Company[]
 }
 

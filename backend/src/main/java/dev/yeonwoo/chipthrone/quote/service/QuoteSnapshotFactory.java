@@ -58,10 +58,6 @@ public class QuoteSnapshotFactory {
         return new QuoteSnapshot(
                 MarketMode.ESTIMATE,
                 clock.instant(),
-                fxRate.rate().doubleValue(),
-                fxRate.asOfDate(),
-                fxRate.source(),
-                fxRate.fetchedAt(),
                 stocks
         );
     }

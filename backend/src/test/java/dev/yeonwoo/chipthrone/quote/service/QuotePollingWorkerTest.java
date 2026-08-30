@@ -87,7 +87,6 @@ class QuotePollingWorkerTest {
     private Fixture fixture(QuoteService service, Clock clock, boolean enabled) {
         QuoteProperties quoteProperties = new QuoteProperties(
                 "xyz",
-                1450,
                 List.of(
                         new QuoteProperties.Asset("005930", "삼성전자", "xyz:SMSN", 5_919_637_922L, QuoteProperties.Market.KRX),
                         new QuoteProperties.Asset("000660", "SK하이닉스", "xyz:SKHX", 728_002_365L, QuoteProperties.Market.KRX)

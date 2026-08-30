@@ -89,21 +89,10 @@ function App() {
         </section>
 
         <section data-testid="estimate-krx" className="mt-7">
-          <div className="mb-2 flex items-end justify-between gap-3">
-            <h2 className={SECTION_TITLE_CLASS}>해외 추정 시세</h2>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-[12px] font-medium tabular-nums dark:border-neutral-800 dark:bg-neutral-900">
-              {snapshot.fxSource === 'PYTH' && (
-                <span aria-hidden="true" className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-              )}
-              {/* Pyth는 소수 5자리로 온다. 통화 표시는 2자리로 끊는다. */}
-              <span>
-                USD/KRW {snapshot.fxRate.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-          </div>
+          <h2 className={`${SECTION_TITLE_CLASS} mb-2`}>해외 추정 시세</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {krxCompanies.map((company) => (
-              <EstimateCompanyCard key={company.code} company={company} fxRate={snapshot.fxRate} />
+              <EstimateCompanyCard key={company.code} company={company} />
             ))}
           </div>
         </section>
@@ -134,9 +123,9 @@ function App() {
         <footer className="mt-8 border-t border-neutral-200 pt-4 text-[11px] leading-relaxed text-neutral-400 dark:border-neutral-800">
           <p className="mb-1 font-medium text-neutral-500">면책조항</p>
           <p>
-            국내 확정값은 금융위원회 일별 주식시세정보, 환율은 Pyth Network의 USD/KRW 실시간 시세를 사용합니다.
-            Pyth는 공적 고시환율이 아닌 민간 오라클 네트워크의 집계값입니다.
-            24시간 가격은 실제 주식 체결가가 아닌 Hyperliquid 파생시장의 추정값이며 지연·괴리가 있을 수 있습니다.
+            국내 확정값은 금융위원회 일별 주식시세정보를 사용합니다.
+            원화 환산값은 업비트 KRW-USDC 시장가를 참고한 추정값입니다.
+            24시간 가격은 실제 주식 체결가가 아닌 Hyperliquid 파생시장의 추정값이며 지연이나 괴리가 발생할 수 있습니다.
             본 정보는 투자 권유나 자문이 아닙니다.
           </p>
         </footer>

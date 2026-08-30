@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Hyperliquid/금융위원회/Pyth 호환 Fake 서버와 정확한 호출 카운터."""
+"""Hyperliquid/금융위원회/업비트 호환 Fake 서버와 정확한 호출 카운터."""
 
 import json
 import os
 import threading
 import time
 from collections import Counter
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -115,12 +116,23 @@ class Handler(BaseHTTPRequestHandler):
                     "faults": sorted(FAULTS),
                     "slack_events": list(SLACK_EVENTS),
                 })
-        # Pyth Hermes: /v2/updates/price/latest 와 /v2/updates/price/{epochSeconds} 둘 다 같은 형식이다.
-        if parsed.path.startswith("/v2/updates/price/"):
-            increment("pyth_fx")
-            return self.json_response({"parsed": [{
-                "price": {"price": "145000000", "conf": "80000", "expo": -5, "publish_time": 1785472200}
-            }]})
+        if parsed.path == "/v1/ticker":
+            increment("upbit_fx")
+            return self.json_response([{
+                "market": "KRW-USDC",
+                "trade_price": 1450.0,
+                "trade_timestamp": int(time.time() * 1000),
+            }])
+        if parsed.path == "/v1/candles/minutes/1":
+            increment("upbit_fx")
+            requested_at = datetime.fromisoformat(query["to"][0].replace("Z", "+00:00"))
+            traded_at = requested_at.astimezone(timezone.utc) - timedelta(minutes=1)
+            return self.json_response([{
+                "market": "KRW-USDC",
+                "candle_date_time_utc": traded_at.replace(tzinfo=None).isoformat(timespec="seconds"),
+                "trade_price": 1450.0,
+                "timestamp": int(traded_at.timestamp() * 1000),
+            }])
         if parsed.path == "/getStockPriceInfo":
             increment("fsc_daily_stock")
             # srtnCd는 실제 API가 무시한다. 클라이언트와 같이 likeSrtnCd를 본다.

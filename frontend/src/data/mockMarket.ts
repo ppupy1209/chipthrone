@@ -23,10 +23,6 @@ export const fallbackAssets: SupportedAsset[] = [
 export const mockSnapshot: MarketSnapshot = {
   mode: 'ESTIMATE',
   at: new Date().toISOString(),
-  fxRate: 1531,
-  fxAsOfDate: '2026-06-19',
-  fxFetchedAt: null,
-  fxSource: 'PYTH',
   stocks: [
     {
       code: '005930',

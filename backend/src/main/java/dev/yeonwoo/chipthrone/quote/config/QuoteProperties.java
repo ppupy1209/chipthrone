@@ -15,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "chipthrone.quote")
 public record QuoteProperties(
         @NotBlank String dex,
-        @Positive double initialFxRate,
         @Valid @NotEmpty List<Asset> assets
 ) {
     public record Asset(

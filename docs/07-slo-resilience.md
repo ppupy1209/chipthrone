@@ -15,7 +15,7 @@
 
 ## 외부 API 과호출 방지
 
-`loadtest/fake_quote_server.py`가 Hyperliquid·금융위원회·Pyth·Slack Webhook을 모두 localhost에서 대체한다. 장애 주입도 Fake Hyperliquid 호환 엔드포인트가 HTTP 503을 반환하는 방식이다. 실제 API 키를 읽지 않고 외부 호스트를 호출하지 않는다.
+`loadtest/fake_quote_server.py`가 Hyperliquid, 금융위원회, 업비트, Slack Webhook을 모두 localhost에서 대체한다. 장애 주입도 Fake Hyperliquid 호환 엔드포인트가 HTTP 503을 반환하는 방식이다. 실제 API 키를 읽지 않고 외부 호스트를 호출하지 않는다.
 
 ```bash
 cd backend

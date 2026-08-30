@@ -36,10 +36,6 @@ type BackendStock = {
 type BackendSnapshot = {
   mode: MarketSnapshot['mode']
   at: string
-  fxRate: number
-  fxAsOfDate: string | null
-  fxFetchedAt: string | null
-  fxSource: MarketSnapshot['fxSource']
   stocks: BackendStock[]
 }
 
@@ -86,10 +82,6 @@ export function useMarketData(symbols: string[]): { snapshot: MarketSnapshot } {
           return {
             mode: data.mode,
             at: data.at,
-            fxRate: data.fxRate,
-            fxAsOfDate: data.fxAsOfDate,
-            fxFetchedAt: data.fxFetchedAt,
-            fxSource: data.fxSource,
             stocks: selectedCodes.map((code) => merged.get(code)).filter((stock): stock is Company => !!stock),
           }
         })

@@ -19,13 +19,12 @@ chipthrone:
     cooldown-minutes: 10
   source:
     public-data-service-key: ${PUBLIC_DATA_SERVICE_KEY:}
-    # Pyth Hermes는 키가 없다. Hyperliquid HIP-3 오라클과 같은 USD/KRW 피드를 쓴다.
-    pyth-hermes-url: ${PYTH_HERMES_URL:https://hermes.pyth.network}
-    pyth-usd-krw-feed-id: ${PYTH_USD_KRW_FEED_ID:e539120487c29b4defdf9a53d337316ea022a2688978a468f9efd847201be7e3}
+    # 인증키 없는 공개 시세를 서버 내부 원화 환산에만 사용한다.
+    upbit-api-url: ${UPBIT_API_URL:https://api.upbit.com}
+    upbit-market: ${UPBIT_MARKET:KRW-USDC}
   quote:
     polling-enabled: true
     dex: xyz
-    initial-fx-rate: 1450
     assets:
       # 금융위원회 일별 데이터의 상장주식수로 갱신됨. 값은 API 미연동 시 폴백.
       - code: "005930"
