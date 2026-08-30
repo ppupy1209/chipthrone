@@ -21,7 +21,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
- * 업비트 KRW-USDC 시장가를 USD/KRW의 근사값으로 사용하는 내부 환산 클라이언트.
+ * 업비트 KRW-USDC 최우선 매수 호가와 매도 호가의 중간값을 USD/KRW의 근사값으로 사용하는 내부 환산 클라이언트.
  *
  * <p>인증키가 필요 없는 시세 조회 API를 서버에서만 호출한다. 원본 응답과 환율은 외부 API에
  * 노출하지 않고 Hyperliquid 달러 추정가를 원화로 환산하는 데만 사용한다.
@@ -64,16 +64,17 @@ public class UpbitUsdcExchangeRateClient implements ExchangeRateClient {
     @Override
     public ExchangeRateQuote fetchUsdKrw() {
         URI uri = UriComponentsBuilder.fromUriString(apiUrl)
-                .path("/v1/ticker")
+                .path("/v1/orderbook")
                 .queryParam("markets", market)
+                .queryParam("count", 1)
                 .build()
                 .encode()
                 .toUri();
-        JsonNode ticker = first(request(uri, "usdc_krw_ticker"), "ticker");
-        requireMarket(ticker);
-        Instant tradedAt = Instant.ofEpochMilli(ticker.path("trade_timestamp").asLong());
-        validateCurrentTimestamp(tradedAt);
-        return quote(rate(ticker, "trade_price"), tradedAt);
+        JsonNode orderbook = first(request(uri, "usdc_krw_orderbook"), "orderbook");
+        requireMarket(orderbook);
+        Instant quotedAt = Instant.ofEpochMilli(orderbook.path("timestamp").asLong());
+        validateCurrentTimestamp(quotedAt);
+        return quote(orderbookMidpoint(orderbook), quotedAt);
     }
 
     @Override
@@ -137,11 +138,25 @@ public class UpbitUsdcExchangeRateClient implements ExchangeRateClient {
         return rate;
     }
 
+    private BigDecimal orderbookMidpoint(JsonNode orderbook) {
+        JsonNode units = orderbook.path("orderbook_units");
+        JsonNode best = units.isArray() ? units.path(0) : null;
+        if (best == null || best.isMissingNode() || best.isNull()) {
+            throw new IllegalStateException("Unexpected Upbit KRW-USDC orderbook response");
+        }
+        BigDecimal bid = rate(best, "bid_price");
+        BigDecimal ask = rate(best, "ask_price");
+        if (bid.compareTo(ask) > 0) {
+            throw new IllegalStateException("Crossed Upbit KRW-USDC orderbook");
+        }
+        return bid.add(ask).divide(BigDecimal.valueOf(2));
+    }
+
     private void validateCurrentTimestamp(Instant tradedAt) {
         Instant now = clock.instant();
         if (tradedAt.isAfter(now.plus(MAX_FUTURE_SKEW))
                 || Duration.between(tradedAt, now).compareTo(MAX_CURRENT_AGE) > 0) {
-            throw new IllegalStateException("Stale Upbit KRW-USDC ticker: " + tradedAt);
+            throw new IllegalStateException("Stale Upbit KRW-USDC orderbook: " + tradedAt);
         }
     }
 

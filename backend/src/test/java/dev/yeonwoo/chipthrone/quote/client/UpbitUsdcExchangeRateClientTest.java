@@ -50,34 +50,36 @@ class UpbitUsdcExchangeRateClientTest {
     }
 
     @Test
-    void readsFreshTickerAndCountsOneServerSideCall() {
+    void readsFreshOrderbookMidpointAndCountsOneServerSideCall() {
         Fixture f = fixture();
-        f.server().expect(requestTo(API + "/v1/ticker?markets=KRW-USDC"))
+        f.server().expect(requestTo(API + "/v1/orderbook?markets=KRW-USDC&count=1"))
                 .andExpect(headerDoesNotExist(HttpHeaders.ORIGIN))
                 .andExpect(headerDoesNotExist(HttpHeaders.AUTHORIZATION))
                 .andRespond(withSuccess("""
-                        [{"market":"KRW-USDC","trade_price":1388.0,"trade_timestamp":1788099593809}]
+                        [{"market":"KRW-USDC","timestamp":1788099593809,
+                          "orderbook_units":[{"bid_price":1387.0,"ask_price":1388.0}]}]
                         """, MediaType.APPLICATION_JSON));
 
         ExchangeRateQuote quote = f.client().fetchUsdKrw();
 
-        assertThat(quote.rate()).isEqualByComparingTo("1388.0");
+        assertThat(quote.rate()).isEqualByComparingTo("1387.5");
         assertThat(quote.source()).isEqualTo("UPBIT_USDC");
         assertThat(quote.asOfDate()).isEqualTo("2026-08-30");
         assertThat(quote.fetchedAt()).isEqualTo(NOW);
         assertThat(f.registry().counter(
                 "chipthrone.quote.external.api.calls",
                 "source", "upbit",
-                "operation", "usdc_krw_ticker").count()).isEqualTo(1);
+                "operation", "usdc_krw_orderbook").count()).isEqualTo(1);
         f.server().verify(Duration.ofSeconds(1));
     }
 
     @Test
-    void rejectsTickerOlderThanFifteenMinutes() {
+    void rejectsOrderbookOlderThanFifteenMinutes() {
         Fixture f = fixture();
-        f.server().expect(requestTo(API + "/v1/ticker?markets=KRW-USDC"))
+        f.server().expect(requestTo(API + "/v1/orderbook?markets=KRW-USDC&count=1"))
                 .andRespond(withSuccess("""
-                        [{"market":"KRW-USDC","trade_price":1388.0,"trade_timestamp":1788098400000}]
+                        [{"market":"KRW-USDC","timestamp":1788098400000,
+                          "orderbook_units":[{"bid_price":1387.0,"ask_price":1388.0}]}]
                         """, MediaType.APPLICATION_JSON));
 
         assertThatThrownBy(() -> f.client().fetchUsdKrw())

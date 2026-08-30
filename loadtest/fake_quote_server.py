@@ -116,12 +116,15 @@ class Handler(BaseHTTPRequestHandler):
                     "faults": sorted(FAULTS),
                     "slack_events": list(SLACK_EVENTS),
                 })
-        if parsed.path == "/v1/ticker":
+        if parsed.path == "/v1/orderbook":
             increment("upbit_fx")
             return self.json_response([{
                 "market": "KRW-USDC",
-                "trade_price": 1450.0,
-                "trade_timestamp": int(time.time() * 1000),
+                "timestamp": int(time.time() * 1000),
+                "orderbook_units": [{
+                    "bid_price": 1449.0,
+                    "ask_price": 1451.0,
+                }],
             }])
         if parsed.path == "/v1/candles/minutes/1":
             increment("upbit_fx")
