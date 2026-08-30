@@ -10,6 +10,7 @@
 | `deploy-backend.yml` | main 푸시 | Docker 이미지 → GHCR 푸시 | 없음(GITHUB_TOKEN) |
 | EC2 watchtower | 60초 주기 | GHCR 새 이미지 감지 → 자동 pull/재시작 | 없음(SSH 불필요) |
 | EC2 health recovery | 15초 주기 | API 응답 불능 컨테이너를 감지해 제한적으로 재시작 | systemd timer |
+| CloudWatch Logs | 상시 | 백엔드 표준 출력을 중앙 저장·검색 | EC2 IAM 역할 |
 
 배포는 **이미지 푸시 + watchtower 자동 반영** 방식이다. GitHub Actions가 EC2에 SSH로 접속하지 않으므로 보안그룹 22를 열 필요가 없다. 프론트엔드 배포는 Vercel의 GitHub 연동이 담당한다(아래 4번).
 
@@ -24,6 +25,29 @@
    ```
    (또는 `infra/ec2-bootstrap.sh` 내용을 복사해 실행)
 4. GHCR 이미지가 private면 pull 전에 로그인 필요. **public 권장**(아래 3번 참고).
+
+### 기존 EC2에 에러 로그 수집 추가
+
+CloudWatch Logs의 `/chipthrone/api` 로그 그룹에서 백엔드의 `WARN`, `ERROR` 로그와 예외 스택을 검색한다. EC2에는 별도 로그 서버나 수집 에이전트를 설치하지 않고 Docker의 `awslogs` 드라이버를 사용한다.
+
+1. AWS CloudWatch에서 `/chipthrone/api` 로그 그룹을 만들고 보존 기간을 **14일**로 설정한다.
+2. `infra/iam/chipthrone-cloudwatch-logs-policy.json` 정책을 EC2용 IAM 역할에 연결하고 해당 역할을 EC2 인스턴스에 연결한다.
+3. EC2의 `~/chipthrone.env`에 다음 두 값을 추가한다.
+   ```dotenv
+   AWS_REGION=<EC2 리전>
+   CLOUDWATCH_LOG_GROUP=/chipthrone/api
+   ```
+4. 운영 컨테이너를 CloudWatch 로그 드라이버로 다시 생성한다.
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/ppupy1209/chipthrone/main/infra/install-cloudwatch-logs.sh | bash
+   ```
+5. 적용 상태를 확인한다.
+   ```bash
+   sudo docker inspect --format '{{.HostConfig.LogConfig.Type}}' chipthrone-api
+   curl https://api.chipthrone.com/api/health
+   ```
+
+`awslogs`가 출력되고 Health API가 정상 응답하면 적용 완료다. 로그 그룹을 찾을 수 없거나 로그 스트림 생성 권한이 없으면 설치 스크립트가 기존 컨테이너를 제거하기 전에 중단된다.
 
 ### RDS (이후 단계)
 - MySQL 8, **db.t3.micro**(프리티어), 20GB. EC2 보안 그룹에서만 3306 접근 허용.
@@ -142,10 +166,7 @@ sudo certbot --nginx -d api.chipthrone.com
    ```
 2. 컨테이너를 env 파일로 재실행:
    ```bash
-   sudo docker rm -f chipthrone-api
-   sudo docker run -d --name chipthrone-api --restart unless-stopped \
-     -p 8080:8080 -e JAVA_OPTS="-Xms128m -Xmx512m" \
-     --env-file ~/chipthrone.env ghcr.io/ppupy1209/chipthrone-api:latest
+   /usr/local/bin/chipthrone-run-api
    ```
    - watchtower가 이후 업데이트 시 이 환경변수를 그대로 유지한다.
    - 키가 비면 Hyperliquid 추정 시세는 계속 동작한다.

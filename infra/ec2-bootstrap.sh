@@ -63,18 +63,9 @@ sudo nginx -t && sudo systemctl reload nginx
 echo "==> 컨테이너 최초 실행 시도 ($IMAGE)"
 # GHCR 패키지가 private면 먼저 로그인 필요:
 #   echo <GitHub PAT(read:packages)> | docker login ghcr.io -u ${OWNER} --password-stdin
-# 시크릿(공공데이터·환율·Slack 키)은 env 파일로 주입한다. 있으면 --env-file 로 전달.
-ENV_FILE="$HOME/chipthrone.env"
-ENV_OPT=""
-if [ -f "$ENV_FILE" ]; then
-  ENV_OPT="--env-file $ENV_FILE"
-  echo "==> env 파일 사용: $ENV_FILE"
-fi
-
-if sudo docker pull "$IMAGE"; then
-  sudo docker rm -f chipthrone-api 2>/dev/null || true
-  sudo docker run -d --name chipthrone-api --restart unless-stopped \
-    -p 8080:8080 -e JAVA_OPTS="-Xms128m -Xmx512m" $ENV_OPT "$IMAGE"
+install_infra_file "run-api-container.sh" \
+  "/usr/local/bin/chipthrone-run-api" "0755"
+if CHIPTHRONE_IMAGE="$IMAGE" /usr/local/bin/chipthrone-run-api; then
   echo "==> 컨테이너 실행 완료"
 else
   echo "!! 이미지 pull 실패 — GHCR 패키지를 public으로 바꾸거나 docker login 후 재시도하세요."
@@ -107,6 +98,7 @@ cat <<DONE
      curl http://localhost:8080/api/health
      curl https://${API_DOMAIN}/api/health
      sudo docker inspect --format '{{.State.Health.Status}}' chipthrone-api
+     sudo docker inspect --format '{{.HostConfig.LogConfig.Type}}' chipthrone-api
      systemctl status chipthrone-health-recovery.timer
 4) 이후 main 푸시 시 GitHub Actions가 자동 재배포
 ==================================================

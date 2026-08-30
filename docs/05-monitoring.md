@@ -1,4 +1,26 @@
-# 05. 모니터링 — Prometheus·Grafana·Slack
+# 05. 모니터링
+
+## 운영 에러 로그
+
+백엔드 로그는 컨테이너 표준 출력으로 기록하고 Docker `awslogs` 드라이버가 CloudWatch Logs의 `/chipthrone/api` 로그 그룹으로 전송한다. 운영 환경에서는 Spring Boot ECS JSON 형식을 사용해 시각, 로그 레벨, 클래스, 서비스명, 메시지와 예외 스택을 필드별로 검색한다. 로컬 실행은 기존 텍스트 형식을 유지한다.
+
+CloudWatch Logs Insights에서 최근 경고와 오류를 확인하는 쿼리:
+
+```text
+fields @timestamp, `log.level`, `service.name`, message
+| filter `log.level` in ["ERROR", "WARN"]
+| sort @timestamp desc
+| limit 100
+```
+
+로그 보존 기간은 14일로 제한한다. CloudWatch 전송 장애가 API 처리까지 막지 않도록 Docker 로그 전달은 4MB 비차단 버퍼를 사용한다. CloudWatch 설정이 없는 컨테이너는 `local` 드라이버로 최대 10MB 파일 3개만 보관한다.
+
+배포 후 확인:
+
+```bash
+sudo docker inspect --format '{{.HostConfig.LogConfig.Type}}' chipthrone-api
+sudo docker logs --tail 100 chipthrone-api
+```
 
 ## 수요 기반 시세 지표
 

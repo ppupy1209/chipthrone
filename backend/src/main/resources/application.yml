@@ -1,3 +1,7 @@
+spring:
+  application:
+    name: chipthrone-api
+
 server:
   port: 8080
 
