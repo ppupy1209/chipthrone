@@ -16,6 +16,23 @@ import org.springframework.web.client.RestClient;
 class AlertServiceTest {
 
     @Test
+    void officialCloseFailureAlertsImmediatelyAndRecoversOnce() {
+        MutableClock clock = new MutableClock(Instant.parse("2026-06-22T01:00:00Z"));
+        CapturingSlackNotifier notifier = new CapturingSlackNotifier();
+        AlertService service = newService(notifier, clock, 5, 10);
+
+        service.recordFailure(AlertEvent.OFFICIAL_CLOSE);
+        service.recordFailure(AlertEvent.OFFICIAL_CLOSE);
+        service.recordSuccess(AlertEvent.OFFICIAL_CLOSE);
+        service.recordSuccess(AlertEvent.OFFICIAL_CLOSE);
+
+        assertThat(notifier.messages).containsExactly(
+                ":warning: chipthrone-api 전날 종가 수집 실패",
+                ":white_check_mark: chipthrone-api 전날 종가 수집 복구"
+        );
+    }
+
+    @Test
     void sendsFailureOnlyAfterConsecutiveThreshold() {
         MutableClock clock = new MutableClock(Instant.parse("2026-06-22T01:00:00Z"));
         CapturingSlackNotifier notifier = new CapturingSlackNotifier();

@@ -2,6 +2,7 @@ package dev.yeonwoo.chipthrone.quote.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import dev.yeonwoo.chipthrone.alert.AlertProperties;
+import dev.yeonwoo.chipthrone.alert.AlertEvent;
 import dev.yeonwoo.chipthrone.alert.AlertService;
 import dev.yeonwoo.chipthrone.alert.SlackNotifier;
 import dev.yeonwoo.chipthrone.quote.client.ExchangeRateClient;
@@ -125,6 +127,24 @@ class QuoteServiceTest {
         assertThat(fallback).contains(first);
     }
 
+    @Test
+    void reportsOfficialCloseFailureAndRecovery() {
+        MutableClock clock = new MutableClock(Instant.parse("2026-06-22T01:00:00Z"));
+        StubOfficialClient official = new StubOfficialClient(true);
+        official.empty = true;
+        AlertService alerts = mock(AlertService.class);
+        QuoteService service = newService(
+                new StubMarketDataClient(), official, new StubExchangeRateClient(true), clock, alerts);
+
+        service.refresh(Set.of("005930", "000660"));
+        verify(alerts).recordFailure(AlertEvent.OFFICIAL_CLOSE);
+
+        clock.advance(Duration.ofMinutes(10));
+        official.empty = false;
+        service.refresh(Set.of("005930", "000660"));
+        verify(alerts).recordSuccess(AlertEvent.OFFICIAL_CLOSE);
+    }
+
     private QuoteService newService(
             MarketDataClient market,
             OfficialStockPriceClient official,
@@ -144,6 +164,27 @@ class QuoteServiceTest {
             ExchangeRateClient fx,
             Clock clock
     ) {
+        AlertProperties alertProperties = new AlertProperties("", 5, 10);
+        return newService(
+                market,
+                official,
+                fx,
+                clock,
+                new AlertService(
+                        alertProperties,
+                        new SlackNotifier(RestClient.builder().build(), alertProperties),
+                        clock
+                )
+        );
+    }
+
+    private QuoteService newService(
+            MarketDataClient market,
+            OfficialStockPriceClient official,
+            ExchangeRateClient fx,
+            Clock clock,
+            AlertService alertService
+    ) {
         QuoteProperties properties = properties();
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         return new QuoteService(
@@ -156,11 +197,7 @@ class QuoteServiceTest {
                 new AssetCatalog(properties),
                 new QuoteSnapshotFactory(properties, clock),
                 mock(QuoteBroadcaster.class),
-                new AlertService(
-                        new AlertProperties("", 5, 10),
-                        new SlackNotifier(RestClient.builder().build(), new AlertProperties("", 5, 10)),
-                        clock
-                ),
+                alertService,
                 new QuoteMetrics(registry),
                 clock
         );
@@ -234,6 +271,7 @@ class QuoteServiceTest {
     private static final class StubOfficialClient implements OfficialStockPriceClient {
         private final boolean enabled;
         private int calls;
+        private boolean empty;
 
         private StubOfficialClient(boolean enabled) {
             this.enabled = enabled;
@@ -247,6 +285,9 @@ class QuoteServiceTest {
         @Override
         public Optional<OfficialStockPrice> fetchLatest(String code) {
             calls++;
+            if (empty) {
+                return Optional.empty();
+            }
             long shares = code.equals("005930") ? 5_919_637_922L : 728_002_365L;
             BigDecimal close = code.equals("005930") ? new BigDecimal("71000") : new BigDecimal("205000");
             return Optional.of(new OfficialStockPrice(

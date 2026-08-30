@@ -30,7 +30,7 @@ public class AlertService {
     public synchronized void recordFailure(AlertEvent event) {
         FailureState state = state(event);
         state.consecutiveFailures++;
-        if (!state.failing && state.consecutiveFailures >= properties.consecutiveFailureThreshold()) {
+        if (!state.failing && state.consecutiveFailures >= failureThreshold(event)) {
             state.failing = true;
             send(failureNotification(event), failureMessage(event));
         }
@@ -63,20 +63,30 @@ public class AlertService {
         return Duration.ofMinutes(properties.cooldownMinutes());
     }
 
+    private int failureThreshold(AlertEvent event) {
+        return switch (event) {
+            case OFFICIAL_CLOSE -> 1;
+            case QUOTE_SOURCE -> properties.consecutiveFailureThreshold();
+        };
+    }
+
     private AlertNotification failureNotification(AlertEvent event) {
         return switch (event) {
+            case OFFICIAL_CLOSE -> AlertNotification.OFFICIAL_CLOSE_FAILURE;
             case QUOTE_SOURCE -> AlertNotification.QUOTE_SOURCE_FAILURE;
         };
     }
 
     private AlertNotification recoveryNotification(AlertEvent event) {
         return switch (event) {
+            case OFFICIAL_CLOSE -> AlertNotification.OFFICIAL_CLOSE_RECOVERY;
             case QUOTE_SOURCE -> AlertNotification.QUOTE_SOURCE_RECOVERY;
         };
     }
 
     private String failureMessage(AlertEvent event) {
         return switch (event) {
+            case OFFICIAL_CLOSE -> ":warning: chipthrone-api 전날 종가 수집 실패";
             case QUOTE_SOURCE -> ":warning: chipthrone-api 시세 소스 장애: 연속 실패 "
                     + properties.consecutiveFailureThreshold() + "회";
         };
@@ -84,12 +94,15 @@ public class AlertService {
 
     private String recoveryMessage(AlertEvent event) {
         return switch (event) {
+            case OFFICIAL_CLOSE -> ":white_check_mark: chipthrone-api 전날 종가 수집 복구";
             case QUOTE_SOURCE -> ":white_check_mark: chipthrone-api 시세 소스 복구";
         };
     }
 
     private enum AlertNotification {
         DEPLOYMENT,
+        OFFICIAL_CLOSE_FAILURE,
+        OFFICIAL_CLOSE_RECOVERY,
         QUOTE_SOURCE_FAILURE,
         QUOTE_SOURCE_RECOVERY
     }

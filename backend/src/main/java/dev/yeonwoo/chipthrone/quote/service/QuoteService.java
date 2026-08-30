@@ -157,26 +157,43 @@ public class QuoteService {
             return Map.copyOf(officialByCode);
         }
         Instant now = clock.instant();
-        assets.stream()
-                .filter(asset -> asset.market() == QuoteProperties.Market.KRX)
-                .forEach(asset -> {
-                    String code = asset.code();
-                    Instant retryAt = nextOfficialRetryAtByCode.get(code);
-                    if (!shouldRefreshDaily(officialFetchedAtByCode.get(code), FSC_PUBLISH_TIME)
-                            || (retryAt != null && now.isBefore(retryAt))) {
-                        return;
-                    }
-                    try {
-                        officialStockPriceClient.fetchLatest(code).ifPresentOrElse(value -> {
-                            officialByCode.put(code, value);
-                            officialFetchedAtByCode.put(code, now);
-                            nextOfficialRetryAtByCode.remove(code);
-                        }, () -> nextOfficialRetryAtByCode.put(code, now.plus(DAILY_SOURCE_RETRY_BACKOFF)));
-                    } catch (RuntimeException ex) {
-                        nextOfficialRetryAtByCode.put(code, now.plus(DAILY_SOURCE_RETRY_BACKOFF));
-                        log.warn("Failed to fetch official daily price for {}. Keeping cached value.", code, ex);
-                    }
-                });
+        boolean attempted = false;
+        boolean failed = false;
+        for (QuoteProperties.Asset asset : assets) {
+            if (asset.market() != QuoteProperties.Market.KRX) {
+                continue;
+            }
+            String code = asset.code();
+            Instant retryAt = nextOfficialRetryAtByCode.get(code);
+            if (!shouldRefreshDaily(officialFetchedAtByCode.get(code), FSC_PUBLISH_TIME)
+                    || (retryAt != null && now.isBefore(retryAt))) {
+                continue;
+            }
+            attempted = true;
+            try {
+                Optional<OfficialStockPrice> latest = officialStockPriceClient.fetchLatest(code);
+                if (latest.isPresent()) {
+                    officialByCode.put(code, latest.get());
+                    officialFetchedAtByCode.put(code, now);
+                    nextOfficialRetryAtByCode.remove(code);
+                } else {
+                    failed = true;
+                    nextOfficialRetryAtByCode.put(code, now.plus(DAILY_SOURCE_RETRY_BACKOFF));
+                    log.warn("Official daily price was empty for {}. Keeping cached value.", code);
+                }
+            } catch (RuntimeException ex) {
+                failed = true;
+                nextOfficialRetryAtByCode.put(code, now.plus(DAILY_SOURCE_RETRY_BACKOFF));
+                log.warn("Failed to fetch official daily price for {}. Keeping cached value.", code, ex);
+            }
+        }
+        if (attempted) {
+            if (failed) {
+                alertService.recordFailure(AlertEvent.OFFICIAL_CLOSE);
+            } else {
+                alertService.recordSuccess(AlertEvent.OFFICIAL_CLOSE);
+            }
+        }
         return Map.copyOf(officialByCode);
     }
 
