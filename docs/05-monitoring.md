@@ -2,24 +2,15 @@
 
 ## 운영 에러 로그
 
-백엔드 로그는 컨테이너 표준 출력으로 기록하고 Docker `awslogs` 드라이버가 CloudWatch Logs의 `/chipthrone/api` 로그 그룹으로 전송한다. 운영 환경에서는 Spring Boot ECS JSON 형식을 사용해 시각, 로그 레벨, 클래스, 서비스명, 메시지와 예외 스택을 필드별로 검색한다. 로컬 실행은 기존 텍스트 형식을 유지한다.
+백엔드 로그는 Logback이 EC2의 `/var/log/chipthrone/api.log`에 기록한다. 활성 로그 파일은 10MB, 압축된 보관 파일은 최대 20MB로 제한하고 최대 7일까지만 유지한다. 외부 로그 서비스를 사용하지 않아 추가 사용 요금이 발생하지 않는다.
 
-CloudWatch Logs Insights에서 최근 경고와 오류를 확인하는 쿼리:
+로그 디렉터리는 컨테이너와 EC2 사이에 연결되어 Watchtower 배포 후에도 유지된다.
 
-```text
-fields @timestamp, `log.level`, `service.name`, message
-| filter `log.level` in ["ERROR", "WARN"]
-| sort @timestamp desc
-| limit 100
-```
-
-로그 보존 기간은 14일로 제한한다. CloudWatch 전송 장애가 API 처리까지 막지 않도록 Docker 로그 전달은 4MB 비차단 버퍼를 사용한다. CloudWatch 설정이 없는 컨테이너는 `local` 드라이버로 최대 10MB 파일 3개만 보관한다.
-
-배포 후 확인:
+최근 경고와 오류 확인:
 
 ```bash
-sudo docker inspect --format '{{.HostConfig.LogConfig.Type}}' chipthrone-api
-sudo docker logs --tail 100 chipthrone-api
+sudo grep -E ' (WARN|ERROR) ' /var/log/chipthrone/api.log
+sudo tail -F /var/log/chipthrone/api.log
 ```
 
 ## 수요 기반 시세 지표

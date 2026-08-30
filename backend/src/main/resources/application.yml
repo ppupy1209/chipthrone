@@ -2,6 +2,13 @@ spring:
   application:
     name: chipthrone-api
 
+logging:
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      total-size-cap: 20MB
+      max-history: 7
+
 server:
   port: 8080
 
