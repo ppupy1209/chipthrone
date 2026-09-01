@@ -22,9 +22,18 @@ Hyperliquid의 해외 파생 가격을 업비트 KRW-USDC 최우선 호가의 �
 
 ## 아키텍처
 
-<img width="896" height="543" alt="CHIPTHRONE 배포 및 운영 아키텍처" src="https://github.com/user-attachments/assets/6b5a74d0-9151-4ed3-ba9b-8933f7df6d91" />
+```mermaid
+flowchart LR
+    GitHub[GitHub Actions] --> GHCR
+    GHCR --> Timer[EC2 systemd timer]
+    Timer --> Candidate[비활성 API 슬롯]
+    Candidate -->|Readiness 통과| Nginx
+    Nginx --> Client[신규 요청]
+    Nginx -. 기존 SSE 유지 .-> Previous[이전 API 슬롯]
+    Candidate -->|전환 후 연속 실패| Previous
+```
 
-GitHub Actions에서 테스트와 빌드를 마친 이미지는 GHCR에 저장됩니다. EC2의 Watchtower는 60초마다 새 이미지를 확인해 변경 사항이 있으면 실행 중인 컨테이너를 교체합니다. 서비스 외부 응답과 애플리케이션 내부 이벤트는 각각 따로 감시해 문제가 생기면 Slack으로 알립니다.
+GitHub Actions에서 테스트와 빌드를 마친 이미지는 GHCR에 저장됩니다. EC2의 systemd timer는 60초마다 새 이미지를 확인하고 비활성 슬롯에 먼저 실행합니다. Readiness 검증을 통과한 뒤에만 Nginx를 전환하고, 기존 슬롯은 SSE 연결이 끝날 때까지 유지합니다. 전환 뒤 후보가 연속으로 실패하면 이전 슬롯으로 자동 롤백합니다.
 
 ## CI/CD
 
@@ -41,9 +50,11 @@ PR과 `main` 반영 시 인프라 스크립트를 검사하고 백엔드 빌드�
 
 ### 해결
 
-대신 배포 방식을 push에서 pull로 바꿨습니다. GitHub Actions는 이미지를 GHCR에 저장하는 데까지만 관여합니다. 이후 EC2의 Watchtower가 60초마다 새 이미지를 확인해 컨테이너를 교체합니다.
+대신 배포 방식을 push에서 pull로 바꿨습니다. GitHub Actions는 이미지를 GHCR에 저장하는 데까지만 관여합니다. EC2의 systemd timer가 60초마다 새 이미지를 확인하므로 외부에서 EC2에 접속할 필요가 없습니다.
 
-이 방식으로 22번 포트는 계속 개인 IP에만 허용할 수 있었습니다. `main` 반영 후 최대 60초 안에 자동으로 배포됩니다. 배포 과정에서 SSH 키와 러너 IP를 따로 관리할 필요도 없어졌습니다.
+새 이미지는 blue와 green 중 비활성 슬롯에 올라갑니다. Readiness가 확인되면 Nginx를 새 슬롯으로 전환하고, 기존 SSE 연결은 이전 슬롯에서 최대 310초 동안 마저 처리합니다. 후보가 전환 후 연속 3회 응답하지 않으면 Nginx를 이전 슬롯으로 되돌립니다. 실패한 이미지 ID는 기록해 같은 이미지를 60초마다 다시 배포하지 않습니다.
+
+이 방식으로 22번 포트는 계속 개인 IP에만 허용할 수 있고, 배포 과정에서 SSH 키와 러너 IP를 별도로 관리하지 않습니다. 자세한 실패 기준과 EC2 적용 절차는 [배포 실패 자동 롤백과 SSE drain](docs/08-health-gated-deploy.md)에 정리했습니다.
 
 ## 로컬 실행
 

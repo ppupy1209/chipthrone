@@ -8,10 +8,10 @@
 |---|---|---|---|
 | `ci.yml` | PR · main 푸시 | 백엔드 `gradle build` + 프론트 `npm build` | 없음(즉시 동작) |
 | `deploy-backend.yml` | main 푸시 | Docker 이미지 → GHCR 푸시 | 없음(GITHUB_TOKEN) |
-| EC2 watchtower | 60초 주기 | GHCR 새 이미지 감지 → 자동 pull/재시작 | 없음(SSH 불필요) |
+| EC2 slot deploy | 60초 주기 | GHCR 새 이미지 감지 → 후보 Readiness → Nginx 전환·자동 롤백 | systemd timer |
 | EC2 health recovery | 15초 주기 | API 응답 불능 컨테이너를 감지해 제한적으로 재시작 | systemd timer |
 
-배포는 **이미지 푸시 + watchtower 자동 반영** 방식이다. GitHub Actions가 EC2에 SSH로 접속하지 않으므로 보안그룹 22를 열 필요가 없다. 프론트엔드 배포는 Vercel의 GitHub 연동이 담당한다(아래 4번).
+배포는 **이미지 푸시 + EC2 pull 확인** 방식이다. GitHub Actions가 EC2에 SSH로 접속하지 않으므로 보안그룹 22를 열 필요가 없다. EC2는 새 이미지를 비활성 blue/green 슬롯에 먼저 실행하고 Readiness 확인 뒤 Nginx를 전환한다. 프론트엔드 배포는 Vercel의 GitHub 연동이 담당한다(아래 4번).
 
 ## 2. AWS 인프라 프로비저닝 (프리티어)
 
@@ -25,25 +25,39 @@
    (또는 `infra/ec2-bootstrap.sh` 내용을 복사해 실행)
 4. GHCR 이미지가 private면 pull 전에 로그인 필요. **public 권장**(아래 3번 참고).
 
-### 기존 EC2에 Logback 파일 로그 적용
+### 기존 EC2를 슬롯 배포로 전환
 
-외부 로그 저장소를 사용하지 않고 Logback 파일 로그를 EC2의 `/var/log/chipthrone`에 보관한다. 활성 로그 파일은 10MB, 압축된 보관 파일은 최대 20MB로 제한한다. 최대 7일 이내에서 전체 디스크 사용량을 약 30MB로 유지한다.
-
-호스트 디렉터리를 컨테이너에 연결하므로 Watchtower가 컨테이너를 교체해도 이전 로그가 유지된다. 중복 저장을 막기 위해 Docker 로그 드라이버는 비활성화한다.
-
-기존 운영 컨테이너에는 다음 명령으로 적용한다.
+기존 Nginx의 인증서 설정은 유지하고 `proxy_pass`만 이름 있는 upstream으로 바꾼다. 설치 스크립트는 배포 파일과 systemd timer를 설치한 뒤 Watchtower를 중지한다. 첫 후보 배포가 실패하면 기존 `chipthrone-api` 컨테이너와 8080 upstream을 유지한다.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ppupy1209/chipthrone/main/infra/run-api-container.sh | bash
+curl -fsSL \
+  https://raw.githubusercontent.com/ppupy1209/chipthrone/main/infra/install-deploy-agent.sh \
+  -o /tmp/install-deploy-agent.sh
+sudo bash /tmp/install-deploy-agent.sh
 ```
 
 ```bash
-sudo docker inspect --format '{{.HostConfig.LogConfig.Type}} {{range .Mounts}}{{.Source}}:{{.Destination}}{{end}}' chipthrone-api
+cat /var/lib/chipthrone-deploy/active-container
+cat /etc/nginx/conf.d/chipthrone-api-upstream.conf
+systemctl status chipthrone-deploy.timer
+```
+
+실패 기준과 장애 주입 검증은 [08-health-gated-deploy.md](08-health-gated-deploy.md)를 따른다.
+
+### Logback 파일 로그
+
+외부 로그 저장소를 사용하지 않고 Logback 파일 로그를 EC2의 `/var/log/chipthrone`에 보관한다. blue와 green은 각각 `api-blue.log`, `api-green.log`를 사용한다. 슬롯별 활성 로그 파일은 10MB, 압축된 보관 파일은 최대 20MB로 제한한다.
+
+호스트 디렉터리를 두 슬롯에 연결하므로 컨테이너를 교체해도 이전 로그가 유지된다. 두 JVM이 잠시 함께 파일을 쓰더라도 회전 파일이 충돌하지 않도록 슬롯별 파일을 분리하고, 중복 저장을 막기 위해 Docker 로그 드라이버는 비활성화한다.
+
+```bash
+ACTIVE_CONTAINER="$(cut -d'|' -f1 /var/lib/chipthrone-deploy/active-container)"
+sudo docker inspect --format '{{.HostConfig.LogConfig.Type}} {{range .Mounts}}{{.Source}}:{{.Destination}}{{end}}' "$ACTIVE_CONTAINER"
 sudo ls -lh /var/log/chipthrone
 curl https://api.chipthrone.com/api/health
 ```
 
-`none /var/log/chipthrone:/var/log/chipthrone`이 출력되고 `api.log`와 Health API가 확인되면 적용 완료다.
+`none /var/log/chipthrone:/var/log/chipthrone`이 출력되고 활성 슬롯 로그와 Health API가 확인되면 적용 완료다.
 
 ### RDS (이후 단계)
 - MySQL 8, **db.t3.micro**(프리티어), 20GB. EC2 보안 그룹에서만 3306 접근 허용.
@@ -51,9 +65,9 @@ curl https://api.chipthrone.com/api/health
 ## 3. GitHub 설정 (배포)
 
 SSH 배포를 쓰지 않으므로 `EC2_HOST/USER/SSH_KEY`, `DEPLOY_ENABLED` 시크릿은 **불필요**하다.
-이미지 푸시는 `GITHUB_TOKEN`으로 동작하고, EC2의 watchtower가 GHCR에서 새 이미지를 polling해 자동 반영한다.
+이미지 푸시는 `GITHUB_TOKEN`으로 동작하고, EC2의 배포 timer가 GHCR에서 새 이미지를 polling해 자동 반영한다.
 
-**GHCR 패키지 공개** (EC2/watchtower가 로그인 없이 pull 가능하게)
+**GHCR 패키지 공개** (EC2 배포 timer가 로그인 없이 pull 가능하게)
 - GitHub → 프로필 → Packages → `chipthrone-api` → Package settings → Change visibility → Public.
 - (비공개 유지 시 EC2에서 `docker login ghcr.io` 필요)
 
@@ -63,13 +77,13 @@ SSH 배포를 쓰지 않으므로 `EC2_HOST/USER/SSH_KEY`, `DEPLOY_ENABLED` 시�
 
 ### 응답 불능 컨테이너 자동 복구
 
-Docker 이미지가 15초마다 컨테이너 내부의 `/api/health`를 호출한다. 3초 안에 응답하지 않는 상태가 3회 연속되면 Docker가 컨테이너를 `unhealthy`로 표시한다.
+Docker 이미지가 15초마다 컨테이너 내부의 `/actuator/health/readiness`를 호출한다. 3초 안에 응답하지 않는 상태가 3회 연속되면 Docker가 컨테이너를 `unhealthy`로 표시한다.
 
-`chipthrone-health-recovery.timer`는 15초마다 이 상태를 확인하고 `unhealthy` 컨테이너를 재시작한다. 프로세스 종료는 기존 `--restart unless-stopped`가 처리하고, 프로세스는 살아 있지만 API가 응답하지 않는 상태만 이 경로가 처리한다.
+`chipthrone-health-recovery.timer`는 15초마다 배포 상태 파일에서 활성 슬롯을 읽고 `unhealthy` 컨테이너를 재시작한다. 배포 중에는 공용 잠금을 얻지 못하면 건너뛰어 후보 실패를 재시작으로 가리지 않는다. 프로세스 종료는 기존 `--restart unless-stopped`가 처리하고, 프로세스는 살아 있지만 API가 응답하지 않는 상태만 이 경로가 처리한다.
 
 무한 재시작으로 장애 원인이 가려지는 것을 막기 위해 10분 안에는 최대 3회만 자동 복구한다. 이후에도 응답하지 않으면 재시작을 중단하고, EC2 외부의 Uptime Monitor가 Slack으로 장애를 알린다.
 
-기존 EC2에는 아래 명령으로 자동 복구 계층만 추가한다. Docker Healthcheck는 새 백엔드 이미지가 Watchtower를 통해 반영된 뒤 활성화된다.
+슬롯 배포 설치 스크립트가 자동 복구 계층도 함께 갱신한다. 자동 복구만 다시 설치해야 할 때는 아래 명령을 사용한다.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ppupy1209/chipthrone/main/infra/install-health-recovery.sh | bash
@@ -77,7 +91,8 @@ curl -fsSL https://raw.githubusercontent.com/ppupy1209/chipthrone/main/infra/ins
 
 ```bash
 # 현재 상태
-sudo docker inspect --format '{{.State.Health.Status}}' chipthrone-api
+ACTIVE_CONTAINER="$(cut -d'|' -f1 /var/lib/chipthrone-deploy/active-container)"
+sudo docker inspect --format '{{.State.Health.Status}}' "$ACTIVE_CONTAINER"
 systemctl status chipthrone-health-recovery.timer
 
 # 자동 복구 이력
@@ -91,12 +106,13 @@ journalctl -u chipthrone-health-recovery.service
 사전 조건:
 
 - [ ] 자동 복구 변경사항을 `main`에 푸시하고 GitHub Actions 빌드 성공 확인
-- [ ] Watchtower가 새 백엔드 이미지를 반영한 뒤 컨테이너 상태가 `healthy`인지 확인
-- [ ] `install-health-recovery.sh`를 실행하고 systemd timer가 `active`인지 확인
+- [ ] 슬롯 배포가 새 백엔드 이미지를 반영한 뒤 활성 컨테이너 상태가 `healthy`인지 확인
+- [ ] 배포와 health recovery systemd timer가 모두 `active`인지 확인
 - [ ] `https://api.chipthrone.com/api/health`가 `200 OK`인지 확인
 
 ```bash
-sudo docker inspect --format '{{.State.Status}} {{.State.Health.Status}}' chipthrone-api
+ACTIVE_CONTAINER="$(cut -d'|' -f1 /var/lib/chipthrone-deploy/active-container)"
+sudo docker inspect --format '{{.State.Status}} {{.State.Health.Status}}' "$ACTIVE_CONTAINER"
 systemctl is-active chipthrone-health-recovery.timer
 curl -i https://api.chipthrone.com/api/health
 ```
@@ -109,10 +125,10 @@ sudo journalctl -fu chipthrone-health-recovery.service
 
 # 터미널 2: 시작 시각 기록 후 API 프로세스 일시 정지
 date -Is
-sudo docker pause chipthrone-api
+sudo docker pause "$ACTIVE_CONTAINER"
 
 # 상태 변화 관측: healthy → unhealthy → starting → healthy
-watch -n 2 "sudo docker inspect --format '{{.State.Status}} {{.State.Health.Status}}' chipthrone-api"
+watch -n 2 "sudo docker inspect --format '{{.State.Status}} {{.State.Health.Status}}' '$ACTIVE_CONTAINER'"
 ```
 
 확인 및 기록:
@@ -126,9 +142,9 @@ watch -n 2 "sudo docker inspect --format '{{.State.Status}} {{.State.Health.Stat
 자동 복구가 동작하지 않으면 다른 터미널에서 즉시 일시 정지를 해제하고 로그를 확인한다.
 
 ```bash
-sudo docker unpause chipthrone-api
+sudo docker unpause "$ACTIVE_CONTAINER"
 sudo journalctl -u chipthrone-health-recovery.service --since "10 minutes ago"
-sudo docker logs --tail 100 chipthrone-api
+sudo tail -n 100 "/var/log/chipthrone/api-${ACTIVE_CONTAINER##*-}.log"
 ```
 
 ## 4. Vercel (프론트엔드)
@@ -160,11 +176,11 @@ sudo certbot --nginx -d api.chipthrone.com
    ```
    PUBLIC_DATA_SERVICE_KEY=공공데이터포털_DECODING_인증키
    ```
-2. 컨테이너를 env 파일로 재실행:
+2. env 파일 변경을 활성 슬롯에 반영:
    ```bash
-   /usr/local/bin/chipthrone-run-api
+   sudo CHIPTHRONE_FORCE_DEPLOY=1 /usr/local/bin/chipthrone-deploy
    ```
-   - watchtower가 이후 업데이트 시 이 환경변수를 그대로 유지한다.
+   - 이후 슬롯 배포도 같은 env 파일을 새 컨테이너에 주입한다.
    - 키가 비면 Hyperliquid 추정 시세는 계속 동작한다.
    - 공공데이터 키가 비면 국내 확정 종가와 시가총액이 비어 있다.
 3. 확인: `/api/quotes?symbols=005930,SNDK`에서 `source=HYPERLIQUID`, 국내 종목의 `regularClose/officialMarketCap`을 확인한다. `fxRate`와 `fxSource`가 응답에 없는지도 함께 확인한다.

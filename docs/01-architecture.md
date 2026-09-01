@@ -64,8 +64,10 @@ Hyperliquid 15분 캔들(`candleSnapshot`)과 같은 시각 이전 30분 안의 
 ## 배포
 
 - 프론트: Vercel
-- 백엔드: 기존 EC2 Docker 컨테이너
-- 이미지: GitHub Actions → GHCR, 기존 Watchtower 자동 반영
+- 백엔드: 기존 EC2의 blue/green Docker 슬롯
+- 이미지: GitHub Actions → GHCR, systemd timer가 60초마다 pull 확인
+- 전환: 비활성 슬롯 Readiness 확인 → Nginx reload → 기존 SSE 연결 최대 310초 drain
+- 롤백: 전환 후 후보 Readiness가 연속 3회 실패하면 이전 슬롯으로 upstream 복구
 - DNS/CDN: Cloudflare
 
 실제 AWS 변경이나 새 유료 리소스 생성은 별도 승인 없이는 수행하지 않는다.

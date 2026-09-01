@@ -19,6 +19,7 @@ set -euo pipefail
 
 case "$1" in
   inspect)
+    printf 'inspect %s\n' "${@: -1}" >> "${MOCK_DOCKER_CALLS:?}"
     printf '%s\n' "${MOCK_HEALTH_STATUS:?}"
     ;;
   restart)
@@ -52,6 +53,8 @@ run_recovery() {
   MOCK_DOCKER_CALLS="$DOCKER_CALLS" \
   MOCK_LOGGER_CALLS="$LOGGER_CALLS" \
   STATE_DIR="$state_dir" \
+  CHIPTHRONE_ACTIVE_STATE_FILE="${state_dir}/active-container" \
+  CHIPTHRONE_DEPLOY_LOCK_FILE="${state_dir}/deploy.lock" \
   DOCKER_BIN="$MOCK_DOCKER" \
   LOGGER_BIN="$MOCK_LOGGER" \
   FLOCK_BIN="$MOCK_FLOCK" \
@@ -63,7 +66,7 @@ assert_restart_count() {
   local expected="$1"
   local actual=0
   if [[ -f "$DOCKER_CALLS" ]]; then
-    actual="$(wc -l < "$DOCKER_CALLS" | tr -d ' ')"
+    actual="$(grep -c '^restart ' "$DOCKER_CALLS" || true)"
   fi
   if [[ "$actual" != "$expected" ]]; then
     echo "expected restart count=${expected}, actual=${actual}" >&2
@@ -89,5 +92,13 @@ grep -q "automatic recovery stopped" "$LOGGER_CALLS"
 
 run_recovery "$unhealthy_state" unhealthy 1701
 assert_restart_count 4
+
+: > "$DOCKER_CALLS"
+slot_state="${TEST_ROOT}/slot"
+mkdir -p "$slot_state"
+printf '%s\n' 'chipthrone-api-blue|18080|sha256:new|blue' > "${slot_state}/active-container"
+run_recovery "$slot_state" unhealthy 2000
+grep -q '^inspect chipthrone-api-blue$' "$DOCKER_CALLS"
+grep -q '^restart chipthrone-api-blue$' "$DOCKER_CALLS"
 
 echo "health-recovery tests passed"

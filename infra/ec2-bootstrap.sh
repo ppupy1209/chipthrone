@@ -7,7 +7,6 @@
 set -euo pipefail
 
 OWNER="ppupy1209"
-IMAGE="ghcr.io/${OWNER}/chipthrone-api:latest"
 API_DOMAIN="api.chipthrone.com"
 RAW_INFRA_BASE="https://raw.githubusercontent.com/${OWNER}/chipthrone/main/infra"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,13 +37,19 @@ sudo dnf install -y certbot python3-certbot-nginx || \
   echo "(certbot dnf 설치 실패 시: sudo python3 -m pip install certbot certbot-nginx)"
 
 echo "==> Nginx 리버스 프록시 설정 (${API_DOMAIN})"
+sudo tee /etc/nginx/conf.d/chipthrone-api-upstream.conf >/dev/null <<'UPSTREAM'
+upstream chipthrone_api {
+    server 127.0.0.1:8080;
+    keepalive 32;
+}
+UPSTREAM
 sudo tee /etc/nginx/conf.d/chipthrone-api.conf >/dev/null <<NGINX
 server {
     listen 80;
     server_name ${API_DOMAIN};
 
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://chipthrone_api;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -60,32 +65,15 @@ server {
 NGINX
 sudo nginx -t && sudo systemctl reload nginx
 
-echo "==> 컨테이너 최초 실행 시도 ($IMAGE)"
-# GHCR 패키지가 private면 먼저 로그인 필요:
-#   echo <GitHub PAT(read:packages)> | docker login ghcr.io -u ${OWNER} --password-stdin
-install_infra_file "run-api-container.sh" \
-  "/usr/local/bin/chipthrone-run-api" "0755"
-if CHIPTHRONE_IMAGE="$IMAGE" /usr/local/bin/chipthrone-run-api; then
-  echo "==> 컨테이너 실행 완료"
+echo "==> Readiness 검증, 자동 롤백, SSE drain 배포 설치"
+install_infra_file "install-deploy-agent.sh" \
+  "/usr/local/bin/chipthrone-install-deploy-agent" "0755"
+if sudo /usr/local/bin/chipthrone-install-deploy-agent; then
+  echo "==> 첫 슬롯 배포 완료"
 else
-  echo "!! 이미지 pull 실패 — GHCR 패키지를 public으로 바꾸거나 docker login 후 재시도하세요."
+  echo "!! 첫 슬롯 배포 실패 — 기존 컨테이너가 있으면 그대로 유지됩니다."
+  echo "   GHCR 공개 여부와 journalctl -u chipthrone-deploy.service를 확인하세요."
 fi
-
-echo "==> watchtower 실행 (새 이미지 자동 반영, 60초 주기)"
-sudo docker rm -f watchtower 2>/dev/null || true
-sudo docker run -d --name watchtower --restart unless-stopped \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  containrrr/watchtower --cleanup --interval 60 chipthrone-api
-
-echo "==> 응답 불능 컨테이너 자동 복구 설치"
-install_infra_file "health-recovery.sh" \
-  "/usr/local/bin/chipthrone-health-recovery" "0755"
-install_infra_file "chipthrone-health-recovery.service" \
-  "/etc/systemd/system/chipthrone-health-recovery.service" "0644"
-install_infra_file "chipthrone-health-recovery.timer" \
-  "/etc/systemd/system/chipthrone-health-recovery.timer" "0644"
-sudo systemctl daemon-reload
-sudo systemctl enable --now chipthrone-health-recovery.timer
 
 cat <<DONE
 
@@ -95,11 +83,11 @@ cat <<DONE
 2) DNS 전파 후 SSL 발급:
      sudo certbot --nginx -d ${API_DOMAIN}
 3) 확인:
-     curl http://localhost:8080/api/health
+     cat /var/lib/chipthrone-deploy/active-container
+     cat /etc/nginx/conf.d/chipthrone-api-upstream.conf
      curl https://${API_DOMAIN}/api/health
-     sudo docker inspect --format '{{.State.Health.Status}}' chipthrone-api
-     sudo docker inspect --format '{{.HostConfig.LogConfig.Type}}' chipthrone-api
+     systemctl status chipthrone-deploy.timer
      systemctl status chipthrone-health-recovery.timer
-4) 이후 main 푸시 시 GitHub Actions가 자동 재배포
+4) 이후 main 푸시 시 후보 슬롯 검증 후 Nginx 전환, 실패 시 이전 슬롯 롤백
 ==================================================
 DONE

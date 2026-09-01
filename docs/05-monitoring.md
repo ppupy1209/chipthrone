@@ -2,15 +2,15 @@
 
 ## 운영 에러 로그
 
-백엔드 로그는 Logback이 EC2의 `/var/log/chipthrone/api.log`에 기록한다. 활성 로그 파일은 10MB, 압축된 보관 파일은 최대 20MB로 제한하고 최대 7일까지만 유지한다. 외부 로그 서비스를 사용하지 않아 추가 사용 요금이 발생하지 않는다.
+백엔드 로그는 Logback이 EC2의 `/var/log/chipthrone/api-blue.log` 또는 `api-green.log`에 기록한다. 슬롯별 활성 로그 파일은 10MB, 압축된 보관 파일은 최대 20MB로 제한하고 최대 7일까지만 유지한다. 외부 로그 서비스를 사용하지 않아 추가 사용 요금이 발생하지 않는다.
 
-로그 디렉터리는 컨테이너와 EC2 사이에 연결되어 Watchtower 배포 후에도 유지된다.
+로그 디렉터리는 컨테이너와 EC2 사이에 연결되어 슬롯이 교체된 뒤에도 유지된다.
 
 최근 경고와 오류 확인:
 
 ```bash
-sudo grep -E ' (WARN|ERROR) ' /var/log/chipthrone/api.log
-sudo tail -F /var/log/chipthrone/api.log
+sudo grep -E ' (WARN|ERROR) ' /var/log/chipthrone/api-*.log
+sudo tail -F /var/log/chipthrone/api-*.log
 ```
 
 ## 수요 기반 시세 지표
@@ -43,7 +43,7 @@ docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
 
 > 왜 둘? 앱이 완전히 죽으면 **자기 죽음을 Slack에 못 알린다.** liveness는 반드시 EC2 바깥에서 봐야 하고, 반대로 시세 원천 장애 같은 앱 내부 사건은 외부 핑으로는 안 보인다.
 
-감시와 별도로 EC2 호스트에는 **자동 복구 계층**이 있다. Docker Healthcheck가 프로세스는 살아 있지만 `/api/health`가 응답하지 않는 상태를 판정하고, systemd timer가 10분에 최대 3회까지 컨테이너를 재시작한다. 제한을 넘긴 장애는 자동 복구를 멈추고 외부 liveness 알림에 맡긴다.
+감시와 별도로 EC2 호스트에는 **자동 복구 계층**이 있다. Docker Healthcheck가 활성 슬롯의 Readiness 응답 불능을 판정하고, systemd timer가 10분에 최대 3회까지 해당 컨테이너를 재시작한다. 배포 중에는 배포 스크립트가 같은 잠금을 선점해 재시작 대신 이전 슬롯 롤백 여부를 판단한다. 제한을 넘긴 장애는 자동 복구를 멈추고 외부 liveness 알림에 맡긴다.
 
 ---
 
@@ -90,7 +90,7 @@ docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
 앱 내부에서 의미 있는 사건이 생기면 Slack Webhook으로 알린다. **단, 알림 폭주를 반드시 막는다**(폴링이 3초 주기라 그대로 쏘면 노이즈 지옥).
 
 ### 알릴 이벤트
-1. **배포/재시작** — `ApplicationReadyEvent`에서 1회. 예: `:white_check_mark: chipthrone-api vX.Y.Z 기동`. watchtower가 조용히 재배포하므로 의도치 않은 재시작·크래시루프를 드러내는 용도.
+1. **배포/재시작** — `ApplicationReadyEvent`에서 1회. 예: `:white_check_mark: chipthrone-api vX.Y.Z 기동`. 호스트 배포 스크립트도 배포 성공·기동 실패·자동 롤백을 같은 Webhook으로 알려 새 프로세스 기동과 실제 트래픽 전환을 구분한다.
 2. **전날 종가 수집 장애** — 금융위원회 API가 빈 응답이나 오류를 반환하면 즉시 1회 알림. 마지막 정상값을 유지하고 10분 뒤 재시도하며 복구되면 1회 알림.
 3. **실시간 시세 소스 장애** — `QuoteService.refresh()`의 `marketDataClient`/`snapshotFactory` 호출이 **N회 연속 실패**하면 1회 알림. 마지막 스냅샷을 유지하고 복구되면 1회 알림.
 

@@ -1,0 +1,12 @@
+[Unit]
+Description=Deploy CHIP THRONE API with health-gated slot switching
+Requires=docker.service nginx.service
+After=network-online.target docker.service nginx.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=CHIPTHRONE_IMAGE=ghcr.io/ppupy1209/chipthrone-api:latest
+Environment=CHIPTHRONE_ENV_FILE=/home/ec2-user/chipthrone.env
+ExecStart=/usr/local/bin/chipthrone-deploy
+TimeoutStartSec=10min

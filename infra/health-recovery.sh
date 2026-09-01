@@ -6,6 +6,8 @@ CONTAINER_NAME="${CONTAINER_NAME:-chipthrone-api}"
 MAX_RESTARTS="${MAX_RESTARTS:-3}"
 WINDOW_SECONDS="${WINDOW_SECONDS:-600}"
 STATE_DIR="${STATE_DIR:-/var/lib/chipthrone-health-recovery}"
+ACTIVE_STATE_FILE="${CHIPTHRONE_ACTIVE_STATE_FILE:-/var/lib/chipthrone-deploy/active-container}"
+DEPLOY_LOCK_FILE="${CHIPTHRONE_DEPLOY_LOCK_FILE:-/var/lib/chipthrone-deploy/deploy.lock}"
 DOCKER_BIN="${DOCKER_BIN:-/usr/bin/docker}"
 LOGGER_BIN="${LOGGER_BIN:-/usr/bin/logger}"
 FLOCK_BIN="${FLOCK_BIN:-/usr/bin/flock}"
@@ -21,7 +23,12 @@ if [[ ! "$WINDOW_SECONDS" =~ ^[1-9][0-9]*$ ]]; then
   exit 2
 fi
 
-mkdir -p "$STATE_DIR"
+mkdir -p "$STATE_DIR" "$(dirname -- "$DEPLOY_LOCK_FILE")"
+
+# 배포 중에는 후보 상태를 배포 스크립트가 판단해야 한다. 여기서 먼저 재시작하면
+# 전환 후 실패를 가려 자동 롤백이 동작하지 않을 수 있다.
+exec 8>"$DEPLOY_LOCK_FILE"
+"$FLOCK_BIN" -n 8 || exit 0
 
 LOCK_FILE="${STATE_DIR}/recovery.lock"
 RESTART_HISTORY="${STATE_DIR}/restart-history"
@@ -29,6 +36,18 @@ LIMIT_REPORTED_AT="${STATE_DIR}/limit-reported-at"
 
 exec 9>"$LOCK_FILE"
 "$FLOCK_BIN" -n 9 || exit 0
+
+if [[ -s "$ACTIVE_STATE_FILE" ]]; then
+  IFS='|' read -r active_name _active_port _active_image active_slot < "$ACTIVE_STATE_FILE"
+  if [[ "$active_name" =~ ^chipthrone-api-(blue|green)$ && "$active_slot" =~ ^(blue|green)$ ]]; then
+    CONTAINER_NAME="$active_name"
+  elif [[ "$active_name" == "chipthrone-api" && "$active_slot" == "legacy" ]]; then
+    CONTAINER_NAME="$active_name"
+  else
+    "$LOGGER_BIN" -t chipthrone-health-recovery \
+      "invalid active deployment state; fallback container=${CONTAINER_NAME}"
+  fi
+fi
 
 health_status="$(
   "$DOCKER_BIN" inspect \

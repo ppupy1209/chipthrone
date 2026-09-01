@@ -1,6 +1,8 @@
 spring:
   application:
     name: chipthrone-api
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
 logging:
   logback:
@@ -11,6 +13,7 @@ logging:
 
 server:
   port: 8080
+  shutdown: graceful
 
 chipthrone:
   alert:

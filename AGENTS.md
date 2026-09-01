@@ -14,7 +14,7 @@
 |---|---|
 | 백엔드 | Java 21, Spring Boot, Gradle Wrapper, SSE fan-out, DB 없음(인메모리 캐시) |
 | 프론트 | React 19, TypeScript, Vite 8, Tailwind 4, 관심 종목은 Local Storage |
-| 인프라 | 프론트 Vercel / 백엔드 EC2 Docker(GitHub Actions → GHCR → Watchtower) / DNS·CDN Cloudflare |
+| 인프라 | 프론트 Vercel / 백엔드 EC2 Docker(GitHub Actions → GHCR → systemd blue-green 슬롯 배포) / DNS·CDN Cloudflare |
 | 관측 | Prometheus + Grafana (`docs/05-monitoring.md`), Slack 장애 알림 |
 | 외부 API | 금융위원회 일별 주식시세정보, 업비트 공개 시세 조회, Hyperliquid 공개 `info` API |
 
@@ -62,6 +62,9 @@ cd frontend && npm run lint
   Toss Open API는 시세 표시·제3자 제공 약관 확인 전까지 도입하지 않는다.
 - **[이전] 수요 기반 단일 polling + SSE fan-out.** 사용자·종목 수와 무관하게 polling cycle당 Hyperliquid 호출 1회.
   활성 종목 0이면 수집만 멈추고 health check는 유지. 마지막 구독 해제 후 15초 grace.
+- **[2026-09-01] Watchtower 즉시 교체를 health-gated 슬롯 배포로 교체.** 비활성 슬롯의 Readiness를 먼저 확인하고
+  Nginx reload로 신규 요청만 전환한다. 기존 슬롯은 SSE 최대 연결 수명 300초에 여유 10초를 더해 유지한다.
+  전환 뒤 후보가 연속 3회 실패하면 이전 upstream으로 롤백하고 같은 이미지의 자동 재시도를 막는다.
 - **[이전] 괴리율은 "같은 시점" 비교로만 계산.** 현재가 ↔ 전일 종가를 맞대면 등락이 섞여 추정 오차를 못 잰다.
   확정 종가 기준일 15:30 KST에 마감된 15분 캔들(`candleSnapshot`) × 그날 고시환율 ÷ 공식 종가.
   기준일이 바뀔 때만 재계산, 실패 시 30분 백오프.
@@ -130,6 +133,7 @@ cd frontend && npm run lint
 
 - 완료:
   - 수요 기반 단일 polling + SSE fan-out, 컨테이너 자원 계측, EC2 부하 테스트 실측(`docs/ec2-load-test-results.json`)
+  - 비활성 슬롯 Readiness 검증, Nginx 전환, SSE drain, 전환 후 자동 롤백 배포 스크립트와 장애 시나리오 테스트
   - localhost Fake API 장애 주입, quote freshness SLI, MTTD·복구 감지 실측(`docs/07-slo-resilience.md`)
   - 공공데이터 기반 확정 시세와 같은 시점 괴리율 산출(`EstimateAccuracyService`)
   - 업비트 KRW-USDC 5분 주기 내부 환산, 원본 환율 비노출
@@ -146,4 +150,4 @@ cd frontend && npm run lint
 
 - [아키텍처](docs/01-architecture.md) · [데이터 소스](docs/02-data-sources.md) · [배포](docs/03-deploy.md)
 - [API](docs/04-api.md) · [모니터링](docs/05-monitoring.md) · [수요 기반 수집과 측정](docs/06-demand-driven-quotes.md)
-- [SLO와 외부 시세 장애 복구 실험](docs/07-slo-resilience.md)
+- [SLO와 외부 시세 장애 복구 실험](docs/07-slo-resilience.md) · [배포 실패 자동 롤백과 SSE drain](docs/08-health-gated-deploy.md)

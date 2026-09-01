@@ -12,8 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash -n infra/*.sh
+      - run: bash infra/deploy-backend.test.sh
       - run: bash infra/health-recovery.test.sh
-      - run: bash infra/run-api-container.test.sh
 
   backend:
     name: 백엔드 빌드·테스트
