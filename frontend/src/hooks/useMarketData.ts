@@ -18,14 +18,8 @@ type BackendStock = {
   changePct: number
   sharesOutstanding: number
   marketCap: number
-  officialMarketCap: number | null
-  regularClose: number | null
-  regularCloseDate: string | null
   nxtClose: number | null
   nxtCloseDate: string | null
-  high: number | null
-  officialCloseEstimate: number | null
-  officialDivergencePct: number | null
   sessionCloseUsd: number | null
   sessionCloseDate: string | null
   market: Company['market']
@@ -48,15 +42,9 @@ function toCompany(stock: BackendStock, index: number): Company {
     price: stock.priceKrw,
     priceUsd: stock.priceUsd,
     changePct: stock.changePct,
-    regularClose: stock.regularClose,
-    regularCloseDate: stock.regularCloseDate,
     nxtClose: stock.nxtClose,
     nxtCloseDate: stock.nxtCloseDate,
-    high: stock.high ?? null,
     sharesOutstanding: stock.sharesOutstanding,
-    officialMarketCap: stock.officialMarketCap,
-    officialCloseEstimate: stock.officialCloseEstimate,
-    officialDivergencePct: stock.officialDivergencePct,
     sessionCloseUsd: stock.sessionCloseUsd,
     sessionCloseDate: stock.sessionCloseDate,
     market: stock.market,

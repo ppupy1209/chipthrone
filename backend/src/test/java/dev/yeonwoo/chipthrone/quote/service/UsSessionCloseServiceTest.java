@@ -74,7 +74,7 @@ class UsSessionCloseServiceTest {
         assertThat(market.calls).isEqualTo(1);
     }
 
-    /** 국내 종목은 금융위 확정 종가를 쓴다. 여기서 건드리면 안 된다. */
+    /** 국내 종목은 종가 대비 등락률을 제공하지 않는다. 마감 기준가를 만들지 않아야 한다. */
     @Test
     void skipsKrxAssets() {
         StubMarketDataClient market = new StubMarketDataClient(new BigDecimal("183.52"));

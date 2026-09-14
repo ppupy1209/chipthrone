@@ -3,7 +3,6 @@ package dev.yeonwoo.chipthrone.quote.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.headerDoesNotExist;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.queryParam;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -28,7 +27,6 @@ class UpbitUsdcExchangeRateClientTest {
     private static final String MARKET = "KRW-USDC";
     private static final Instant NOW = Instant.parse("2026-08-30T14:20:59Z");
     private static final Clock CLOCK = Clock.fixed(NOW, ZoneOffset.UTC);
-    private static final Instant KRX_CLOSE = Instant.parse("2026-07-31T06:30:00Z");
 
     private record Fixture(
             UpbitUsdcExchangeRateClient client,
@@ -85,44 +83,6 @@ class UpbitUsdcExchangeRateClientTest {
         assertThatThrownBy(() -> f.client().fetchUsdKrw())
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Stale Upbit");
-    }
-
-    @Test
-    void readsTheLastMinuteCandleBeforeTheRequestedInstantAndCachesIt() {
-        Fixture f = fixture();
-        f.server().expect(requestTo(org.hamcrest.Matchers.startsWith(API + "/v1/candles/minutes/1")))
-                .andExpect(queryParam("market", MARKET))
-                .andExpect(queryParam("to", KRX_CLOSE.toString()))
-                .andExpect(queryParam("count", "1"))
-                .andRespond(withSuccess("""
-                        [{"market":"KRW-USDC","candle_date_time_utc":"2026-07-31T06:23:00",
-                          "trade_price":1390.0,"timestamp":1785479016000}]
-                        """, MediaType.APPLICATION_JSON));
-
-        ExchangeRateQuote first = f.client().fetchUsdKrw(KRX_CLOSE);
-        ExchangeRateQuote second = f.client().fetchUsdKrw(KRX_CLOSE);
-
-        assertThat(first.rate()).isEqualByComparingTo("1390.0");
-        assertThat(second).isEqualTo(first);
-        assertThat(f.registry().counter(
-                "chipthrone.quote.external.api.calls",
-                "source", "upbit",
-                "operation", "usdc_krw_minute_candle").count()).isEqualTo(1);
-        f.server().verify(Duration.ofSeconds(1));
-    }
-
-    @Test
-    void rejectsHistoricalCandleMoreThanThirtyMinutesAway() {
-        Fixture f = fixture();
-        f.server().expect(requestTo(org.hamcrest.Matchers.startsWith(API + "/v1/candles/minutes/1")))
-                .andRespond(withSuccess("""
-                        [{"market":"KRW-USDC","candle_date_time_utc":"2026-07-31T05:59:00",
-                          "trade_price":1390.0,"timestamp":1785477540000}]
-                        """, MediaType.APPLICATION_JSON));
-
-        assertThatThrownBy(() -> f.client().fetchUsdKrw(KRX_CLOSE))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("not close");
     }
 
     @Test

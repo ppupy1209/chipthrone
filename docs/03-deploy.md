@@ -168,19 +168,18 @@ sudo tail -n 100 "/var/log/chipthrone/api-${ACTIVE_CONTAINER##*-}.log"
 sudo certbot --nginx -d api.chipthrone.com
 ```
 
-## 7. 공식 데이터 키 주입
+## 7. 시크릿 주입
 
-공공데이터포털 인증키는 **시크릿**이므로 레포와 이미지에 넣지 않고 EC2 환경변수로 주입한다. 업비트 공개 시세 조회는 인증키가 필요 없다. KIS와 Alpaca 키는 더 이상 사용하지 않는다.
+Slack Webhook URL은 **시크릿**이므로 레포와 이미지에 넣지 않고 EC2 환경변수로 주입한다. Hyperliquid와 업비트 공개 시세 조회는 인증키가 필요 없다. KIS와 Alpaca 키, 공공데이터포털 인증키는 더 이상 사용하지 않는다.
 
 1. EC2에서 env 파일 생성 (`~/chipthrone.env`):
    ```
-   PUBLIC_DATA_SERVICE_KEY=공공데이터포털_DECODING_인증키
+   SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
    ```
 2. env 파일 변경을 활성 슬롯에 반영:
    ```bash
    sudo CHIPTHRONE_FORCE_DEPLOY=1 /usr/local/bin/chipthrone-deploy
    ```
    - 이후 슬롯 배포도 같은 env 파일을 새 컨테이너에 주입한다.
-   - 키가 비면 Hyperliquid 추정 시세는 계속 동작한다.
-   - 공공데이터 키가 비면 국내 확정 종가와 시가총액이 비어 있다.
-3. 확인: `/api/quotes?symbols=005930,SNDK`에서 `source=HYPERLIQUID`, 국내 종목의 `regularClose/officialMarketCap`을 확인한다. `fxRate`와 `fxSource`가 응답에 없는지도 함께 확인한다.
+   - Webhook URL이 비면 Slack 알림만 꺼지고 시세 수집은 계속 동작한다.
+3. 확인: `/api/quotes?symbols=005930,SNDK`에서 `source=HYPERLIQUID`를 확인한다. `fxRate`, `fxSource`, `regularClose`, `officialMarketCap`이 응답에 없는지도 함께 확인한다.

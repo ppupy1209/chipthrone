@@ -21,7 +21,6 @@ chipthrone:
     consecutive-failure-threshold: 5
     cooldown-minutes: 10
   source:
-    public-data-service-key: ${PUBLIC_DATA_SERVICE_KEY:}
     # 인증키 없는 공개 시세를 서버 내부 원화 환산에만 사용한다.
     upbit-api-url: ${UPBIT_API_URL:https://api.upbit.com}
     upbit-market: ${UPBIT_MARKET:KRW-USDC}
@@ -29,17 +28,18 @@ chipthrone:
     polling-enabled: true
     dex: xyz
     assets:
-      # 금융위원회 일별 데이터의 상장주식수로 갱신됨. 값은 API 미연동 시 폴백.
+      # 국내 종목 상장주식수는 자동으로 갱신되지 않는다. 자기주식 소각이나 신주 상장이 있으면 직접 고친다.
+      # 2026-04-02 자기주식 소각 반영, 2026-09-10 기준 상장주식수
       - code: "005930"
         name: "삼성전자"
         symbol: "xyz:SMSN"
-        shares-outstanding: 5919637922
+        shares-outstanding: 5846278608
         market: KRX
-      # 금융위원회 일별 데이터의 상장주식수로 갱신됨. 값은 API 미연동 시 폴백.
+      # 2026-09-10 기준 상장주식수
       - code: "000660"
         name: "SK하이닉스"
         symbol: "xyz:SKHX"
-        shares-outstanding: 728002365
+        shares-outstanding: 730492365
         market: KRX
       # SEC 2026-04-24 발행주식수
       - code: "SNDK"

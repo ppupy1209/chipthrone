@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Header } from './components/Header'
-import {
-  EstimateCompanyCard,
-  OfficialCloseTitle,
-  OfficialCompanyCard,
-  UsCompanyCard,
-} from './components/CompanyCard'
+import { EstimateCompanyCard, UsCompanyCard } from './components/CompanyCard'
 import { ReversalCalculator } from './components/ReversalCalculator'
 import { WatchlistPicker } from './components/WatchlistPicker'
 import { useMarketData } from './hooks/useMarketData'
 import { useSupportedAssets } from './hooks/useSupportedAssets'
-import { compareOfficial, officialMarketCap } from './lib/marketCap'
+import { compareMarketCap, marketCap } from './lib/marketCap'
 import { fallbackAssets } from './data/mockMarket'
 import { MAX_WATCHLIST, MIN_WATCHLIST, normalizeWatchlist } from './lib/watchlist.js'
 
@@ -45,11 +40,10 @@ function App() {
   const krxCompanies = companies.filter((company) => company.market === 'KRX')
   const usCompanies = companies.filter((company) => company.market === 'US')
   const krxRanked = useMemo(
-    () => [...krxCompanies].sort((a, b) => officialMarketCap(b) - officialMarketCap(a)),
+    () => [...krxCompanies].sort((a, b) => marketCap(b) - marketCap(a)),
     [krxCompanies],
   )
-  const comparison = krxRanked.length >= 2 ? compareOfficial(krxRanked[0], krxRanked[1]) : null
-  const officialDate = krxCompanies.map((company) => company.regularCloseDate).find(Boolean) ?? null
+  const comparison = krxRanked.length >= 2 ? compareMarketCap(krxRanked[0], krxRanked[1]) : null
 
   const add = (code: string) =>
     setStoredSymbols((current) =>
@@ -67,34 +61,18 @@ function App() {
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 sm:py-8">
         <Header />
 
-        <section data-testid="official-krx" className="mt-5">
-          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h2 className={`${SECTION_TITLE_CLASS} tabular-nums`}>
-              <OfficialCloseTitle date={officialDate} />
-            </h2>
-            <p className="text-[10px] text-neutral-400 dark:text-neutral-500">
-              금융위원회 일별 데이터 · 영업일 13:05 이후 갱신
-            </p>
-          </div>
+        <section data-testid="estimate-krx" className="mt-5">
+          <h2 className={`${SECTION_TITLE_CLASS} mb-2`}>해외 추정 시세</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {krxCompanies.map((company) => (
-              <OfficialCompanyCard
+              <EstimateCompanyCard
                 key={company.code}
                 company={company}
-                isLeader={krxRanked[0]?.code === company.code && officialMarketCap(company) > 0}
+                isLeader={krxRanked[0]?.code === company.code && marketCap(company) > 0}
               />
             ))}
           </div>
           {comparison && <div className="mt-3"><ReversalCalculator cmp={comparison} /></div>}
-        </section>
-
-        <section data-testid="estimate-krx" className="mt-7">
-          <h2 className={`${SECTION_TITLE_CLASS} mb-2`}>해외 추정 시세</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {krxCompanies.map((company) => (
-              <EstimateCompanyCard key={company.code} company={company} />
-            ))}
-          </div>
         </section>
 
         <section data-testid="us-watchlist" className="mt-7">
@@ -123,9 +101,9 @@ function App() {
         <footer className="mt-8 border-t border-neutral-200 pt-4 text-[11px] leading-relaxed text-neutral-400 dark:border-neutral-800">
           <p className="mb-1 font-medium text-neutral-500">면책조항</p>
           <p>
-            국내 확정값은 금융위원회 일별 주식시세정보를 사용합니다.
             원화 환산값은 업비트 KRW-USDC 최우선 호가의 중간값을 참고한 추정값입니다.
             24시간 가격은 실제 주식 체결가가 아닌 Hyperliquid 파생시장의 추정값이며 지연이나 괴리가 발생할 수 있습니다.
+            시가총액 순위와 왕좌 교체 조건도 이 추정값으로 계산합니다.
             본 정보는 투자 권유나 자문이 아닙니다.
           </p>
         </footer>

@@ -9,11 +9,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import dev.yeonwoo.chipthrone.quote.config.QuoteProperties;
-import dev.yeonwoo.chipthrone.quote.model.EstimateAccuracy;
 import dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote;
 import dev.yeonwoo.chipthrone.quote.model.MarketAssetPrice;
 import dev.yeonwoo.chipthrone.quote.model.MarketMode;
-import dev.yeonwoo.chipthrone.quote.model.OfficialStockPrice;
 import dev.yeonwoo.chipthrone.quote.model.QuoteSnapshot;
 import dev.yeonwoo.chipthrone.quote.model.SessionClose;
 import dev.yeonwoo.chipthrone.quote.model.StockQuote;
@@ -32,14 +30,12 @@ public class QuoteSnapshotFactory {
     }
 
     public QuoteSnapshot create(List<MarketAssetPrice> prices, ExchangeRateQuote fxRate) {
-        return create(prices, fxRate, Map.of(), Map.of(), Map.of(), properties.assets());
+        return create(prices, fxRate, Map.of(), properties.assets());
     }
 
     public QuoteSnapshot create(
             List<MarketAssetPrice> prices,
             ExchangeRateQuote fxRate,
-            Map<String, OfficialStockPrice> officialByCode,
-            Map<String, EstimateAccuracy> accuracyByCode,
             Map<String, SessionClose> sessionCloseByCode,
             List<QuoteProperties.Asset> assets
     ) {
@@ -49,8 +45,6 @@ public class QuoteSnapshotFactory {
                 .map(asset -> toStockQuote(
                         asset,
                         requirePrice(priceBySymbol, asset.symbol()),
-                        officialByCode.get(asset.code()),
-                        accuracyByCode.get(asset.code()),
                         sessionCloseByCode.get(asset.code()),
                         fxRate.rate()
                 ))
@@ -73,8 +67,6 @@ public class QuoteSnapshotFactory {
     private StockQuote toStockQuote(
             QuoteProperties.Asset asset,
             MarketAssetPrice price,
-            OfficialStockPrice official,
-            EstimateAccuracy accuracy,
             SessionClose sessionClose,
             BigDecimal fxRate
     ) {
@@ -83,9 +75,7 @@ public class QuoteSnapshotFactory {
                 .divide(price.prevDayPx(), 12, RoundingMode.HALF_UP)
                 .subtract(BigDecimal.ONE)
                 .multiply(BigDecimal.valueOf(100));
-        long shares = official == null || official.sharesOutstanding() <= 0
-                ? asset.sharesOutstanding()
-                : official.sharesOutstanding();
+        long shares = asset.sharesOutstanding();
         BigDecimal estimatedMarketCap = priceKrw.multiply(BigDecimal.valueOf(shares));
 
         return new StockQuote(
@@ -96,17 +86,11 @@ public class QuoteSnapshotFactory {
                 changePct.doubleValue(),
                 shares,
                 estimatedMarketCap.doubleValue(),
-                official == null ? null : official.marketCap().doubleValue(),
-                official == null ? null : official.close().doubleValue(),
-                official == null ? null : official.closeDate(),
-                official == null ? null : official.high().doubleValue(),
                 null,
                 null,
                 asset.market().name(),
                 "HYPERLIQUID",
                 "ESTIMATE",
-                accuracy == null ? null : accuracy.estimateKrw().doubleValue(),
-                accuracy == null ? null : accuracy.divergencePct().doubleValue(),
                 sessionClose == null ? null : sessionClose.closeUsd().doubleValue(),
                 sessionClose == null ? null : sessionClose.closeDate()
         );
