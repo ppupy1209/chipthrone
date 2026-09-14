@@ -36,27 +36,23 @@
       "priceKrw": 246500.0,
       "priceUsd": 170.0,
       "changePct": -1.73,
-      "sharesOutstanding": 5919637922,
-      "marketCap": 1459180747773000.0,
-      "officialMarketCap": 1553904954525000.0,
-      "regularClose": 262500.0,
-      "regularCloseDate": "2026-07-31",
-      "high": 267000.0,
+      "sharesOutstanding": 5846278608,
+      "marketCap": 1441107676872000.0,
       "nxtClose": null,
       "nxtCloseDate": null,
       "market": "KRX",
       "source": "HYPERLIQUID",
       "status": "ESTIMATE",
-      "officialCloseEstimate": 264523.0,
-      "officialDivergencePct": 0.77
+      "sessionCloseUsd": null,
+      "sessionCloseDate": null
     }
   ]
 }
 ```
 
-`marketCap`은 추정 가격 기준, `officialMarketCap`은 금융위원회 확정값이다. `changePct`는 Hyperliquid `prevDayPx` 기준이다.
+`marketCap`은 추정 가격과 설정의 상장주식수로 계산한다. `changePct`는 Hyperliquid `prevDayPx` 기준이다. `sessionCloseUsd`와 `sessionCloseDate`는 미국 종목 전용이며 국내 종목은 null이다. 원화 환산에 사용한 원본 시세와 환율값은 응답에 포함하지 않는다.
 
-`officialCloseEstimate`는 `regularCloseDate`의 정규장 마감(15:30 KST) 시각 추정가(원)이고, `officialDivergencePct`는 그 값과 `regularClose`의 괴리율이다. 확정 종가가 없으면 둘 다 null이다. 원화 환산에 사용한 원본 시세와 환율값은 응답에 포함하지 않는다.
+`officialMarketCap`, `regularClose`, `regularCloseDate`, `high`, `officialCloseEstimate`, `officialDivergencePct`는 2026-09-14에 금융위원회 소스 제외와 함께 삭제했다.
 
 ## GET /api/stream?symbols=005930,000660
 

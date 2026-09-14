@@ -5,21 +5,6 @@ export function marketCap(c: Company): number {
   return c.price * c.sharesOutstanding
 }
 
-export function officialMarketCap(c: Company): number {
-  if (c.officialMarketCap != null) return c.officialMarketCap
-  return (c.regularClose ?? 0) * c.sharesOutstanding
-}
-
-/**
- * 확정 종가 대비 현재 추정가의 등락률(%). 증권앱이 보여주는 등락률과 같은 기준이다.
- * Hyperliquid `prevDayPx` 기준 24시간 등락률과는 기준점이 달라 값이 크게 벌어질 수 있다.
- * 확정 종가가 없으면(공공데이터 미연동) null.
- */
-export function closeChangePct(c: Company): number | null {
-  if (c.regularClose == null || c.regularClose <= 0) return null
-  return (c.price / c.regularClose - 1) * 100
-}
-
 /**
  * 미국 종목의 직전 정규장 마감(16:00 ET) 대비 등락률(%).
  * 양쪽 다 달러라 환율 변동이 섞이지 않는다. 미국 현지에서 보는 등락률과 같은 기준이다.
@@ -80,14 +65,13 @@ export type Comparison = {
   reversalPrice: number
 }
 
-/** 금융위원회 확정 시가총액 기준 왕좌 교체 조건. */
-export function compareOfficial(a: Company, b: Company): Comparison | null {
-  if (!a.regularClose || !b.regularClose) return null
-  const capA = officialMarketCap(a)
-  const capB = officialMarketCap(b)
+/** 추정 시가총액 기준 왕좌 교체 조건. 가격이나 주식 수가 비어 시총이 0이면 계산하지 않는다. */
+export function compareMarketCap(a: Company, b: Company): Comparison | null {
+  const capA = marketCap(a)
+  const capB = marketCap(b)
+  if (capA <= 0 || capB <= 0) return null
   const [leader, challenger, leaderCap, challengerCap] =
     capA >= capB ? [a, b, capA, capB] : [b, a, capB, capA]
-  const challengerClose = challenger.regularClose!
   const reversalPrice = leaderCap / challenger.sharesOutstanding
   return {
     leader,
@@ -96,7 +80,7 @@ export function compareOfficial(a: Company, b: Company): Comparison | null {
     challengerCap,
     gap: leaderCap - challengerCap,
     gapPct: ((leaderCap - challengerCap) / challengerCap) * 100,
-    reversalPct: (reversalPrice / challengerClose - 1) * 100,
+    reversalPct: (reversalPrice / challenger.price - 1) * 100,
     reversalPrice,
   }
 }

@@ -22,7 +22,7 @@ function particle(word: string, withFinal: string, withoutFinal: string): string
 
 export function ReversalCalculator({ cmp }: { cmp: Comparison }) {
   const needPct = Math.max(cmp.reversalPct, 0)
-  const needPrice = Math.round(cmp.reversalPrice - (cmp.challenger.regularClose ?? cmp.challenger.price))
+  const needPrice = Math.round(cmp.reversalPrice - cmp.challenger.price)
 
   const challengerText = TEXT_COLOR[cmp.challenger.color]
   const leaderText = TEXT_COLOR[cmp.leader.color]

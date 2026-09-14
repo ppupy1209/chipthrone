@@ -55,10 +55,12 @@ class QuoteControllerTest {
                 .andExpect(jsonPath("$.stocks[0].changeBasis").doesNotExist())
                 .andExpect(jsonPath("$.stocks[0].sharesOutstanding").value(5_919_637_922L))
                 .andExpect(jsonPath("$.stocks[0].marketCap").value(2.108E15))
-                .andExpect(jsonPath("$.stocks[0].officialMarketCap").value(nullValue()))
-                .andExpect(jsonPath("$.stocks[0].regularClose").value(nullValue()))
-                .andExpect(jsonPath("$.stocks[0].regularCloseDate").value(nullValue()))
-                .andExpect(jsonPath("$.stocks[0].high").value(nullValue()))
+                .andExpect(jsonPath("$.stocks[0].officialMarketCap").doesNotExist())
+                .andExpect(jsonPath("$.stocks[0].regularClose").doesNotExist())
+                .andExpect(jsonPath("$.stocks[0].regularCloseDate").doesNotExist())
+                .andExpect(jsonPath("$.stocks[0].high").doesNotExist())
+                .andExpect(jsonPath("$.stocks[0].officialCloseEstimate").doesNotExist())
+                .andExpect(jsonPath("$.stocks[0].officialDivergencePct").doesNotExist())
                 .andExpect(jsonPath("$.stocks[0].nxtClose").value(nullValue()))
                 .andExpect(jsonPath("$.stocks[0].nxtCloseDate").value(nullValue()));
     }
@@ -128,9 +130,6 @@ class QuoteControllerTest {
                         1.04,
                         5_919_637_922L,
                         2.108E15,
-                        null,
-                        null,
-                        null,
                         null,
                         null
                 ))

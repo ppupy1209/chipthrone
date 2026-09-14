@@ -91,12 +91,11 @@ docker compose -f docker-compose.yml -f docker-compose.capture.yml up --build -d
 
 ### 알릴 이벤트
 1. **배포/재시작** — `ApplicationReadyEvent`에서 1회. 예: `:white_check_mark: chipthrone-api vX.Y.Z 기동`. 호스트 배포 스크립트도 배포 성공·기동 실패·자동 롤백을 같은 Webhook으로 알려 새 프로세스 기동과 실제 트래픽 전환을 구분한다.
-2. **전날 종가 수집 장애** — 금융위원회 API가 빈 응답이나 오류를 반환하면 즉시 1회 알림. 마지막 정상값을 유지하고 10분 뒤 재시도하며 복구되면 1회 알림.
-3. **실시간 시세 소스 장애** — `QuoteService.refresh()`의 `marketDataClient`/`snapshotFactory` 호출이 **N회 연속 실패**하면 1회 알림. 마지막 스냅샷을 유지하고 복구되면 1회 알림.
+2. **실시간 시세 소스 장애** — `QuoteService.refresh()`의 `marketDataClient`/`snapshotFactory` 호출이 **N회 연속 실패**하면 1회 알림. 마지막 스냅샷을 유지하고 복구되면 1회 알림.
 
 ### 폭주 방지 규칙 (필수)
 - **상태 전이에서만**: `정상→실패` 1회, `실패→복구` 1회. 매 실패마다 X.
-- 실시간 시세는 **연속 실패 임계값** `N`(예: 5회 ≈ 15초), 전날 종가는 1회 실패로 장애 전환.
+- 실시간 시세는 **연속 실패 임계값** `N`(예: 5회 ≈ 15초)을 넘을 때 장애 전환. (전날 종가 수집 알림은 2026-09-14 금융위원회 소스 제외와 함께 삭제)
 - 같은 종류의 알림은 최소 10분간 차단.
 - 모든 임계값·쿨다운은 `application.yml`(`chipthrone.alert.*`)로 노출.
 

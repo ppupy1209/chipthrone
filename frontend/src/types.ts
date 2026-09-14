@@ -12,24 +12,12 @@ export type Company = {
   priceUsd: number
   /** Hyperliquid 전일 기준가 대비 등락률(%) */
   changePct: number
-  /** 금융위원회 확정 종가(원) — 공공데이터 미연동 시 null */
-  regularClose: number | null
-  /** 금융위원회 확정 종가 기준일(yyyy-MM-dd) */
-  regularCloseDate: string | null
   /** 이전 API 호환 필드. 현재는 null */
   nxtClose: number | null
   /** 이전 API 호환 필드. 현재는 null */
   nxtCloseDate: string | null
-  /** 금융위원회 확정 거래일 고가(원) */
-  high: number | null
   /** 상장주식수(보통주) */
   sharesOutstanding: number
-  /** 금융위원회 전일 확정 시가총액(원) */
-  officialMarketCap: number | null
-  /** 확정 종가와 같은 시점(정규장 마감)의 추정가(원) */
-  officialCloseEstimate: number | null
-  /** 확정 종가 대비 같은 시점 추정가의 괴리율(%) */
-  officialDivergencePct: number | null
   /** 미국 종목 전용. 직전 정규장 마감(16:00 ET) 시점 추정가(달러) */
   sessionCloseUsd: number | null
   /** 미국 종목 전용. 그 마감 기준일(ET 기준 yyyy-MM-dd) */

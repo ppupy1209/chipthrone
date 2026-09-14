@@ -5,10 +5,7 @@ import java.net.URI;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.yeonwoo.chipthrone.quote.model.ExchangeRateQuote;
@@ -31,7 +28,6 @@ public class UpbitUsdcExchangeRateClient implements ExchangeRateClient {
 
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     private static final Duration MAX_CURRENT_AGE = Duration.ofMinutes(15);
-    private static final Duration MAX_HISTORICAL_GAP = Duration.ofMinutes(30);
     private static final Duration MAX_FUTURE_SKEW = Duration.ofMinutes(1);
 
     private final RestClient restClient;
@@ -39,7 +35,6 @@ public class UpbitUsdcExchangeRateClient implements ExchangeRateClient {
     private final Clock clock;
     private final String apiUrl;
     private final String market;
-    private final AtomicReference<HistoricalRate> historicalCache = new AtomicReference<>();
 
     public UpbitUsdcExchangeRateClient(
             RestClient restClient,
@@ -75,33 +70,6 @@ public class UpbitUsdcExchangeRateClient implements ExchangeRateClient {
         Instant quotedAt = Instant.ofEpochMilli(orderbook.path("timestamp").asLong());
         validateCurrentTimestamp(quotedAt);
         return quote(orderbookMidpoint(orderbook), quotedAt);
-    }
-
-    @Override
-    public ExchangeRateQuote fetchUsdKrw(Instant at) {
-        HistoricalRate cached = historicalCache.get();
-        if (cached != null && cached.requestedAt().equals(at)) {
-            return cached.quote();
-        }
-
-        URI uri = UriComponentsBuilder.fromUriString(apiUrl)
-                .path("/v1/candles/minutes/1")
-                .queryParam("market", market)
-                .queryParam("to", at.toString())
-                .queryParam("count", 1)
-                .build()
-                .encode()
-                .toUri();
-        JsonNode candle = first(request(uri, "usdc_krw_minute_candle"), "minute candle");
-        requireMarket(candle);
-        Instant tradedAt = candleTimestamp(candle);
-        Duration gap = Duration.between(tradedAt, at);
-        if (gap.isNegative() || gap.compareTo(MAX_HISTORICAL_GAP) > 0) {
-            throw new IllegalStateException("Upbit KRW-USDC candle is not close to requested time: " + at);
-        }
-        ExchangeRateQuote quote = quote(rate(candle, "trade_price"), tradedAt);
-        historicalCache.set(new HistoricalRate(at, quote));
-        return quote;
     }
 
     private JsonNode request(URI uri, String operation) {
@@ -160,18 +128,6 @@ public class UpbitUsdcExchangeRateClient implements ExchangeRateClient {
         }
     }
 
-    private Instant candleTimestamp(JsonNode candle) {
-        long timestamp = candle.path("timestamp").asLong();
-        if (timestamp > 0) {
-            return Instant.ofEpochMilli(timestamp);
-        }
-        String candleAt = candle.path("candle_date_time_utc").asText();
-        if (candleAt.isBlank()) {
-            throw new IllegalStateException("Upbit KRW-USDC candle has no timestamp");
-        }
-        return LocalDateTime.parse(candleAt).toInstant(ZoneOffset.UTC);
-    }
-
     private ExchangeRateQuote quote(BigDecimal rate, Instant tradedAt) {
         return new ExchangeRateQuote(
                 rate,
@@ -179,8 +135,5 @@ public class UpbitUsdcExchangeRateClient implements ExchangeRateClient {
                 "UPBIT_USDC",
                 clock.instant()
         );
-    }
-
-    private record HistoricalRate(Instant requestedAt, ExchangeRateQuote quote) {
     }
 }
