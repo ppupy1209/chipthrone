@@ -55,10 +55,10 @@ PR과 `main` 반영 시 인프라 스크립트를 검사하고 백엔드 빌드�
 
 ## SSE worker 고갈 로컬 검증
 
-동기식 장기 SSE가 Tomcat worker를 모두 점유하면 일반 API까지 응답하지 못하는 상황을 localhost에서 재현했습니다. 같은 연결 수를 현재 `SseEmitter` 경로로 유지했을 때 worker가 반환되고 Health API가 정상 응답하는지도 함께 측정했습니다.
+동기식 장기 SSE 200개가 Tomcat worker 200개를 모두 점유하면 일반 API와 Prometheus 수집까지 멈추는 상황을 localhost에서 재현했습니다. 현재 `SseEmitter` 경로는 SSE 400개를 유지하면서도 worker가 반환되고 Health API가 정상 응답하는지 Prometheus와 Grafana로 함께 측정했습니다.
 
 - [재현 방법과 실측 결과](docs/09-sse-thread-starvation.md)
-- [원본 측정값](docs/sse-thread-starvation-results.json)
+- [원본 측정값](docs/sse-capacity-load-results.json)
 
 ## 로컬 실행
 

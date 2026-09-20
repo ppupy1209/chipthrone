@@ -1,0 +1,611 @@
+{
+  "measured_at": "2026-09-20T04:03:01.200136+00:00",
+  "host": "Darwin arm64",
+  "tomcat_max_threads": 200,
+  "blocking_sse": {
+    "connected_clients": 200,
+    "worker_stacks_in_blocking_handler": 200,
+    "health": {
+      "probe_attempts": 21,
+      "probe_successes": 8,
+      "probe_failures": 13,
+      "success_rate": 0.381,
+      "latency_p50_ms": 2.95,
+      "latency_p95_ms": 7.29,
+      "latency_max_ms": 7.29,
+      "failure_types": [
+        "TimeoutError"
+      ]
+    }
+  },
+  "async_sse": {
+    "connected_clients": 400,
+    "worker_stacks_in_blocking_handler": 0,
+    "health": {
+      "probe_attempts": 28,
+      "probe_successes": 28,
+      "probe_failures": 0,
+      "success_rate": 1.0,
+      "latency_p50_ms": 3.44,
+      "latency_p95_ms": 5.25,
+      "latency_max_ms": 5.35,
+      "failure_types": []
+    }
+  },
+  "probe_samples": [
+    {
+      "at_epoch_seconds": 1789876888.634363,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 1.97,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876889.643449,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 4.14,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876890.652444,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 4.75,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876891.6596658,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 3.74,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876892.668624,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 3.9,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876893.676927,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 3.92,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876894.684494,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 2.52,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876895.694036,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 4.49,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876896.702572,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 4.58,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876897.710498,
+      "phase": "warmup",
+      "success": true,
+      "latency_ms": 2.87,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876898.718251,
+      "phase": "blocking",
+      "success": true,
+      "latency_ms": 2.69,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876899.726239,
+      "phase": "blocking",
+      "success": true,
+      "latency_ms": 2.95,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876900.733899,
+      "phase": "blocking",
+      "success": true,
+      "latency_ms": 2.66,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876901.741504,
+      "phase": "blocking",
+      "success": true,
+      "latency_ms": 2.57,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876902.7498791,
+      "phase": "blocking",
+      "success": true,
+      "latency_ms": 3.3,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876903.759478,
+      "phase": "blocking",
+      "success": true,
+      "latency_ms": 7.29,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876904.768229,
+      "phase": "blocking",
+      "success": true,
+      "latency_ms": 4.27,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876905.778615,
+      "phase": "blocking",
+      "success": true,
+      "latency_ms": 5.25,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876907.283037,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.94,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876908.788119,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.91,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876910.2913349,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.95,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876911.7952409,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 502.09,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876913.299624,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.88,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876914.802437,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.87,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876916.306376,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.85,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876917.8091269,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.99,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876919.315669,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.43,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876920.822592,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.79,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876922.3252969,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 502.15,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876923.831233,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 502.05,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876925.3376052,
+      "phase": "blocking",
+      "success": false,
+      "latency_ms": 501.78,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876926.844884,
+      "phase": "recovery",
+      "success": false,
+      "latency_ms": 502.06,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876928.348911,
+      "phase": "recovery",
+      "success": false,
+      "latency_ms": 502.01,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876929.855847,
+      "phase": "recovery",
+      "success": false,
+      "latency_ms": 501.82,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876931.362803,
+      "phase": "recovery",
+      "success": false,
+      "latency_ms": 502.03,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876932.8700318,
+      "phase": "recovery",
+      "success": false,
+      "latency_ms": 502.1,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876934.3773491,
+      "phase": "recovery",
+      "success": false,
+      "latency_ms": 502.18,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876935.882488,
+      "phase": "recovery",
+      "success": false,
+      "latency_ms": 501.9,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876937.386132,
+      "phase": "recovery",
+      "success": false,
+      "latency_ms": 502.1,
+      "error": "TimeoutError"
+    },
+    {
+      "at_epoch_seconds": 1789876938.69998,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 309.09,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876939.7039611,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 3.26,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876940.708242,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 2.29,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876941.717819,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 5.84,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876942.726015,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 3.87,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876943.734996,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 3.91,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876944.743068,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 6.11,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876945.751998,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 4.91,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876946.7594612,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 4.03,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876947.767513,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 2.99,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876948.774444,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 4.07,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876949.783294,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 5.08,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876950.788722,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 4.55,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876951.798063,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 4.21,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876952.808002,
+      "phase": "recovery",
+      "success": true,
+      "latency_ms": 4.81,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876953.815428,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.36,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876954.823317,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 2.84,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876955.83235,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.89,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876956.8427799,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 5.35,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876957.8478642,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.94,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876958.855732,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 2.8,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876959.862334,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.44,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876960.871063,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.67,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876961.879188,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.06,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876962.8851998,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 2.47,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876963.889239,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 2.74,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876964.8969421,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 2.64,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876965.9033442,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 2.9,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876966.907812,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 2.49,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876967.9163232,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.46,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876968.9229991,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.37,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876969.931666,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.6,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876970.9407098,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.93,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876971.9496472,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.85,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876972.956712,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 4.01,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876973.960475,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.01,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876974.964721,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.31,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876975.974118,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 4.26,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876976.980099,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 4.08,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876977.988024,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 2.86,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876978.996107,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 4.22,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876980.006452,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 5.25,
+      "error": null
+    },
+    {
+      "at_epoch_seconds": 1789876981.0154612,
+      "phase": "async",
+      "success": true,
+      "latency_ms": 3.91,
+      "error": null
+    }
+  ]
+}

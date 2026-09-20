@@ -1,0 +1,67 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "type": "timeseries", "title": "부하 생성기의 SSE 연결", "id": 1,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "expr": "chipthrone_lab_target_sse_connections", "legendFormat": "생성한 연결", "refId": "A" },
+        { "expr": "chipthrone_sse_connections", "legendFormat": "SseEmitter 등록", "refId": "B" }
+      ]
+    },
+    {
+      "type": "timeseries", "title": "Tomcat worker 사용", "id": 2,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "max": 200 }, "overrides": [] },
+      "targets": [
+        { "expr": "tomcat_threads_busy_threads", "legendFormat": "busy worker", "refId": "A" },
+        { "expr": "tomcat_threads_current_threads", "legendFormat": "current worker", "refId": "B" }
+      ]
+    },
+    {
+      "type": "timeseries", "title": "외부 Health 성공", "id": 3,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] },
+      "targets": [
+        { "expr": "chipthrone_lab_health_probe_success * 100", "legendFormat": "Health 성공", "refId": "A" },
+        { "expr": "up{job=\"chipthrone-api\"} * 100", "legendFormat": "Prometheus scrape", "refId": "B" }
+      ]
+    },
+    {
+      "type": "timeseries", "title": "외부 Health 응답 시간", "id": 4,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "expr": "chipthrone_lab_health_probe_latency_seconds", "legendFormat": "probe latency", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries", "title": "JVM 메모리 사용", "id": 5,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "expr": "sum(jvm_memory_used_bytes)", "legendFormat": "heap + non-heap", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries", "title": "프로세스 CPU", "id": 6,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0 }, "overrides": [] },
+      "targets": [
+        { "expr": "process_cpu_usage", "legendFormat": "process CPU", "refId": "A" }
+      ]
+    }
+  ],
+  "refresh": "2s",
+  "schemaVersion": 41,
+  "tags": ["chipthrone", "sse", "tomcat", "loadtest"],
+  "templating": { "list": [] },
+  "time": { "from": "now-10m", "to": "now" },
+  "timezone": "browser",
+  "title": "CHIP THRONE · SSE worker 포화 실험",
+  "uid": "chipthrone-sse-thread-lab",
+  "version": 1
+}

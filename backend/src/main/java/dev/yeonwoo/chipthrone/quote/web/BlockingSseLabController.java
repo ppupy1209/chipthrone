@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/__lab")
 public class BlockingSseLabController {
 
-    private static final long HEARTBEAT_INTERVAL_MS = 250;
+    private static final long HEARTBEAT_INTERVAL_MS = 10_000;
     private static final long MAX_HOLD_MS = 60_000;
 
     @GetMapping(path = "/blocking-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
