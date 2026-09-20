@@ -4,7 +4,7 @@
   "graphTooltip": 1,
   "panels": [
     {
-      "type": "timeseries", "title": "부하 생성기의 SSE 연결", "id": 1,
+      "type": "timeseries", "title": "부하 생성기의 SSE 연결", "id": 1, "interval": "1s",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
       "targets": [
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "type": "timeseries", "title": "Tomcat worker 사용", "id": 2,
+      "type": "timeseries", "title": "Tomcat worker 사용", "id": 2, "interval": "1s",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "fieldConfig": { "defaults": { "unit": "short", "min": 0, "max": 200 }, "overrides": [] },
       "targets": [
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "type": "timeseries", "title": "외부 Health 성공", "id": 3,
+      "type": "timeseries", "title": "외부 Health 성공", "id": 3, "interval": "1s",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] },
       "targets": [

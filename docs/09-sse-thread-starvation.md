@@ -29,30 +29,34 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) \
 docker compose -f docker-compose.sse-thread-lab.yml down
 ```
 
+![동기식 SSE 200개와 운영 SseEmitter 400개의 실제 연결 수](/docs/images/grafana-sse-connections.png)
+
+초록색은 재현용 동기 연결, 노란색은 운영 `SseEmitter` 등록 수다. 한 번의 실행에서 동기 200개로 worker를 포화시킨 뒤 연결을 닫고, 같은 프로세스의 운영 경로에 400개를 연결했다.
+
 ## 동기식 SSE 200개: worker 고갈
 
-![동기식 SSE 연결이 200개로 증가하면서 Tomcat worker와 Health가 함께 고갈되는 Grafana 실측](/docs/images/grafana-sse-worker-blocking-200.png)
+![동기식 SSE 연결 증가에 따라 busy worker가 176개까지 상승한 Grafana 실측](/docs/images/grafana-tomcat-workers.png)
 
-연결을 25개씩 늘리는 동안 busy worker가 같은 방향으로 증가했다. 마지막 scrape에서는 200개 current worker 중 150개가 busy로 관측됐고, 다음 구간부터 애플리케이션이 Prometheus scrape에도 응답하지 못했다. 그래프의 scrape와 외부 Health 성공률이 함께 0으로 떨어진 이유다.
+연결을 25개씩 늘리는 동안 busy worker가 같은 방향으로 증가했다. 마지막 scrape에서는 200개 current worker 중 176개가 busy로 관측됐고, 다음 구간부터 애플리케이션이 Prometheus scrape에도 응답하지 못했다.
 
 부하 생성기에서는 동기 연결 200개를 모두 열었고, 같은 시점의 thread dump에서도 `BlockingSseLabController.blockingStream` stack 200개를 확인했다. 포화에 도달한 뒤 Health probe 13회가 연속으로 500ms timeout에 걸렸다. Nginx가 앞에 있다면 이 상태가 upstream timeout까지 지속되는 순간 외부에서는 504로 보일 수 있다.
 
 ## 운영 `SseEmitter` 경로 400개: 연결과 worker 수명 분리
 
-![운영 SseEmitter 경로에 SSE 400개를 연결해도 Tomcat worker와 Health가 안정적인 Grafana 실측](/docs/images/grafana-sse-emitter-400.png)
+![동기식 worker 포화 구간에서 0%로 떨어지고 회복 및 SseEmitter 구간에서 100%를 유지한 Health 성공률](/docs/images/grafana-health-success.png)
 
 동기 연결을 닫고 애플리케이션이 회복된 뒤 실제 `/api/stream`에 SSE 400개를 연결했다. Actuator의 `chipthrone_sse_connections`도 400을 기록했지만 busy worker는 0으로 돌아왔고, blocking handler stack도 0개였다.
 
-400개 연결을 올리고 유지하는 동안 Health 28회가 모두 성공했다. p50은 3.44ms, p95는 5.25ms, 최대는 5.35ms였다. 로컬 프로세스의 JVM 메모리는 그래프상 약 160~190MiB 범위였고 CPU도 낮게 유지됐다.
+Health 성공률은 worker 포화 구간에서 0%로 떨어졌다가 연결을 닫은 뒤 100%로 회복했다. 이어서 400개 연결을 올리고 유지하는 동안 Health 28회가 모두 성공했다. p50은 3.17ms, p95는 10.71ms, 최대는 12.16ms였다.
 
 | 비교 | 동기 handler | 운영 `SseEmitter` |
 |---|---:|---:|
 | 연결된 SSE 클라이언트 | 200 | 400 |
 | 동기 handler stack | 200 | 0 |
 | 포화/유지 구간 Health | 0/13 | 28/28 |
-| Health p50 | timeout | 3.44ms |
-| Health p95 | timeout | 5.25ms |
-| Health 최대 | timeout | 5.35ms |
+| Health p50 | timeout | 3.17ms |
+| Health p95 | timeout | 10.71ms |
+| Health 최대 | timeout | 12.16ms |
 
 원본 probe 표본과 집계값은 `docs/sse-capacity-load-results.json`에 저장한다. Grafana 이미지는 이 실행에서 Prometheus가 수집한 실제 시계열을 캡처한 것이다.
 
