@@ -35,6 +35,7 @@ sudo usermod -aG docker ec2-user || true
 echo "==> Certbot 설치"
 sudo dnf install -y certbot python3-certbot-nginx || \
   echo "(certbot dnf 설치 실패 시: sudo python3 -m pip install certbot certbot-nginx)"
+sudo systemctl enable --now certbot-renew.timer
 
 echo "==> Nginx 리버스 프록시 설정 (${API_DOMAIN})"
 sudo tee /etc/nginx/conf.d/chipthrone-api-upstream.conf >/dev/null <<'UPSTREAM'
@@ -82,12 +83,14 @@ cat <<DONE
 1) DNS: ${API_DOMAIN} A레코드를 이 EC2 퍼블릭 IP로 설정
 2) DNS 전파 후 SSL 발급:
      sudo certbot --nginx -d ${API_DOMAIN}
+     sudo certbot renew --dry-run
 3) 확인:
      cat /var/lib/chipthrone-deploy/active-container
      cat /etc/nginx/conf.d/chipthrone-api-upstream.conf
      curl https://${API_DOMAIN}/api/health
      systemctl status chipthrone-deploy.timer
      systemctl status chipthrone-health-recovery.timer
+     systemctl status certbot-renew.timer
 4) 이후 main 푸시 시 후보 슬롯 검증 후 Nginx 전환, 실패 시 이전 슬롯 롤백
 ==================================================
 DONE

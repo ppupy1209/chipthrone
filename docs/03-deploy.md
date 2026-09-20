@@ -166,6 +166,15 @@ sudo tail -n 100 "/var/log/chipthrone/api-${ACTIVE_CONTAINER##*-}.log"
 `infra/nginx/api.chipthrone.com.conf` 를 `/etc/nginx/conf.d/` 에 배치 후:
 ```bash
 sudo certbot --nginx -d api.chipthrone.com
+sudo systemctl enable --now certbot-renew.timer
+sudo certbot renew --dry-run
+```
+
+인증서 자동 갱신 타이머는 Amazon Linux에서 기본 비활성화될 수 있으므로 반드시 `enabled`, `active (waiting)` 상태를 확인한다.
+
+```bash
+systemctl status certbot-renew.timer
+systemctl list-timers certbot-renew.timer
 ```
 
 ## 7. 시크릿 주입
