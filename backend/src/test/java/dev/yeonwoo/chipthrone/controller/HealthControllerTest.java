@@ -30,4 +30,10 @@ class HealthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"));
     }
+
+    @Test
+    void blockingSseLabIsNotAvailableInTheDefaultProfile() throws Exception {
+        mockMvc.perform(get("/__lab/blocking-stream"))
+                .andExpect(status().isNotFound());
+    }
 }

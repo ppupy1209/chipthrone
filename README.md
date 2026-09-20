@@ -53,6 +53,13 @@ PR과 `main` 반영 시 인프라 스크립트를 검사하고 백엔드 빌드�
 
 이 방식으로 22번 포트는 계속 개인 IP에만 허용할 수 있고, 배포 과정에서 SSH 키와 러너 IP를 별도로 관리하지 않습니다.
 
+## SSE worker 고갈 로컬 검증
+
+동기식 장기 SSE가 Tomcat worker를 모두 점유하면 일반 API까지 응답하지 못하는 상황을 localhost에서 재현했습니다. 같은 연결 수를 현재 `SseEmitter` 경로로 유지했을 때 worker가 반환되고 Health API가 정상 응답하는지도 함께 측정했습니다.
+
+- [재현 방법과 실측 결과](docs/09-sse-thread-starvation.md)
+- [원본 측정값](docs/sse-thread-starvation-results.json)
+
 ## 로컬 실행
 
 Git과 Docker Desktop을 설치한 뒤 Docker가 실행 중인지 확인해 주세요.
