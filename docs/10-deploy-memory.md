@@ -59,6 +59,8 @@ swap이 없어서 anonymous 메모리(JVM heap 등)는 내보낼 곳이 없다. 
 
 배포 스크립트는 이 구간 동안 거의 실행되지 못했다. OOM kill 이후 남은 Readiness 확인이 통과하자 `deployment completed`로 끝났다. 61분 장애가 있었는데 배포는 성공으로 기록됐다.
 
+![15:51 기동 알림 뒤 66분 동안 알림 없이 16:57 배포 완료만 보고된 Slack](images/deploy-memory-slack-run1.png)
+
 ## JVM 한 개가 왜 300MiB인가
 
 `-XX:NativeMemoryTracking=summary`로 슬롯 하나에 SSE 400개를 붙이고 `jcmd VM.native_memory`로 확인했다. JRE 이미지에 `jcmd`가 없어서 `eclipse-temurin:21-jdk`를 `--pid container:<slot>`으로 붙였다.
@@ -130,6 +132,10 @@ C2를 끄면 CPU 효율이 나빠질 수 있어서 같은 SSE 400개 4분 구간
 | SSE 재연결 | 2,243회 | 400회 |
 | 연결 timeout | 2,004회 | 0회 |
 | OOM kill | 1회 | 0회 |
+
+![가드가 이전 슬롯 drain을 조기 종료했다는 Slack 경고](images/deploy-memory-slack-run2.png)
+
+알림의 82MiB는 64MiB 미만을 감지한 뒤 이전 슬롯을 제거하기 직전에 다시 읽은 값이다.
 
 2차의 재연결 400회는 가드 때문이 아니라 SSE 300초 수명 만료로 원래 일어나는 재연결이다. 연결이 모두 green으로 옮겨 간 직후, 연결 0개인 blue가 메모리를 쥔 채 남아 있는 동안 가용 메모리가 64MiB 아래로 내려갔고 가드가 blue를 drain 종료(09:22:48)보다 17초 먼저 제거했다. 효과를 나누면 다음과 같다.
 
