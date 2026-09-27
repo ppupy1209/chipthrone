@@ -1,0 +1,241 @@
+{
+  "uid": "chipthrone-deploy-memory",
+  "title": "CHIP THRONE 배포 메모리",
+  "schemaVersion": 41,
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "호스트 가용 메모리 (MemAvailable, 빨간 선: 가드 기준 64MiB)",
+      "id": 1,
+      "interval": "1s",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "mbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "transparent",
+                "value": 64
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "deploy_host_memory_available_bytes / 1024 / 1024",
+          "legendFormat": "가용",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "슬롯별 컨테이너 메모리 (cgroup memory.current)",
+      "id": 2,
+      "interval": "1s",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "mbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "deploy_container_memory_current_bytes / 1024 / 1024",
+          "legendFormat": "{{container}}",
+          "refId": "A"
+        },
+        {
+          "expr": "deploy_container_memory_anon_bytes / 1024 / 1024",
+          "legendFormat": "{{container}} anon",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "슬롯별 SSE 연결",
+      "id": 3,
+      "interval": "1s",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "chipthrone_sse_connections",
+          "legendFormat": "{{slot}}",
+          "refId": "A"
+        },
+        {
+          "expr": "deploy_load_open_connections",
+          "legendFormat": "부하 생성기 열린 연결",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "슬롯별 JVM 메모리 (heap, nonheap 사용량)",
+      "id": 4,
+      "interval": "1s",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "mbytes",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum by (slot, area) (jvm_memory_used_bytes) / 1024 / 1024",
+          "legendFormat": "{{slot}} {{area}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (slot) (jvm_memory_committed_bytes{area=\"heap\"}) / 1024 / 1024",
+          "legendFormat": "{{slot}} heap committed",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "외부 Health 성공, 실패 (초당)",
+      "id": 5,
+      "interval": "1s",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "rate(deploy_load_health_ok_total[5s])",
+          "legendFormat": "성공",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(deploy_load_health_fail_total[5s])",
+          "legendFormat": "실패",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "OOM kill 누적, 재연결 누적",
+      "id": 6,
+      "interval": "1s",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "deploy_host_oom_kill_total",
+          "legendFormat": "OOM kill",
+          "refId": "A"
+        },
+        {
+          "expr": "deploy_load_reconnects_total",
+          "legendFormat": "SSE 재연결",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(deploy_load_connect_errors_total)",
+          "legendFormat": "연결 실패",
+          "refId": "C"
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "chipthrone"
+  ]
+}

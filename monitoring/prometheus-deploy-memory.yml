@@ -1,0 +1,20 @@
+# 운영 EC2 슬롯 배포 메모리 측정용. SSH 터널(19101, 28080, 28081)을 먼저 연다.
+global:
+  scrape_interval: 1s
+
+scrape_configs:
+  - job_name: ec2-host
+    static_configs:
+      - targets: ["host.docker.internal:19101"]
+
+  - job_name: chipthrone-slot
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:28080"]
+        labels: {slot: blue}
+      - targets: ["host.docker.internal:28081"]
+        labels: {slot: green}
+
+  - job_name: deploy-load-generator
+    static_configs:
+      - targets: ["host.docker.internal:19100"]
