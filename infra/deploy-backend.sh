@@ -11,6 +11,7 @@ STATE_DIR="${CHIPTHRONE_DEPLOY_STATE_DIR:-/var/lib/chipthrone-deploy}"
 ACTIVE_STATE_FILE="${CHIPTHRONE_ACTIVE_STATE_FILE:-${STATE_DIR}/active-container}"
 REJECTED_IMAGE_FILE="${CHIPTHRONE_REJECTED_IMAGE_FILE:-${STATE_DIR}/rejected-image}"
 DEPLOY_LOCK_FILE="${CHIPTHRONE_DEPLOY_LOCK_FILE:-${STATE_DIR}/deploy.lock}"
+MEMORY_DEFERRED_FILE="${STATE_DIR}/memory-deferred-image"
 UPSTREAM_FILE="${CHIPTHRONE_NGINX_UPSTREAM_FILE:-/etc/nginx/conf.d/chipthrone-api-upstream.conf}"
 
 BLUE_PORT="${CHIPTHRONE_BLUE_PORT:-18080}"
@@ -21,6 +22,16 @@ CHECK_INTERVAL_SECONDS="${CHIPTHRONE_CHECK_INTERVAL_SECONDS:-2}"
 FAILURE_THRESHOLD="${CHIPTHRONE_FAILURE_THRESHOLD:-3}"
 STOP_TIMEOUT_SECONDS="${CHIPTHRONE_STOP_TIMEOUT_SECONDS:-30}"
 FORCE_DEPLOY="${CHIPTHRONE_FORCE_DEPLOY:-0}"
+# 두 슬롯이 겹치는 동안 t3.micro에 들어가도록 JVM 상주 메모리를 줄인다 (docs/10-deploy-memory.md).
+# SSE 400개 기준 RSS 275MiB -> 226MiB. C2를 끄는 대신 CPU와 전달 지연 p95는 측정 오차 수준이었다.
+JAVA_OPTS="${CHIPTHRONE_JAVA_OPTS:--Xms64m -Xmx320m -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=32m -Xss512k}"
+# swap이 없는 t3.micro에서 가용 메모리가 바닥나면 OOM killer 대신 페이지 캐시 스래싱으로
+# 호스트 전체가 1시간 가까이 멈췄다. 이 값 아래로 내려가면 두 슬롯을 겹쳐 두지 않는다.
+MIN_AVAILABLE_MIB="${CHIPTHRONE_MIN_AVAILABLE_MIB:-64}"
+# 후보 슬롯 기동에 필요한 여유. 기동 직후 실측 최대 174MiB에 여유를 더했다.
+# 기동 전 가용 메모리가 MIN + 이 값보다 작으면 배포를 미룬다.
+CANDIDATE_RESERVE_MIB="${CHIPTHRONE_CANDIDATE_RESERVE_MIB:-180}"
+MEMINFO_FILE="${CHIPTHRONE_MEMINFO_FILE:-/proc/meminfo}"
 
 DOCKER_BIN="${DOCKER_BIN:-/usr/bin/docker}"
 CURL_BIN="${CURL_BIN:-/usr/bin/curl}"
@@ -96,6 +107,8 @@ require_non_negative_integer CHIPTHRONE_DRAIN_SECONDS "$DRAIN_SECONDS"
 require_positive_integer CHIPTHRONE_CHECK_INTERVAL_SECONDS "$CHECK_INTERVAL_SECONDS"
 require_positive_integer CHIPTHRONE_FAILURE_THRESHOLD "$FAILURE_THRESHOLD"
 require_positive_integer CHIPTHRONE_STOP_TIMEOUT_SECONDS "$STOP_TIMEOUT_SECONDS"
+require_non_negative_integer CHIPTHRONE_MIN_AVAILABLE_MIB "$MIN_AVAILABLE_MIB"
+require_non_negative_integer CHIPTHRONE_CANDIDATE_RESERVE_MIB "$CANDIDATE_RESERVE_MIB"
 
 mkdir -p "$STATE_DIR" "$HOST_LOG_DIR" "$(dirname -- "$UPSTREAM_FILE")"
 
@@ -227,6 +240,15 @@ candidate_ready() {
     "http://127.0.0.1:${port}/actuator/health/readiness" >/dev/null
 }
 
+available_mib() {
+  awk '/^MemAvailable:/ { print int($2 / 1024) }' "$MEMINFO_FILE"
+}
+
+memory_low() {
+  (( $(available_mib) < MIN_AVAILABLE_MIB ))
+}
+
+# 반환값 2: 후보가 뜨는 동안 호스트 가용 메모리가 바닥났다.
 wait_for_candidate() {
   local port="$1"
   local attempts=$(( (STARTUP_TIMEOUT_SECONDS + CHECK_INTERVAL_SECONDS - 1) / CHECK_INTERVAL_SECONDS ))
@@ -234,6 +256,9 @@ wait_for_candidate() {
   for ((attempt = 1; attempt <= attempts; attempt++)); do
     if candidate_ready "$port"; then
       return 0
+    fi
+    if memory_low; then
+      return 2
     fi
     if (( attempt < attempts )); then
       "$SLEEP_BIN" "$CHECK_INTERVAL_SECONDS"
@@ -258,6 +283,9 @@ monitor_candidate() {
         return 1
       fi
     fi
+    if [[ -n "$active_name" ]] && memory_low && container_exists "$active_name"; then
+      stop_previous_early
+    fi
     if (( check < checks )); then
       "$SLEEP_BIN" "$CHECK_INTERVAL_SECONDS"
     fi
@@ -268,6 +296,33 @@ monitor_candidate() {
 cleanup_candidate() {
   local name="$1"
   "$DOCKER_BIN" rm -f "$name" >/dev/null 2>&1 || true
+}
+
+# 두 슬롯을 계속 겹쳐 두면 호스트가 멈춘다. 이전 슬롯의 SSE 연결은 끊기지만
+# 브라우저가 새 슬롯으로 다시 연결하므로, 멈춤 대신 재연결을 택한다.
+# 이후에는 롤백할 이전 슬롯이 없다.
+stop_previous_early() {
+  local available
+  available="$(available_mib)"
+  log "host memory is low (${available}MiB available); ending SSE drain early and removing ${active_name}"
+  "$DOCKER_BIN" rm -f "$active_name" >/dev/null 2>&1 || true
+  notify_slack ":warning: CHIP THRONE 배포 중 가용 메모리 ${available}MiB: 이전 슬롯 drain을 조기 종료했습니다. 기존 SSE 연결은 새 슬롯으로 재연결됩니다."
+}
+
+memory_deferred_notified() {
+  [[ -s "$MEMORY_DEFERRED_FILE" ]] && [[ "$(cat "$MEMORY_DEFERRED_FILE")" == "$1" ]]
+}
+
+# 같은 이미지에 대해 Slack 알림은 한 번만 보낸다. timer가 60초마다 다시 시도하기 때문이다.
+defer_for_memory() {
+  local image_id="$1"
+  local reason="$2"
+  log "deployment postponed: ${reason}"
+  if ! memory_deferred_notified "$image_id"; then
+    notify_slack ":hourglass: CHIP THRONE 배포 보류: ${reason}. 메모리가 확보되면 다음 주기에 다시 시도합니다. image=${image_id}"
+    printf '%s\n' "$image_id" > "$MEMORY_DEFERRED_FILE"
+  fi
+  exit 0
 }
 
 read_active_state
@@ -300,6 +355,11 @@ candidate_name="chipthrone-api-${candidate_slot}"
 
 cleanup_candidate "$candidate_name"
 
+available_before_start="$(available_mib)"
+if (( available_before_start < MIN_AVAILABLE_MIB + CANDIDATE_RESERVE_MIB )); then
+  defer_for_memory "$desired_image" "가용 메모리 ${available_before_start}MiB로 후보 슬롯 기동 여유(${MIN_AVAILABLE_MIB}+${CANDIDATE_RESERVE_MIB}MiB)가 부족합니다"
+fi
+
 log "starting ${candidate_slot} candidate on 127.0.0.1:${candidate_port}"
 run_args=(
   run -d
@@ -307,9 +367,7 @@ run_args=(
   --restart unless-stopped
   --stop-timeout "$STOP_TIMEOUT_SECONDS"
   -p "127.0.0.1:${candidate_port}:8080"
-  # 운영 실측에서 400 SSE 연결 시 최대 컨테이너 메모리는 273.52MiB였다.
-  # 두 슬롯이 겹치는 동안 t3.micro 메모리에 여유를 남기도록 최대 heap을 낮춘다.
-  -e "JAVA_OPTS=-Xms128m -Xmx320m"
+  -e "JAVA_OPTS=${JAVA_OPTS}"
   -e "LOGGING_FILE_NAME=${CONTAINER_LOG_DIR}/api-${candidate_slot}.log"
   -v "${HOST_LOG_DIR}:${CONTAINER_LOG_DIR}"
   --log-driver none
@@ -322,7 +380,13 @@ fi
 run_args+=("$IMAGE")
 "$DOCKER_BIN" "${run_args[@]}" >/dev/null
 
-if ! wait_for_candidate "$candidate_port"; then
+startup_status=0
+wait_for_candidate "$candidate_port" || startup_status=$?
+if (( startup_status == 2 )); then
+  cleanup_candidate "$candidate_name"
+  defer_for_memory "$desired_image" "후보 슬롯 기동 중 가용 메모리가 ${MIN_AVAILABLE_MIB}MiB 아래로 내려가 후보를 제거했습니다"
+fi
+if (( startup_status != 0 )); then
   log "candidate did not become ready; active slot remains unchanged"
   mark_rejected "$desired_image"
   notify_slack ":x: CHIP THRONE 배포 실패: 후보 슬롯이 Readiness 검증을 통과하지 못했습니다. image=${desired_image}"
@@ -362,5 +426,6 @@ if [[ -n "$active_name" && "$active_name" != "$candidate_name" ]] && container_e
 fi
 
 clear_rejected
+rm -f "$MEMORY_DEFERRED_FILE"
 notify_slack ":white_check_mark: CHIP THRONE 배포 완료: slot=${candidate_slot}, image=${desired_image}"
 log "deployment completed: slot=${candidate_slot}, image=${desired_image}"

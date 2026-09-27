@@ -82,6 +82,15 @@ case "${MOCK_CURL_MODE:-success}" in
   post-switch-fail)
     if (( count == 1 )); then exit 0; else exit 22; fi
     ;;
+  drain-low-memory)
+    # 전환 직후부터 가용 메모리가 바닥난 상황
+    printf 'MemAvailable:   32000 kB\n' > "${MOCK_MEMINFO:?}"
+    exit 0
+    ;;
+  startup-low-memory)
+    printf 'MemAvailable:   32000 kB\n' > "${MOCK_MEMINFO:?}"
+    exit 22
+    ;;
   *)
     exit 64
     ;;
@@ -125,6 +134,8 @@ invoke_deploy() {
   MOCK_SYSTEMCTL_CALLS="${scenario_root}/systemctl-calls" \
   MOCK_CURL_COUNT="${scenario_root}/curl-count" \
   MOCK_CURL_MODE="$curl_mode" \
+  MOCK_MEMINFO="${scenario_root}/meminfo" \
+  CHIPTHRONE_MEMINFO_FILE="${scenario_root}/meminfo" \
   CHIPTHRONE_SKIP_ROOT_CHECK=1 \
   CHIPTHRONE_DEPLOY_STATE_DIR="$state_dir" \
   CHIPTHRONE_LOG_DIR="$log_dir" \
@@ -153,6 +164,7 @@ run_scenario() {
   local upstream="${scenario_root}/nginx/upstream.conf"
   mkdir -p "$containers" "$state_dir" "$log_dir" "$(dirname -- "$upstream")"
   printf '%s\n' 'sha256:old' > "${containers}/chipthrone-api.image"
+  printf 'MemAvailable:  %s kB\n' "${MOCK_AVAILABLE_KB:-512000}" > "${scenario_root}/meminfo"
   cat > "$upstream" <<'EOF'
 upstream chipthrone_api {
     server 127.0.0.1:8080;
@@ -202,5 +214,29 @@ grep -q '127.0.0.1:8080' "${rollback_root}/nginx/upstream.conf"
 [[ -f "${rollback_root}/containers/chipthrone-api.image" ]]
 [[ ! -f "${rollback_root}/containers/chipthrone-api-blue.image" ]]
 grep -q '^sha256:new$' "${rollback_root}/state/rejected-image"
+
+# 전환 뒤 메모리가 바닥나면 drain을 끝까지 기다리지 않고 이전 슬롯을 즉시 제거한다.
+run_scenario drain-low-memory drain-low-memory
+drain_root="${TEST_ROOT}/drain-low-memory"
+grep -q '^chipthrone-api-blue|18080|sha256:new|blue$' "${drain_root}/state/active-container"
+[[ ! -f "${drain_root}/containers/chipthrone-api.image" ]]
+grep -q '^rm -f chipthrone-api$' "${drain_root}/docker-calls"
+grep -q '^stop ' "${drain_root}/docker-calls" && { echo 'unexpected: ^stop '; exit 1; }
+
+# 기동 중 메모리가 바닥나면 후보를 지우고 기존 슬롯을 유지한다. 실패 이미지로 기록하지 않는다.
+run_scenario startup-low-memory startup-low-memory
+startup_low_root="${TEST_ROOT}/startup-low-memory"
+[[ -f "${startup_low_root}/containers/chipthrone-api.image" ]]
+[[ ! -f "${startup_low_root}/containers/chipthrone-api-blue.image" ]]
+grep -q '127.0.0.1:8080' "${startup_low_root}/nginx/upstream.conf"
+[[ ! -f "${startup_low_root}/state/rejected-image" ]]
+grep -q '^sha256:new$' "${startup_low_root}/state/memory-deferred-image"
+
+# 기동 전부터 여유가 없으면 후보를 띄우지 않는다.
+MOCK_AVAILABLE_KB=200000 run_scenario pre-start-low-memory success
+pre_start_root="${TEST_ROOT}/pre-start-low-memory"
+grep -q '^run ' "${pre_start_root}/docker-calls" && { echo 'unexpected: ^run '; exit 1; }
+[[ -f "${pre_start_root}/containers/chipthrone-api.image" ]]
+grep -q '^sha256:new$' "${pre_start_root}/state/memory-deferred-image"
 
 echo "deploy-backend tests passed"
