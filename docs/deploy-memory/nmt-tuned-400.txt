@@ -1,0 +1,23 @@
+Total: reserved=1503MB, committed=206MB
+-                 Java Heap (reserved=320MB, committed=105MB)
+-                     Class (reserved=1025MB, committed=8MB)
+                            (malloc=1MB #34694) (peak=1MB #35221) 
+-                    Thread (reserved=21MB, committed=4MB)
+                            (stack: reserved=21MB, committed=4MB, peak=4MB)
+-                      Code (reserved=34MB, committed=15MB)
+-                  Compiler (reserved=0MB, committed=0MB)
+                            (arena=0MB #2) (peak=9MB #4)
+-                    Symbol (reserved=17MB, committed=17MB)
+                            (malloc=14MB #128661) (peak=14MB #129550) 
+-        Shared class space (reserved=16MB, committed=12MB, readonly=0MB)
+                            (mmap: reserved=16MB, committed=12MB, peak=12MB) 
+-               Arena Chunk (reserved=0MB, committed=0MB)
+                            (malloc=0MB #169) (peak=12MB #441) 
+-                 Metaspace (reserved=64MB, committed=41MB)
+---
+deploy_host_memory_available_bytes 284856320
+deploy_container_memory_current_bytes{container="chipthrone-api-green"} 246648832
+deploy_container_memory_anon_bytes{container="chipthrone-api-green"} 225415168
+deploy_container_memory_file_bytes{container="chipthrone-api-green"} 17965056
+VmRSS:	  231068 kB
+Threads:	40

@@ -60,6 +60,12 @@ PR과 `main` 반영 시 인프라 스크립트를 검사하고 백엔드 빌드�
 - [재현 방법과 실측 결과](docs/09-sse-thread-starvation.md)
 - [원본 측정값](docs/sse-capacity-load-results.json)
 
+## 배포 중 메모리 검증
+
+슬롯 배포는 JVM 두 개를 최대 310초 겹쳐 띄웁니다. 운영 t3.micro(swap 없음)에서 SSE 400개를 유지한 채 배포하자 호스트가 61분 동안 응답하지 못했습니다. JVM 상주 메모리를 줄이고 배포 스크립트에 가용 메모리 가드를 넣은 뒤 같은 조건에서 Health 실패 0회로 배포됐습니다.
+
+- [재현, 원인 분석, 해결과 검증](docs/10-deploy-memory.md)
+
 ## 로컬 실행
 
 Git과 Docker Desktop을 설치한 뒤 Docker가 실행 중인지 확인해 주세요.

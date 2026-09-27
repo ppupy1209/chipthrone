@@ -1,0 +1,2321 @@
+{
+  "target": "https://api.chipthrone.com",
+  "connections": 400,
+  "retrySeconds": 3,
+  "startedAt": "2026-09-27T09:05:44.567393+00:00",
+  "endedAt": "2026-09-27T09:10:00.066606+00:00",
+  "totals": {
+    "connects": 400,
+    "reconnects": 0,
+    "events": 31735,
+    "connectErrors": {},
+    "healthOk": 256,
+    "healthFail": 0
+  },
+  "timeline": [
+    {
+      "at": "2026-09-27T09:05:44.567393+00:00",
+      "open": 0,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 0,
+      "healthFail": 0,
+      "healthLatencyMs": 0.0
+    },
+    {
+      "at": "2026-09-27T09:05:45.570268+00:00",
+      "open": 0,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 1,
+      "healthFail": 0,
+      "healthLatencyMs": 138.15
+    },
+    {
+      "at": "2026-09-27T09:05:46.570503+00:00",
+      "open": 50,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 2,
+      "healthFail": 0,
+      "healthLatencyMs": 59.18
+    },
+    {
+      "at": "2026-09-27T09:05:47.570739+00:00",
+      "open": 75,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 3,
+      "healthFail": 0,
+      "healthLatencyMs": 86.58
+    },
+    {
+      "at": "2026-09-27T09:05:48.572544+00:00",
+      "open": 100,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 4,
+      "healthFail": 0,
+      "healthLatencyMs": 62.48
+    },
+    {
+      "at": "2026-09-27T09:05:49.573648+00:00",
+      "open": 125,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 5,
+      "healthFail": 0,
+      "healthLatencyMs": 43.55
+    },
+    {
+      "at": "2026-09-27T09:05:50.576124+00:00",
+      "open": 150,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 6,
+      "healthFail": 0,
+      "healthLatencyMs": 59.38
+    },
+    {
+      "at": "2026-09-27T09:05:51.577256+00:00",
+      "open": 175,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 7,
+      "healthFail": 0,
+      "healthLatencyMs": 40.97
+    },
+    {
+      "at": "2026-09-27T09:05:52.579554+00:00",
+      "open": 200,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 8,
+      "healthFail": 0,
+      "healthLatencyMs": 56.12
+    },
+    {
+      "at": "2026-09-27T09:05:53.582191+00:00",
+      "open": 225,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 9,
+      "healthFail": 0,
+      "healthLatencyMs": 45.97
+    },
+    {
+      "at": "2026-09-27T09:05:54.589520+00:00",
+      "open": 250,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 10,
+      "healthFail": 0,
+      "healthLatencyMs": 31.14
+    },
+    {
+      "at": "2026-09-27T09:05:55.589776+00:00",
+      "open": 275,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 11,
+      "healthFail": 0,
+      "healthLatencyMs": 46.64
+    },
+    {
+      "at": "2026-09-27T09:05:56.589906+00:00",
+      "open": 300,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 12,
+      "healthFail": 0,
+      "healthLatencyMs": 65.91
+    },
+    {
+      "at": "2026-09-27T09:05:57.590667+00:00",
+      "open": 325,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 13,
+      "healthFail": 0,
+      "healthLatencyMs": 41.08
+    },
+    {
+      "at": "2026-09-27T09:05:58.591828+00:00",
+      "open": 350,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 14,
+      "healthFail": 0,
+      "healthLatencyMs": 42.18
+    },
+    {
+      "at": "2026-09-27T09:05:59.594245+00:00",
+      "open": 375,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 15,
+      "healthFail": 0,
+      "healthLatencyMs": 39.04
+    },
+    {
+      "at": "2026-09-27T09:06:00.596500+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 16,
+      "healthFail": 0,
+      "healthLatencyMs": 78.47
+    },
+    {
+      "at": "2026-09-27T09:06:01.597446+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 17,
+      "healthFail": 0,
+      "healthLatencyMs": 27.06
+    },
+    {
+      "at": "2026-09-27T09:06:02.599048+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 18,
+      "healthFail": 0,
+      "healthLatencyMs": 39.18
+    },
+    {
+      "at": "2026-09-27T09:06:03.601160+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 19,
+      "healthFail": 0,
+      "healthLatencyMs": 31.05
+    },
+    {
+      "at": "2026-09-27T09:06:04.603331+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 20,
+      "healthFail": 0,
+      "healthLatencyMs": 29.31
+    },
+    {
+      "at": "2026-09-27T09:06:05.605557+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 21,
+      "healthFail": 0,
+      "healthLatencyMs": 25.32
+    },
+    {
+      "at": "2026-09-27T09:06:06.605950+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 22,
+      "healthFail": 0,
+      "healthLatencyMs": 30.78
+    },
+    {
+      "at": "2026-09-27T09:06:07.607868+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 23,
+      "healthFail": 0,
+      "healthLatencyMs": 29.42
+    },
+    {
+      "at": "2026-09-27T09:06:08.609979+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 24,
+      "healthFail": 0,
+      "healthLatencyMs": 24.65
+    },
+    {
+      "at": "2026-09-27T09:06:09.610808+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 25,
+      "healthFail": 0,
+      "healthLatencyMs": 28.54
+    },
+    {
+      "at": "2026-09-27T09:06:10.612845+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 26,
+      "healthFail": 0,
+      "healthLatencyMs": 25.95
+    },
+    {
+      "at": "2026-09-27T09:06:11.613055+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 27,
+      "healthFail": 0,
+      "healthLatencyMs": 25.37
+    },
+    {
+      "at": "2026-09-27T09:06:12.615182+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 28,
+      "healthFail": 0,
+      "healthLatencyMs": 38.7
+    },
+    {
+      "at": "2026-09-27T09:06:13.617367+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 29,
+      "healthFail": 0,
+      "healthLatencyMs": 25.24
+    },
+    {
+      "at": "2026-09-27T09:06:14.619503+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 30,
+      "healthFail": 0,
+      "healthLatencyMs": 27.74
+    },
+    {
+      "at": "2026-09-27T09:06:15.621659+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 31,
+      "healthFail": 0,
+      "healthLatencyMs": 29.09
+    },
+    {
+      "at": "2026-09-27T09:06:16.622075+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 32,
+      "healthFail": 0,
+      "healthLatencyMs": 32.1
+    },
+    {
+      "at": "2026-09-27T09:06:17.624212+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 33,
+      "healthFail": 0,
+      "healthLatencyMs": 32.23
+    },
+    {
+      "at": "2026-09-27T09:06:18.626326+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 34,
+      "healthFail": 0,
+      "healthLatencyMs": 29.39
+    },
+    {
+      "at": "2026-09-27T09:06:19.628486+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 35,
+      "healthFail": 0,
+      "healthLatencyMs": 30.34
+    },
+    {
+      "at": "2026-09-27T09:06:20.630746+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 36,
+      "healthFail": 0,
+      "healthLatencyMs": 31.39
+    },
+    {
+      "at": "2026-09-27T09:06:21.633003+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 37,
+      "healthFail": 0,
+      "healthLatencyMs": 26.21
+    },
+    {
+      "at": "2026-09-27T09:06:22.635028+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 38,
+      "healthFail": 0,
+      "healthLatencyMs": 28.72
+    },
+    {
+      "at": "2026-09-27T09:06:23.637186+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 39,
+      "healthFail": 0,
+      "healthLatencyMs": 35.81
+    },
+    {
+      "at": "2026-09-27T09:06:24.639401+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 40,
+      "healthFail": 0,
+      "healthLatencyMs": 28.41
+    },
+    {
+      "at": "2026-09-27T09:06:25.640708+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 41,
+      "healthFail": 0,
+      "healthLatencyMs": 26.85
+    },
+    {
+      "at": "2026-09-27T09:06:26.642679+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 42,
+      "healthFail": 0,
+      "healthLatencyMs": 28.57
+    },
+    {
+      "at": "2026-09-27T09:06:27.644749+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 43,
+      "healthFail": 0,
+      "healthLatencyMs": 24.51
+    },
+    {
+      "at": "2026-09-27T09:06:28.646973+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 44,
+      "healthFail": 0,
+      "healthLatencyMs": 26.83
+    },
+    {
+      "at": "2026-09-27T09:06:29.649050+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 45,
+      "healthFail": 0,
+      "healthLatencyMs": 28.08
+    },
+    {
+      "at": "2026-09-27T09:06:30.649332+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 46,
+      "healthFail": 0,
+      "healthLatencyMs": 28.06
+    },
+    {
+      "at": "2026-09-27T09:06:31.651368+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 47,
+      "healthFail": 0,
+      "healthLatencyMs": 32.29
+    },
+    {
+      "at": "2026-09-27T09:06:32.653460+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 48,
+      "healthFail": 0,
+      "healthLatencyMs": 28.23
+    },
+    {
+      "at": "2026-09-27T09:06:33.655779+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 49,
+      "healthFail": 0,
+      "healthLatencyMs": 27.02
+    },
+    {
+      "at": "2026-09-27T09:06:34.657951+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 50,
+      "healthFail": 0,
+      "healthLatencyMs": 31.12
+    },
+    {
+      "at": "2026-09-27T09:06:35.660118+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 51,
+      "healthFail": 0,
+      "healthLatencyMs": 27.24
+    },
+    {
+      "at": "2026-09-27T09:06:36.662292+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 52,
+      "healthFail": 0,
+      "healthLatencyMs": 27.78
+    },
+    {
+      "at": "2026-09-27T09:06:37.664662+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 53,
+      "healthFail": 0,
+      "healthLatencyMs": 28.47
+    },
+    {
+      "at": "2026-09-27T09:06:38.666608+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 54,
+      "healthFail": 0,
+      "healthLatencyMs": 24.21
+    },
+    {
+      "at": "2026-09-27T09:06:39.668969+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 55,
+      "healthFail": 0,
+      "healthLatencyMs": 28.95
+    },
+    {
+      "at": "2026-09-27T09:06:40.670917+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 56,
+      "healthFail": 0,
+      "healthLatencyMs": 29.05
+    },
+    {
+      "at": "2026-09-27T09:06:41.673368+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 57,
+      "healthFail": 0,
+      "healthLatencyMs": 24.69
+    },
+    {
+      "at": "2026-09-27T09:06:42.675668+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 58,
+      "healthFail": 0,
+      "healthLatencyMs": 27.87
+    },
+    {
+      "at": "2026-09-27T09:06:43.677810+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 59,
+      "healthFail": 0,
+      "healthLatencyMs": 24.71
+    },
+    {
+      "at": "2026-09-27T09:06:44.680057+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 60,
+      "healthFail": 0,
+      "healthLatencyMs": 30.31
+    },
+    {
+      "at": "2026-09-27T09:06:45.682153+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 61,
+      "healthFail": 0,
+      "healthLatencyMs": 28.33
+    },
+    {
+      "at": "2026-09-27T09:06:46.684301+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 62,
+      "healthFail": 0,
+      "healthLatencyMs": 31.57
+    },
+    {
+      "at": "2026-09-27T09:06:47.686607+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 63,
+      "healthFail": 0,
+      "healthLatencyMs": 28.37
+    },
+    {
+      "at": "2026-09-27T09:06:48.688851+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 64,
+      "healthFail": 0,
+      "healthLatencyMs": 28.41
+    },
+    {
+      "at": "2026-09-27T09:06:49.690565+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 65,
+      "healthFail": 0,
+      "healthLatencyMs": 28.31
+    },
+    {
+      "at": "2026-09-27T09:06:50.692722+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 66,
+      "healthFail": 0,
+      "healthLatencyMs": 27.88
+    },
+    {
+      "at": "2026-09-27T09:06:51.694831+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 67,
+      "healthFail": 0,
+      "healthLatencyMs": 29.7
+    },
+    {
+      "at": "2026-09-27T09:06:52.697223+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 68,
+      "healthFail": 0,
+      "healthLatencyMs": 32.64
+    },
+    {
+      "at": "2026-09-27T09:06:53.699387+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 69,
+      "healthFail": 0,
+      "healthLatencyMs": 32.78
+    },
+    {
+      "at": "2026-09-27T09:06:54.701632+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 70,
+      "healthFail": 0,
+      "healthLatencyMs": 25.34
+    },
+    {
+      "at": "2026-09-27T09:06:55.703886+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 71,
+      "healthFail": 0,
+      "healthLatencyMs": 32.35
+    },
+    {
+      "at": "2026-09-27T09:06:56.706001+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 72,
+      "healthFail": 0,
+      "healthLatencyMs": 32.98
+    },
+    {
+      "at": "2026-09-27T09:06:57.708309+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 73,
+      "healthFail": 0,
+      "healthLatencyMs": 25.94
+    },
+    {
+      "at": "2026-09-27T09:06:58.710552+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 74,
+      "healthFail": 0,
+      "healthLatencyMs": 31.01
+    },
+    {
+      "at": "2026-09-27T09:06:59.712615+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 75,
+      "healthFail": 0,
+      "healthLatencyMs": 27.08
+    },
+    {
+      "at": "2026-09-27T09:07:00.714708+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 76,
+      "healthFail": 0,
+      "healthLatencyMs": 27.42
+    },
+    {
+      "at": "2026-09-27T09:07:01.716898+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 77,
+      "healthFail": 0,
+      "healthLatencyMs": 33.46
+    },
+    {
+      "at": "2026-09-27T09:07:02.718041+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 78,
+      "healthFail": 0,
+      "healthLatencyMs": 30.42
+    },
+    {
+      "at": "2026-09-27T09:07:03.720169+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 79,
+      "healthFail": 0,
+      "healthLatencyMs": 35.57
+    },
+    {
+      "at": "2026-09-27T09:07:04.722321+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 80,
+      "healthFail": 0,
+      "healthLatencyMs": 26.85
+    },
+    {
+      "at": "2026-09-27T09:07:05.724111+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 81,
+      "healthFail": 0,
+      "healthLatencyMs": 31.38
+    },
+    {
+      "at": "2026-09-27T09:07:06.725151+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 82,
+      "healthFail": 0,
+      "healthLatencyMs": 29.89
+    },
+    {
+      "at": "2026-09-27T09:07:07.726738+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 83,
+      "healthFail": 0,
+      "healthLatencyMs": 27.76
+    },
+    {
+      "at": "2026-09-27T09:07:08.728894+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 84,
+      "healthFail": 0,
+      "healthLatencyMs": 28.3
+    },
+    {
+      "at": "2026-09-27T09:07:09.729761+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 85,
+      "healthFail": 0,
+      "healthLatencyMs": 25.59
+    },
+    {
+      "at": "2026-09-27T09:07:10.731853+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 86,
+      "healthFail": 0,
+      "healthLatencyMs": 31.53
+    },
+    {
+      "at": "2026-09-27T09:07:11.734244+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 87,
+      "healthFail": 0,
+      "healthLatencyMs": 21.47
+    },
+    {
+      "at": "2026-09-27T09:07:12.736330+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 88,
+      "healthFail": 0,
+      "healthLatencyMs": 33.7
+    },
+    {
+      "at": "2026-09-27T09:07:13.738660+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 89,
+      "healthFail": 0,
+      "healthLatencyMs": 24.08
+    },
+    {
+      "at": "2026-09-27T09:07:14.740698+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 90,
+      "healthFail": 0,
+      "healthLatencyMs": 27.9
+    },
+    {
+      "at": "2026-09-27T09:07:15.743017+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 91,
+      "healthFail": 0,
+      "healthLatencyMs": 24.0
+    },
+    {
+      "at": "2026-09-27T09:07:16.743360+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 92,
+      "healthFail": 0,
+      "healthLatencyMs": 28.28
+    },
+    {
+      "at": "2026-09-27T09:07:17.745688+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 93,
+      "healthFail": 0,
+      "healthLatencyMs": 30.95
+    },
+    {
+      "at": "2026-09-27T09:07:18.747930+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 94,
+      "healthFail": 0,
+      "healthLatencyMs": 31.77
+    },
+    {
+      "at": "2026-09-27T09:07:19.750247+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 95,
+      "healthFail": 0,
+      "healthLatencyMs": 29.33
+    },
+    {
+      "at": "2026-09-27T09:07:20.752352+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 96,
+      "healthFail": 0,
+      "healthLatencyMs": 30.01
+    },
+    {
+      "at": "2026-09-27T09:07:21.754397+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 97,
+      "healthFail": 0,
+      "healthLatencyMs": 29.8
+    },
+    {
+      "at": "2026-09-27T09:07:22.756591+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 98,
+      "healthFail": 0,
+      "healthLatencyMs": 29.65
+    },
+    {
+      "at": "2026-09-27T09:07:23.759006+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 99,
+      "healthFail": 0,
+      "healthLatencyMs": 27.39
+    },
+    {
+      "at": "2026-09-27T09:07:24.761021+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 100,
+      "healthFail": 0,
+      "healthLatencyMs": 27.91
+    },
+    {
+      "at": "2026-09-27T09:07:25.763361+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 101,
+      "healthFail": 0,
+      "healthLatencyMs": 25.39
+    },
+    {
+      "at": "2026-09-27T09:07:26.765384+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 102,
+      "healthFail": 0,
+      "healthLatencyMs": 33.12
+    },
+    {
+      "at": "2026-09-27T09:07:27.765722+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 103,
+      "healthFail": 0,
+      "healthLatencyMs": 31.9
+    },
+    {
+      "at": "2026-09-27T09:07:28.767832+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 104,
+      "healthFail": 0,
+      "healthLatencyMs": 28.08
+    },
+    {
+      "at": "2026-09-27T09:07:29.770004+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 105,
+      "healthFail": 0,
+      "healthLatencyMs": 30.19
+    },
+    {
+      "at": "2026-09-27T09:07:30.772293+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 106,
+      "healthFail": 0,
+      "healthLatencyMs": 30.86
+    },
+    {
+      "at": "2026-09-27T09:07:31.773534+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 107,
+      "healthFail": 0,
+      "healthLatencyMs": 28.99
+    },
+    {
+      "at": "2026-09-27T09:07:32.775869+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 108,
+      "healthFail": 0,
+      "healthLatencyMs": 26.97
+    },
+    {
+      "at": "2026-09-27T09:07:33.777965+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 109,
+      "healthFail": 0,
+      "healthLatencyMs": 28.75
+    },
+    {
+      "at": "2026-09-27T09:07:34.780114+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 110,
+      "healthFail": 0,
+      "healthLatencyMs": 28.82
+    },
+    {
+      "at": "2026-09-27T09:07:35.782256+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 111,
+      "healthFail": 0,
+      "healthLatencyMs": 22.82
+    },
+    {
+      "at": "2026-09-27T09:07:36.782959+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 112,
+      "healthFail": 0,
+      "healthLatencyMs": 37.14
+    },
+    {
+      "at": "2026-09-27T09:07:37.785141+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 113,
+      "healthFail": 0,
+      "healthLatencyMs": 26.69
+    },
+    {
+      "at": "2026-09-27T09:07:38.787323+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 114,
+      "healthFail": 0,
+      "healthLatencyMs": 29.16
+    },
+    {
+      "at": "2026-09-27T09:07:39.789522+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 115,
+      "healthFail": 0,
+      "healthLatencyMs": 30.82
+    },
+    {
+      "at": "2026-09-27T09:07:40.791553+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 116,
+      "healthFail": 0,
+      "healthLatencyMs": 28.27
+    },
+    {
+      "at": "2026-09-27T09:07:41.793944+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 117,
+      "healthFail": 0,
+      "healthLatencyMs": 23.37
+    },
+    {
+      "at": "2026-09-27T09:07:42.795953+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 118,
+      "healthFail": 0,
+      "healthLatencyMs": 30.8
+    },
+    {
+      "at": "2026-09-27T09:07:43.798295+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 119,
+      "healthFail": 0,
+      "healthLatencyMs": 31.6
+    },
+    {
+      "at": "2026-09-27T09:07:44.798653+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 120,
+      "healthFail": 0,
+      "healthLatencyMs": 32.22
+    },
+    {
+      "at": "2026-09-27T09:07:45.800635+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 121,
+      "healthFail": 0,
+      "healthLatencyMs": 26.24
+    },
+    {
+      "at": "2026-09-27T09:07:46.802937+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 122,
+      "healthFail": 0,
+      "healthLatencyMs": 26.99
+    },
+    {
+      "at": "2026-09-27T09:07:47.805178+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 123,
+      "healthFail": 0,
+      "healthLatencyMs": 26.92
+    },
+    {
+      "at": "2026-09-27T09:07:48.807283+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 124,
+      "healthFail": 0,
+      "healthLatencyMs": 31.53
+    },
+    {
+      "at": "2026-09-27T09:07:49.809415+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 125,
+      "healthFail": 0,
+      "healthLatencyMs": 28.56
+    },
+    {
+      "at": "2026-09-27T09:07:50.811551+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 126,
+      "healthFail": 0,
+      "healthLatencyMs": 32.6
+    },
+    {
+      "at": "2026-09-27T09:07:51.813526+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 127,
+      "healthFail": 0,
+      "healthLatencyMs": 29.5
+    },
+    {
+      "at": "2026-09-27T09:07:52.815635+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 128,
+      "healthFail": 0,
+      "healthLatencyMs": 26.56
+    },
+    {
+      "at": "2026-09-27T09:07:53.817996+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 129,
+      "healthFail": 0,
+      "healthLatencyMs": 26.98
+    },
+    {
+      "at": "2026-09-27T09:07:54.820062+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 130,
+      "healthFail": 0,
+      "healthLatencyMs": 28.03
+    },
+    {
+      "at": "2026-09-27T09:07:55.822362+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 131,
+      "healthFail": 0,
+      "healthLatencyMs": 32.84
+    },
+    {
+      "at": "2026-09-27T09:07:56.824708+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 132,
+      "healthFail": 0,
+      "healthLatencyMs": 32.43
+    },
+    {
+      "at": "2026-09-27T09:07:57.826722+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 133,
+      "healthFail": 0,
+      "healthLatencyMs": 32.8
+    },
+    {
+      "at": "2026-09-27T09:07:58.828878+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 134,
+      "healthFail": 0,
+      "healthLatencyMs": 30.6
+    },
+    {
+      "at": "2026-09-27T09:07:59.831125+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 135,
+      "healthFail": 0,
+      "healthLatencyMs": 30.5
+    },
+    {
+      "at": "2026-09-27T09:08:00.833195+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 136,
+      "healthFail": 0,
+      "healthLatencyMs": 28.64
+    },
+    {
+      "at": "2026-09-27T09:08:01.835121+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 137,
+      "healthFail": 0,
+      "healthLatencyMs": 38.39
+    },
+    {
+      "at": "2026-09-27T09:08:02.837276+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 138,
+      "healthFail": 0,
+      "healthLatencyMs": 41.02
+    },
+    {
+      "at": "2026-09-27T09:08:03.839597+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 139,
+      "healthFail": 0,
+      "healthLatencyMs": 33.37
+    },
+    {
+      "at": "2026-09-27T09:08:04.840614+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 140,
+      "healthFail": 0,
+      "healthLatencyMs": 26.65
+    },
+    {
+      "at": "2026-09-27T09:08:05.842774+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 141,
+      "healthFail": 0,
+      "healthLatencyMs": 29.31
+    },
+    {
+      "at": "2026-09-27T09:08:06.844889+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 142,
+      "healthFail": 0,
+      "healthLatencyMs": 37.88
+    },
+    {
+      "at": "2026-09-27T09:08:07.847047+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 143,
+      "healthFail": 0,
+      "healthLatencyMs": 34.67
+    },
+    {
+      "at": "2026-09-27T09:08:08.849252+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 144,
+      "healthFail": 0,
+      "healthLatencyMs": 26.22
+    },
+    {
+      "at": "2026-09-27T09:08:09.850630+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 145,
+      "healthFail": 0,
+      "healthLatencyMs": 31.43
+    },
+    {
+      "at": "2026-09-27T09:08:10.852906+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 146,
+      "healthFail": 0,
+      "healthLatencyMs": 27.64
+    },
+    {
+      "at": "2026-09-27T09:08:11.853668+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 147,
+      "healthFail": 0,
+      "healthLatencyMs": 29.66
+    },
+    {
+      "at": "2026-09-27T09:08:12.855329+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 148,
+      "healthFail": 0,
+      "healthLatencyMs": 23.61
+    },
+    {
+      "at": "2026-09-27T09:08:13.857527+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 149,
+      "healthFail": 0,
+      "healthLatencyMs": 29.43
+    },
+    {
+      "at": "2026-09-27T09:08:14.859323+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 150,
+      "healthFail": 0,
+      "healthLatencyMs": 31.83
+    },
+    {
+      "at": "2026-09-27T09:08:15.861443+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 151,
+      "healthFail": 0,
+      "healthLatencyMs": 27.31
+    },
+    {
+      "at": "2026-09-27T09:08:16.863767+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 152,
+      "healthFail": 0,
+      "healthLatencyMs": 28.52
+    },
+    {
+      "at": "2026-09-27T09:08:17.865763+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 153,
+      "healthFail": 0,
+      "healthLatencyMs": 29.77
+    },
+    {
+      "at": "2026-09-27T09:08:18.868069+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 154,
+      "healthFail": 0,
+      "healthLatencyMs": 29.82
+    },
+    {
+      "at": "2026-09-27T09:08:19.870305+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 155,
+      "healthFail": 0,
+      "healthLatencyMs": 31.69
+    },
+    {
+      "at": "2026-09-27T09:08:20.872544+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 156,
+      "healthFail": 0,
+      "healthLatencyMs": 32.61
+    },
+    {
+      "at": "2026-09-27T09:08:21.874877+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 157,
+      "healthFail": 0,
+      "healthLatencyMs": 27.76
+    },
+    {
+      "at": "2026-09-27T09:08:22.877048+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 158,
+      "healthFail": 0,
+      "healthLatencyMs": 23.89
+    },
+    {
+      "at": "2026-09-27T09:08:23.879128+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 159,
+      "healthFail": 0,
+      "healthLatencyMs": 32.79
+    },
+    {
+      "at": "2026-09-27T09:08:24.881307+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 160,
+      "healthFail": 0,
+      "healthLatencyMs": 28.81
+    },
+    {
+      "at": "2026-09-27T09:08:25.883794+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 161,
+      "healthFail": 0,
+      "healthLatencyMs": 33.64
+    },
+    {
+      "at": "2026-09-27T09:08:26.885775+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 162,
+      "healthFail": 0,
+      "healthLatencyMs": 35.12
+    },
+    {
+      "at": "2026-09-27T09:08:27.887927+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 163,
+      "healthFail": 0,
+      "healthLatencyMs": 28.96
+    },
+    {
+      "at": "2026-09-27T09:08:28.890051+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 164,
+      "healthFail": 0,
+      "healthLatencyMs": 27.81
+    },
+    {
+      "at": "2026-09-27T09:08:29.892173+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 165,
+      "healthFail": 0,
+      "healthLatencyMs": 31.14
+    },
+    {
+      "at": "2026-09-27T09:08:30.894346+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 166,
+      "healthFail": 0,
+      "healthLatencyMs": 32.0
+    },
+    {
+      "at": "2026-09-27T09:08:31.896392+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 167,
+      "healthFail": 0,
+      "healthLatencyMs": 30.27
+    },
+    {
+      "at": "2026-09-27T09:08:32.898705+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 168,
+      "healthFail": 0,
+      "healthLatencyMs": 27.25
+    },
+    {
+      "at": "2026-09-27T09:08:33.900865+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 169,
+      "healthFail": 0,
+      "healthLatencyMs": 27.4
+    },
+    {
+      "at": "2026-09-27T09:08:34.903128+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 170,
+      "healthFail": 0,
+      "healthLatencyMs": 27.4
+    },
+    {
+      "at": "2026-09-27T09:08:35.905376+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 171,
+      "healthFail": 0,
+      "healthLatencyMs": 39.67
+    },
+    {
+      "at": "2026-09-27T09:08:36.906863+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 172,
+      "healthFail": 0,
+      "healthLatencyMs": 25.82
+    },
+    {
+      "at": "2026-09-27T09:08:37.908652+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 173,
+      "healthFail": 0,
+      "healthLatencyMs": 27.22
+    },
+    {
+      "at": "2026-09-27T09:08:38.911043+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 174,
+      "healthFail": 0,
+      "healthLatencyMs": 25.06
+    },
+    {
+      "at": "2026-09-27T09:08:39.913061+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 175,
+      "healthFail": 0,
+      "healthLatencyMs": 29.74
+    },
+    {
+      "at": "2026-09-27T09:08:40.915246+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 176,
+      "healthFail": 0,
+      "healthLatencyMs": 29.92
+    },
+    {
+      "at": "2026-09-27T09:08:41.917338+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 177,
+      "healthFail": 0,
+      "healthLatencyMs": 26.07
+    },
+    {
+      "at": "2026-09-27T09:08:42.917544+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 178,
+      "healthFail": 0,
+      "healthLatencyMs": 28.37
+    },
+    {
+      "at": "2026-09-27T09:08:43.919749+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 179,
+      "healthFail": 0,
+      "healthLatencyMs": 35.85
+    },
+    {
+      "at": "2026-09-27T09:08:44.922099+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 180,
+      "healthFail": 0,
+      "healthLatencyMs": 25.58
+    },
+    {
+      "at": "2026-09-27T09:08:45.924244+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 181,
+      "healthFail": 0,
+      "healthLatencyMs": 26.9
+    },
+    {
+      "at": "2026-09-27T09:08:46.925815+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 182,
+      "healthFail": 0,
+      "healthLatencyMs": 34.86
+    },
+    {
+      "at": "2026-09-27T09:08:47.927997+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 183,
+      "healthFail": 0,
+      "healthLatencyMs": 28.96
+    },
+    {
+      "at": "2026-09-27T09:08:48.930121+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 184,
+      "healthFail": 0,
+      "healthLatencyMs": 28.13
+    },
+    {
+      "at": "2026-09-27T09:08:49.932352+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 185,
+      "healthFail": 0,
+      "healthLatencyMs": 32.07
+    },
+    {
+      "at": "2026-09-27T09:08:50.934394+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 186,
+      "healthFail": 0,
+      "healthLatencyMs": 30.03
+    },
+    {
+      "at": "2026-09-27T09:08:51.935104+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 187,
+      "healthFail": 0,
+      "healthLatencyMs": 35.33
+    },
+    {
+      "at": "2026-09-27T09:08:52.937277+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 188,
+      "healthFail": 0,
+      "healthLatencyMs": 24.86
+    },
+    {
+      "at": "2026-09-27T09:08:53.939312+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 189,
+      "healthFail": 0,
+      "healthLatencyMs": 28.74
+    },
+    {
+      "at": "2026-09-27T09:08:54.941827+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 190,
+      "healthFail": 0,
+      "healthLatencyMs": 26.86
+    },
+    {
+      "at": "2026-09-27T09:08:55.943874+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 191,
+      "healthFail": 0,
+      "healthLatencyMs": 34.13
+    },
+    {
+      "at": "2026-09-27T09:08:56.946157+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 192,
+      "healthFail": 0,
+      "healthLatencyMs": 29.2
+    },
+    {
+      "at": "2026-09-27T09:08:57.948146+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 193,
+      "healthFail": 0,
+      "healthLatencyMs": 29.09
+    },
+    {
+      "at": "2026-09-27T09:08:58.950713+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 194,
+      "healthFail": 0,
+      "healthLatencyMs": 30.73
+    },
+    {
+      "at": "2026-09-27T09:08:59.951228+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 195,
+      "healthFail": 0,
+      "healthLatencyMs": 29.56
+    },
+    {
+      "at": "2026-09-27T09:09:00.953562+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 196,
+      "healthFail": 0,
+      "healthLatencyMs": 33.92
+    },
+    {
+      "at": "2026-09-27T09:09:01.954063+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 197,
+      "healthFail": 0,
+      "healthLatencyMs": 24.96
+    },
+    {
+      "at": "2026-09-27T09:09:02.956228+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 198,
+      "healthFail": 0,
+      "healthLatencyMs": 33.31
+    },
+    {
+      "at": "2026-09-27T09:09:03.958581+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 199,
+      "healthFail": 0,
+      "healthLatencyMs": 30.3
+    },
+    {
+      "at": "2026-09-27T09:09:04.960544+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 200,
+      "healthFail": 0,
+      "healthLatencyMs": 30.62
+    },
+    {
+      "at": "2026-09-27T09:09:05.962055+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 201,
+      "healthFail": 0,
+      "healthLatencyMs": 27.24
+    },
+    {
+      "at": "2026-09-27T09:09:06.964264+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 202,
+      "healthFail": 0,
+      "healthLatencyMs": 26.05
+    },
+    {
+      "at": "2026-09-27T09:09:07.966567+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 203,
+      "healthFail": 0,
+      "healthLatencyMs": 34.11
+    },
+    {
+      "at": "2026-09-27T09:09:08.968597+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 204,
+      "healthFail": 0,
+      "healthLatencyMs": 38.4
+    },
+    {
+      "at": "2026-09-27T09:09:09.970913+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 205,
+      "healthFail": 0,
+      "healthLatencyMs": 26.58
+    },
+    {
+      "at": "2026-09-27T09:09:10.972991+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 206,
+      "healthFail": 0,
+      "healthLatencyMs": 25.38
+    },
+    {
+      "at": "2026-09-27T09:09:11.973260+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 207,
+      "healthFail": 0,
+      "healthLatencyMs": 26.04
+    },
+    {
+      "at": "2026-09-27T09:09:12.974874+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 208,
+      "healthFail": 0,
+      "healthLatencyMs": 34.78
+    },
+    {
+      "at": "2026-09-27T09:09:13.975759+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 209,
+      "healthFail": 0,
+      "healthLatencyMs": 29.51
+    },
+    {
+      "at": "2026-09-27T09:09:14.977832+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 210,
+      "healthFail": 0,
+      "healthLatencyMs": 34.04
+    },
+    {
+      "at": "2026-09-27T09:09:15.979975+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 211,
+      "healthFail": 0,
+      "healthLatencyMs": 36.86
+    },
+    {
+      "at": "2026-09-27T09:09:16.982207+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 212,
+      "healthFail": 0,
+      "healthLatencyMs": 32.58
+    },
+    {
+      "at": "2026-09-27T09:09:17.984349+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 213,
+      "healthFail": 0,
+      "healthLatencyMs": 28.1
+    },
+    {
+      "at": "2026-09-27T09:09:18.986534+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 214,
+      "healthFail": 0,
+      "healthLatencyMs": 28.16
+    },
+    {
+      "at": "2026-09-27T09:09:19.988874+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 215,
+      "healthFail": 0,
+      "healthLatencyMs": 31.78
+    },
+    {
+      "at": "2026-09-27T09:09:20.989179+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 216,
+      "healthFail": 0,
+      "healthLatencyMs": 32.25
+    },
+    {
+      "at": "2026-09-27T09:09:21.991246+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 217,
+      "healthFail": 0,
+      "healthLatencyMs": 31.02
+    },
+    {
+      "at": "2026-09-27T09:09:22.992813+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 218,
+      "healthFail": 0,
+      "healthLatencyMs": 27.02
+    },
+    {
+      "at": "2026-09-27T09:09:23.994935+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 219,
+      "healthFail": 0,
+      "healthLatencyMs": 25.41
+    },
+    {
+      "at": "2026-09-27T09:09:24.997232+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 220,
+      "healthFail": 0,
+      "healthLatencyMs": 31.64
+    },
+    {
+      "at": "2026-09-27T09:09:25.998430+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 221,
+      "healthFail": 0,
+      "healthLatencyMs": 27.71
+    },
+    {
+      "at": "2026-09-27T09:09:27.000138+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 222,
+      "healthFail": 0,
+      "healthLatencyMs": 27.0
+    },
+    {
+      "at": "2026-09-27T09:09:28.002495+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 223,
+      "healthFail": 0,
+      "healthLatencyMs": 36.55
+    },
+    {
+      "at": "2026-09-27T09:09:29.004751+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 224,
+      "healthFail": 0,
+      "healthLatencyMs": 25.9
+    },
+    {
+      "at": "2026-09-27T09:09:30.007129+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 225,
+      "healthFail": 0,
+      "healthLatencyMs": 26.71
+    },
+    {
+      "at": "2026-09-27T09:09:31.009021+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 226,
+      "healthFail": 0,
+      "healthLatencyMs": 41.56
+    },
+    {
+      "at": "2026-09-27T09:09:32.011025+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 227,
+      "healthFail": 0,
+      "healthLatencyMs": 34.17
+    },
+    {
+      "at": "2026-09-27T09:09:33.013216+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 228,
+      "healthFail": 0,
+      "healthLatencyMs": 26.18
+    },
+    {
+      "at": "2026-09-27T09:09:34.015508+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 229,
+      "healthFail": 0,
+      "healthLatencyMs": 32.24
+    },
+    {
+      "at": "2026-09-27T09:09:35.017332+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 230,
+      "healthFail": 0,
+      "healthLatencyMs": 28.24
+    },
+    {
+      "at": "2026-09-27T09:09:36.019534+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 231,
+      "healthFail": 0,
+      "healthLatencyMs": 27.49
+    },
+    {
+      "at": "2026-09-27T09:09:37.021674+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 232,
+      "healthFail": 0,
+      "healthLatencyMs": 33.78
+    },
+    {
+      "at": "2026-09-27T09:09:38.023927+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 233,
+      "healthFail": 0,
+      "healthLatencyMs": 40.71
+    },
+    {
+      "at": "2026-09-27T09:09:39.026134+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 234,
+      "healthFail": 0,
+      "healthLatencyMs": 30.09
+    },
+    {
+      "at": "2026-09-27T09:09:40.028201+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 235,
+      "healthFail": 0,
+      "healthLatencyMs": 29.5
+    },
+    {
+      "at": "2026-09-27T09:09:41.030305+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 236,
+      "healthFail": 0,
+      "healthLatencyMs": 25.77
+    },
+    {
+      "at": "2026-09-27T09:09:42.031501+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 237,
+      "healthFail": 0,
+      "healthLatencyMs": 23.11
+    },
+    {
+      "at": "2026-09-27T09:09:43.033519+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 238,
+      "healthFail": 0,
+      "healthLatencyMs": 28.63
+    },
+    {
+      "at": "2026-09-27T09:09:44.035709+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 239,
+      "healthFail": 0,
+      "healthLatencyMs": 27.56
+    },
+    {
+      "at": "2026-09-27T09:09:45.037952+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 240,
+      "healthFail": 0,
+      "healthLatencyMs": 32.3
+    },
+    {
+      "at": "2026-09-27T09:09:46.039738+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 241,
+      "healthFail": 0,
+      "healthLatencyMs": 25.88
+    },
+    {
+      "at": "2026-09-27T09:09:47.041653+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 242,
+      "healthFail": 0,
+      "healthLatencyMs": 28.59
+    },
+    {
+      "at": "2026-09-27T09:09:48.043993+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 243,
+      "healthFail": 0,
+      "healthLatencyMs": 26.17
+    },
+    {
+      "at": "2026-09-27T09:09:49.046016+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 244,
+      "healthFail": 0,
+      "healthLatencyMs": 30.27
+    },
+    {
+      "at": "2026-09-27T09:09:50.048214+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 245,
+      "healthFail": 0,
+      "healthLatencyMs": 27.31
+    },
+    {
+      "at": "2026-09-27T09:09:51.048516+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 246,
+      "healthFail": 0,
+      "healthLatencyMs": 29.47
+    },
+    {
+      "at": "2026-09-27T09:09:52.050537+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 247,
+      "healthFail": 0,
+      "healthLatencyMs": 24.33
+    },
+    {
+      "at": "2026-09-27T09:09:53.051108+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 248,
+      "healthFail": 0,
+      "healthLatencyMs": 28.49
+    },
+    {
+      "at": "2026-09-27T09:09:54.053344+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 249,
+      "healthFail": 0,
+      "healthLatencyMs": 26.75
+    },
+    {
+      "at": "2026-09-27T09:09:55.055553+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 250,
+      "healthFail": 0,
+      "healthLatencyMs": 32.59
+    },
+    {
+      "at": "2026-09-27T09:09:56.057620+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 251,
+      "healthFail": 0,
+      "healthLatencyMs": 30.48
+    },
+    {
+      "at": "2026-09-27T09:09:57.059889+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 252,
+      "healthFail": 0,
+      "healthLatencyMs": 30.43
+    },
+    {
+      "at": "2026-09-27T09:09:58.062050+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 253,
+      "healthFail": 0,
+      "healthLatencyMs": 33.84
+    },
+    {
+      "at": "2026-09-27T09:09:59.064357+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 254,
+      "healthFail": 0,
+      "healthLatencyMs": 25.27
+    },
+    {
+      "at": "2026-09-27T09:10:00.066606+00:00",
+      "open": 400,
+      "reconnects": 0,
+      "connectErrors": {},
+      "healthOk": 255,
+      "healthFail": 0,
+      "healthLatencyMs": 28.28
+    }
+  ]
+}
