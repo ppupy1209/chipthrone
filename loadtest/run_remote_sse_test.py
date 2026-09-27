@@ -33,8 +33,8 @@ def percentile(values, value):
     return round(ordered[index], 2)
 
 
-def prometheus_samples(base_url):
-    request = urllib.request.Request(base_url + "/actuator/prometheus")
+def prometheus_samples(metrics_url):
+    request = urllib.request.Request(metrics_url)
     with urllib.request.urlopen(request, timeout=10) as response:
         text = response.read().decode()
     samples = {}
@@ -134,35 +134,35 @@ def external_calls(samples, source):
     )
 
 
-def run(base_url, users, duration, symbols):
+def run(base_url, metrics_url, users, duration, symbols):
     global LATENCIES_MS, MEASUREMENT_STARTED
     LATENCIES_MS = []
     MEASUREMENT_STARTED = time.monotonic()
     parsed_url = urlparse(base_url)
-    before = prometheus_samples(base_url)
+    before = prometheus_samples(metrics_url)
     with ThreadPoolExecutor(max_workers=min(users, 100)) as pool:
         clients = list(pool.map(lambda _: SseClient(parsed_url, symbols).open(), range(users)))
     errors = sum(client.error is not None for client in clients)
     samples = []
     deadline = time.monotonic() + duration
     while time.monotonic() < deadline:
-        metrics = prometheus_samples(base_url)
+        metrics = prometheus_samples(metrics_url)
         samples.append((time.monotonic(), metrics))
         time.sleep(1)
-    after = prometheus_samples(base_url)
+    after = prometheus_samples(metrics_url)
 
     for client in clients:
         client.close()
     cleanup_started = time.monotonic()
     cleanup_deadline = cleanup_started + 45
-    cleaned = prometheus_samples(base_url)
+    cleaned = prometheus_samples(metrics_url)
     while time.monotonic() < cleanup_deadline:
         connections = metric_sum(cleaned, "chipthrone_sse_connections")
         active = metric_sum(cleaned, "chipthrone_quote_active_symbols")
         if connections == 0 and active == 0:
             break
         time.sleep(1)
-        cleaned = prometheus_samples(base_url)
+        cleaned = prometheus_samples(metrics_url)
 
     cpu_percent = None
     container_cpu_percent = None
@@ -231,12 +231,16 @@ def run(base_url, users, duration, symbols):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="https://api.chipthrone.com")
+    # Actuator는 외부에 공개하지 않는다. 활성 슬롯 포트로 SSH 터널을 열고 그 주소를 넘긴다.
+    # 예: ssh -N -L 28080:127.0.0.1:18080 ec2-user@<EC2> 후 http://127.0.0.1:28080/actuator/prometheus
+    parser.add_argument("--metrics-url", required=True)
     parser.add_argument("--users", type=int, required=True)
     parser.add_argument("--duration", type=int, default=12)
     parser.add_argument("--symbols", default="SNDK,MU")
     args = parser.parse_args()
     result = run(
         args.base_url.rstrip("/"),
+        args.metrics_url,
         args.users,
         args.duration,
         [symbol.strip() for symbol in args.symbols.split(",") if symbol.strip()],

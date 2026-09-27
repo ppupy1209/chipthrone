@@ -17,7 +17,14 @@ sudo tail -F /var/log/chipthrone/api-*.log
 
 Actuator `/actuator/prometheus`에서 SSE 연결, 활성 고유 종목, 종목별 구독자, 외부 API 실제 호출, 시장 상태별 polling 성공·실패, 수집 시간, SSE 전달 지연, 미정리 Emitter를 제공한다. 로컬 Grafana capture stack은 다음으로 실행한다.
 
-운영 컨테이너를 SSH 없이 같은 기준으로 확인할 수 있도록 cgroup v2/v1의 CPU 누적 사용량과 현재 메모리도 노출한다.
+운영 컨테이너를 같은 기준으로 확인할 수 있도록 cgroup v2/v1의 CPU 누적 사용량과 현재 메모리도 노출한다.
+
+운영 Nginx는 `/actuator`로 시작하는 경로를 모두 404로 막는다(2026-09-27). 배포 스크립트, Docker healthcheck, Prometheus는 슬롯 포트(`127.0.0.1:18080`, `127.0.0.1:18081`)로 직접 호출하므로 영향이 없다. 운영 지표를 밖에서 볼 때는 SSH 터널을 쓴다.
+
+```bash
+ssh -N -L 28080:127.0.0.1:18080 -L 28081:127.0.0.1:18081 ec2-user@<EC2>
+curl http://127.0.0.1:28080/actuator/prometheus
+```
 
 - `chipthrone_container_cpu_usage_seconds`: 컨테이너 CPU 누적 사용 시간
 - `chipthrone_container_memory_current_bytes`: 컨테이너 현재 메모리
