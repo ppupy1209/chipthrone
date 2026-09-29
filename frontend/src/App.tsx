@@ -96,6 +96,8 @@ function App() {
         <footer className="mt-16 text-[12px] leading-[1.7] text-ink-2">
           원화 환산값은 업비트 KRW-USDC 최우선 호가의 중간값을 참고한 추정값입니다.
           24시간 가격은 실제 주식 체결가가 아닌 Hyperliquid 파생시장의 추정값이며 지연이나 괴리가 발생할 수 있습니다.
+          {/* 넓은 화면에서는 가격 설명과 계산 안내를 문장 단위로 나눠 두 줄로 맞춘다 */}
+          <br className="max-lg:hidden" />
           시가총액 순위와 왕좌 교체 조건도 이 추정값으로 계산합니다.
           본 정보는 투자 권유나 자문이 아닙니다.
         </footer>
