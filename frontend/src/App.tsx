@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Header } from './components/Header'
-import { EstimateCompanyCard, UsCompanyCard } from './components/CompanyCard'
+import { TeamScore } from './components/Scoreboard'
+import { UsQuoteTable } from './components/UsQuoteTable'
 import { ReversalCalculator } from './components/ReversalCalculator'
 import { WatchlistPicker } from './components/WatchlistPicker'
 import { useMarketData } from './hooks/useMarketData'
@@ -11,7 +12,6 @@ import { MAX_WATCHLIST, MIN_WATCHLIST, normalizeWatchlist } from './lib/watchlis
 
 const STORAGE_KEY = 'chipthrone.watchlist.v1'
 const CORE_SYMBOLS = ['005930', '000660']
-const SECTION_TITLE_CLASS = "flex items-center gap-2 text-[14px] font-semibold tracking-[-0.01em] text-neutral-800 before:h-3.5 before:w-[3px] before:rounded-full before:bg-neutral-300 before:content-[''] dark:text-neutral-100 dark:before:bg-neutral-700"
 
 function storedWatchlist(): unknown {
   try {
@@ -44,6 +44,9 @@ function App() {
     [krxCompanies],
   )
   const comparison = krxRanked.length >= 2 ? compareMarketCap(krxRanked[0], krxRanked[1]) : null
+  // 전광판 자리는 고정한다. 1위가 바뀌면 자리가 아니라 "현재 1위" 표시가 옮겨 간다.
+  const [left, right] = CORE_SYMBOLS.map((code) => krxCompanies.find((company) => company.code === code))
+  const rankOf = (code: string) => krxRanked.findIndex((company) => company.code === code) + 1
 
   const add = (code: string) =>
     setStoredSymbols((current) =>
@@ -57,55 +60,36 @@ function App() {
     )
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 sm:py-8">
-        <Header />
+    <div className="min-h-screen bg-paper text-ink">
+      <div className="mx-auto max-w-[1040px] px-4 pt-6 pb-16 sm:px-6">
+        <Header updatedAt={snapshot.at} />
 
-        <section data-testid="estimate-krx" className="mt-5">
-          <h2 className={`${SECTION_TITLE_CLASS} mb-2`}>해외 추정 시세</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {krxCompanies.map((company) => (
-              <EstimateCompanyCard
-                key={company.code}
-                company={company}
-                isLeader={krxRanked[0]?.code === company.code && marketCap(company) > 0}
-              />
-            ))}
-          </div>
-          {comparison && <div className="mt-3"><ReversalCalculator cmp={comparison} /></div>}
+        <section data-testid="estimate-krx" aria-label="삼성전자와 SK하이닉스 시가총액 대결">
+          {left && right && (
+            <div className="mt-8 grid grid-cols-1 gap-8 sm:mt-10 sm:grid-cols-2 sm:gap-10">
+              <TeamScore company={left} rank={rankOf(left.code)} align="left" />
+              <TeamScore company={right} rank={rankOf(right.code)} align="right" />
+            </div>
+          )}
+          {comparison && left && right && <ReversalCalculator cmp={comparison} left={left} right={right} />}
         </section>
 
-        <section data-testid="us-watchlist" className="mt-7">
-          <h2 className={`${SECTION_TITLE_CLASS} mb-2`}>미국 반도체·AI</h2>
+        <section data-testid="us-watchlist" className="mt-16">
+          <h2 className="mb-4 text-[20px] font-semibold tracking-[-0.01em]">미국 반도체와 AI</h2>
+          <UsQuoteTable companies={usCompanies} />
           <WatchlistPicker
             assets={assets}
             selected={symbols}
             onAdd={add}
             onRemove={remove}
           />
-          <div className="mt-4">
-            {usCompanies.length > 0 ? (
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {usCompanies.map((company) => (
-                  <UsCompanyCard key={company.code} company={company} />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-neutral-200 px-4 py-6 text-center text-[11px] text-neutral-400 dark:border-neutral-800">
-                위 목록에서 관심 종목을 추가하세요.
-              </div>
-            )}
-          </div>
         </section>
 
-        <footer className="mt-8 border-t border-neutral-200 pt-4 text-[11px] leading-relaxed text-neutral-400 dark:border-neutral-800">
-          <p className="mb-1 font-medium text-neutral-500">면책조항</p>
-          <p>
-            원화 환산값은 업비트 KRW-USDC 최우선 호가의 중간값을 참고한 추정값입니다.
-            24시간 가격은 실제 주식 체결가가 아닌 Hyperliquid 파생시장의 추정값이며 지연이나 괴리가 발생할 수 있습니다.
-            시가총액 순위와 왕좌 교체 조건도 이 추정값으로 계산합니다.
-            본 정보는 투자 권유나 자문이 아닙니다.
-          </p>
+        <footer className="mt-16 max-w-[64ch] text-[12px] leading-[1.7] text-ink-2">
+          원화 환산값은 업비트 KRW-USDC 최우선 호가의 중간값을 참고한 추정값입니다.
+          24시간 가격은 실제 주식 체결가가 아닌 Hyperliquid 파생시장의 추정값이며 지연이나 괴리가 발생할 수 있습니다.
+          시가총액 순위와 왕좌 교체 조건도 이 추정값으로 계산합니다.
+          본 정보는 투자 권유나 자문이 아닙니다.
         </footer>
       </div>
     </div>

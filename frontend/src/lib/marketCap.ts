@@ -19,9 +19,9 @@ export function formatUsdAmount(usd: number): string {
   return `$${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-/** 시총을 "552.3조" 형식으로 */
+/** 시총을 "1,552.3조" 형식으로 */
 export function formatCap(cap: number): string {
-  return `${(cap / 1e12).toFixed(1)}조`
+  return `${(cap / 1e12).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}조`
 }
 
 /** 가격을 정수 원 단위 "92,500" 형식으로 */
