@@ -1,4 +1,4 @@
-import type { Company } from '../types'
+import type { QuoteSlot } from '../types'
 import { formatCap, formatPrice, formatUsdAmount, marketCap, sessionCloseChangePct } from '../lib/marketCap'
 
 function Change({ value }: { value: number | null }) {
@@ -15,10 +15,14 @@ function Change({ value }: { value: number | null }) {
 
 /**
  * 관심 종목 시세표. 카드를 반복하지 않고 한 표에서 시총 순으로 비교한다.
+ * 시세가 아직 오지 않은 종목은 고른 순서대로 아래에 두고 값 자리에 "-"를 둔다.
  * 좁은 화면에서는 원화 환산 열을 숨겨 네 열만 남긴다.
  */
-export function UsQuoteTable({ companies }: { companies: Company[] }) {
-  const rows = [...companies].sort((a, b) => marketCap(b) - marketCap(a))
+export function UsQuoteTable({ slots }: { slots: QuoteSlot[] }) {
+  const capOf = (slot: QuoteSlot) => (slot.company ? marketCap(slot.company) : 0)
+  const loaded = slots.filter((slot) => slot.company).sort((a, b) => capOf(b) - capOf(a))
+  const pending = slots.filter((slot) => !slot.company)
+  const rows = [...loaded, ...pending]
   return (
     <div>
       <table className="w-full border-collapse">
@@ -39,17 +43,23 @@ export function UsQuoteTable({ companies }: { companies: Company[] }) {
               </td>
             </tr>
           ) : (
-            rows.map((company) => (
-              <tr key={company.code} data-testid="us-company-card" className="border-b border-rule">
+            rows.map(({ code, name, company }) => (
+              <tr key={code} data-testid="us-company-card" className="border-b border-rule">
                 <td className="py-3.5 pr-3 text-left">
-                  <span className="font-semibold">{company.name}</span>
-                  <span className="ml-2 text-[12px] text-ink-2">{company.code}</span>
+                  <span className="font-semibold">{name}</span>
+                  <span className="ml-2 text-[12px] text-ink-2">{code}</span>
                 </td>
-                <td className="num py-3.5 text-right text-[18px] font-semibold sm:text-[22px]">{formatUsdAmount(company.priceUsd)}</td>
-                <td className="hidden py-3.5 text-right text-[15px] tabular-nums sm:table-cell">{formatPrice(company.price)}원</td>
-                <td className="num py-3.5 text-right text-[18px] font-semibold sm:text-[22px]">{formatCap(marketCap(company))}</td>
                 <td className="num py-3.5 text-right text-[18px] font-semibold sm:text-[22px]">
-                  <Change value={sessionCloseChangePct(company)} />
+                  {company ? formatUsdAmount(company.priceUsd) : '-'}
+                </td>
+                <td className="hidden py-3.5 text-right text-[15px] tabular-nums sm:table-cell">
+                  {company ? `${formatPrice(company.price)}원` : '-'}
+                </td>
+                <td className="num py-3.5 text-right text-[18px] font-semibold sm:text-[22px]">
+                  {company ? formatCap(marketCap(company)) : '-'}
+                </td>
+                <td className="num py-3.5 text-right text-[18px] font-semibold sm:text-[22px]">
+                  <Change value={company ? sessionCloseChangePct(company) : null} />
                 </td>
               </tr>
             ))

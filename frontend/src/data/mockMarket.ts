@@ -19,44 +19,9 @@ export const fallbackAssets: SupportedAsset[] = [
   { code: 'SKHY', name: 'SK하이닉스 ADR', market: 'US' },
 ]
 
-// SSE 첫 응답 전 레이아웃을 유지하는 개발용 초기값.
-export const mockSnapshot: MarketSnapshot = {
+// 첫 SSE 응답 전 상태. 예전 가격을 목업으로 보여 주면 실제 시세처럼 읽히므로 비워 둔다.
+export const emptySnapshot: MarketSnapshot = {
   mode: 'ESTIMATE',
-  at: new Date().toISOString(),
-  stocks: [
-    {
-      code: '005930',
-      name: '삼성전자',
-      color: 'blue',
-      logo: '/logos/samsung.svg',
-      price: 369500,
-      priceUsd: 241.35,
-      changePct: 1.1,
-      nxtClose: null,
-      nxtCloseDate: null,
-      sharesOutstanding: 5_846_278_608,
-      sessionCloseUsd: null,
-      sessionCloseDate: null,
-      market: 'KRX',
-      source: 'HYPERLIQUID',
-      status: 'ESTIMATE',
-    },
-    {
-      code: '000660',
-      name: 'SK하이닉스',
-      color: 'red',
-      logo: '/logos/skhynix.svg',
-      price: 2_929_400,
-      priceUsd: 1913.39,
-      changePct: 2.4,
-      nxtClose: null,
-      nxtCloseDate: null,
-      sharesOutstanding: 730_492_365,
-      sessionCloseUsd: null,
-      sessionCloseDate: null,
-      market: 'KRX',
-      source: 'HYPERLIQUID',
-      status: 'ESTIMATE',
-    },
-  ],
+  at: '',
+  stocks: [],
 }

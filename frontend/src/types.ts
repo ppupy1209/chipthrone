@@ -34,6 +34,16 @@ export type MarketSnapshot = {
   stocks: Company[]
 }
 
+/**
+ * 화면의 한 자리. 코드와 이름은 처음부터 알지만 시세(company)는 첫 SSE 응답이 와야 채워진다.
+ * company가 없으면 숫자 자리에 "-"를 보여 준다.
+ */
+export type QuoteSlot = {
+  code: string
+  name: string
+  company?: Company
+}
+
 export type SupportedAsset = {
   code: string
   name: string

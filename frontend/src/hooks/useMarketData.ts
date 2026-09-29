@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Company, MarketSnapshot } from '../types'
-import { mockSnapshot } from '../data/mockMarket'
+import { emptySnapshot } from '../data/mockMarket'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 
@@ -54,7 +54,7 @@ function toCompany(stock: BackendStock, index: number): Company {
 }
 
 export function useMarketData(symbols: string[]): { snapshot: MarketSnapshot } {
-  const [snapshot, setSnapshot] = useState<MarketSnapshot>(mockSnapshot)
+  const [snapshot, setSnapshot] = useState<MarketSnapshot>(emptySnapshot)
   const symbolKey = symbols.join(',')
 
   useEffect(() => {
