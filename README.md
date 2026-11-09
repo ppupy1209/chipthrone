@@ -4,7 +4,9 @@
 
 [chipthrone.com](https://chipthrone.com)
 
-![CHIPTHRONE 전체 화면](docs/images/chipthrone-dashboard.png)
+![CHIP THRONE 카드형 대시보드](docs/images/chipthrone-dashboard.png)
+
+*예시 시세로 캡처한 화면입니다.*
 
 ## 주요 기능
 
@@ -24,7 +26,7 @@ Hyperliquid를 쓰는 것은 이 시장에서 가격이 실제 주가를 기준�
 
 ### 미국 반도체와 AI
 
-반도체와 M7 목록에서 관심 종목을 골라 볼 수 있습니다. 선택한 종목의 추정 가격과 원화 환산 가격, 추정 시가총액, 종가 대비 등락률이 시세표에 시가총액 순으로 표시됩니다. 선택 결과는 브라우저에 저장됩니다.
+반도체와 M7 목록에서 관심 종목을 골라 볼 수 있습니다. 선택한 종목의 추정 가격과 원화 환산 가격, 추정 시가총액, 종가 대비 등락률이 카드로 표시됩니다. 선택 결과는 브라우저에 저장됩니다.
 
 ## 아키텍처
 

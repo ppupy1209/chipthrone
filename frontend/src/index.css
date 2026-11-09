@@ -1,79 +1,40 @@
-/* Hallmark · macrostructure: Stat-Led · genre: editorial · theme: custom scoreboard · tone: scoreboard · anchor hue: 42
- * paper oklch(97.5% 0.008 85) · display Barlow Condensed (numerals) + IBM Plex Sans KR · axes: light / display-condensed / warm
- */
-@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
 /* 다크모드를 OS 설정(media)이 아니라 .dark 클래스 토글로 제어 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/*
- * 전광판 테마 토큰. 색은 역할별로 나눈다.
- * - samsung, sk: 두 회사를 구분하는 색. 막대와 큰 숫자에만 쓴다.
- * - up, down: 등락. 한국 시장 관례대로 상승은 빨강, 하락은 파랑이고 항상 ▲▼와 함께 쓴다.
- * 회사 색과 등락 색이 한 화면에 섞여도 헷갈리지 않도록 SK는 빨강 대신 주황으로 둔다.
- */
-:root {
-  --tk-paper: oklch(97.5% 0.008 85);
-  --tk-paper-2: oklch(94.5% 0.01 85);
-  --tk-ink: oklch(21% 0.012 70);
-  --tk-ink-2: oklch(46% 0.012 70);
-  --tk-rule: oklch(87% 0.01 85);
-  --tk-samsung: oklch(40% 0.13 262);
-  --tk-sk: oklch(60% 0.18 42);
-  --tk-up: oklch(54% 0.2 27);
-  --tk-down: oklch(50% 0.15 255);
-  --tk-focus: oklch(40% 0.13 262);
-}
-
-.dark {
-  --tk-paper: oklch(17% 0.01 70);
-  --tk-paper-2: oklch(21% 0.01 70);
-  --tk-ink: oklch(94% 0.008 85);
-  --tk-ink-2: oklch(70% 0.01 85);
-  --tk-rule: oklch(32% 0.01 70);
-  --tk-samsung: oklch(70% 0.12 262);
-  --tk-sk: oklch(72% 0.15 50);
-  --tk-up: oklch(70% 0.17 27);
-  --tk-down: oklch(70% 0.12 255);
-  --tk-focus: oklch(80% 0.1 262);
-}
-
-@theme inline {
-  --color-paper: var(--tk-paper);
-  --color-paper-2: var(--tk-paper-2);
-  --color-ink: var(--tk-ink);
-  --color-ink-2: var(--tk-ink-2);
-  --color-rule: var(--tk-rule);
-  --color-samsung: var(--tk-samsung);
-  --color-sk: var(--tk-sk);
-  --color-up: var(--tk-up);
-  --color-down: var(--tk-down);
-  --font-sans: "IBM Plex Sans KR", system-ui, sans-serif;
-  --font-num: "Barlow Condensed", "IBM Plex Sans KR", sans-serif;
-}
-
-html,
-body {
-  overflow-x: clip;
-}
-
 body {
   margin: 0;
-  background: var(--tk-paper);
-  color: var(--tk-ink);
-  font-family: var(--font-sans);
-  /* 한글이 "제 / 치고"처럼 단어 중간에서 줄바꿈되지 않게 */
-  word-break: keep-all;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-:focus-visible {
-  outline: 2px solid var(--tk-focus);
-  outline-offset: 2px;
+/* 라이트/다크 전환을 부드럽게 (색상 속성만 transition) */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    fill 0.3s ease,
+    stroke 0.3s ease;
 }
 
-/* 숫자는 자릿수가 바뀌어도 폭이 흔들리지 않게 고정폭 숫자로 */
-.num {
-  font-family: var(--font-num);
-  font-variant-numeric: tabular-nums;
+/* 미국 카드 상단 스트립의 종목별 시그니처 색.
+   테마 전환이 .dark 클래스 토글이라 인라인 style만으로는 두 색을 못 고른다.
+   레이어 밖 규칙이라 Tailwind border 유틸리티보다 항상 우선한다. */
+.brand-strip {
+  border-top-color: var(--brand);
+}
+.dark .brand-strip {
+  border-top-color: var(--brand-dark);
+}
+
+/* 접근성: 모션 최소화 설정 시 전환 끔 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none;
+  }
 }
