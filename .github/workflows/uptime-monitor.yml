@@ -9,7 +9,13 @@ name: Uptime Monitor
 on:
   schedule:
     - cron: "*/5 * * * *" # 5분 주기 (GitHub Actions 최소 간격)
-  workflow_dispatch: {} # 수동 실행(설정 직후 테스트용)
+  workflow_dispatch:
+    inputs:
+      send_test_alert:
+        description: "정상 확인 메시지를 기존 Slack 알림 채널에 1회 전송"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -64,7 +70,26 @@ jobs:
           payload=$(jq -nc \
             --arg fails "$FAILS" --arg now "$now" --arg run "$RUN_URL" \
             '{text: ":red_circle: chipthrone 응답 없음 — \($fails) · 확인(UTC): \($now) · 로그: \($run)"}')
-          curl -s -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
+          response=$(curl --fail --silent --show-error --max-time 10 -X POST \
+            -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL")
+          [ "$response" = "ok" ] || { echo "::error::Slack did not acknowledge the alert"; exit 1; }
+
+      - name: Slack 확인 메시지 (수동 요청 시 1회)
+        if: github.event_name == 'workflow_dispatch' && inputs.send_test_alert && steps.probe.outputs.ok == 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::error::SLACK_WEBHOOK_URL 시크릿이 없어 확인 메시지를 보낼 수 없음"
+            exit 1
+          fi
+          now=$(TZ=Asia/Seoul date +"%Y-%m-%d %H:%M KST")
+          payload=$(jq -nc --arg now "$now" --arg run "$RUN_URL" \
+            '{text: ":white_check_mark: CHIP THRONE 장애 감시 설정 확인 — API와 웹사이트 정상. 장애 감시가 다시 활성화되었습니다. · \($now) · 로그: \($run)"}')
+          response=$(curl --fail --silent --show-error --max-time 10 -X POST \
+            -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL")
+          [ "$response" = "ok" ] || { echo "::error::Slack did not acknowledge the test alert"; exit 1; }
 
       - name: 다운 시 실행 실패 처리(Actions 탭에 표시)
         if: steps.probe.outputs.ok == 'false'
