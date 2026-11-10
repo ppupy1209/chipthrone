@@ -6,8 +6,6 @@
 
 ![CHIP THRONE 카드형 대시보드](docs/images/chipthrone-dashboard.png)
 
-*예시 시세로 캡처한 화면입니다.*
-
 ## 주요 기능
 
 ### 시가총액 비교
