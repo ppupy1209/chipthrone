@@ -1,8 +1,8 @@
-# CHIPTHRONE
+# CHIP THRONE
 
 삼성전자와 SK하이닉스가 시가총액 1위를 겨루는 모습을 한 화면에서 볼 수 있는 대시보드입니다. 해외 파생시장의 추정 시세로 두 회사의 시가총액을 비교하고, 관심 있는 미국 반도체와 AI 종목도 함께 살펴볼 수 있습니다.
 
-[chipthrone.com](https://chipthrone.com)
+[chipthrone.com](https://www.chipthrone.com)
 
 ![CHIP THRONE 카드형 대시보드](docs/images/chipthrone-dashboard.png)
 
@@ -24,20 +24,20 @@ Hyperliquid를 쓰는 것은 이 시장에서 가격이 실제 주가를 기준�
 
 ### 미국 반도체와 AI
 
-반도체와 M7 목록에서 관심 종목을 골라 볼 수 있습니다. 선택한 종목의 추정 가격과 원화 환산 가격, 추정 시가총액, 종가 대비 등락률이 카드로 표시됩니다. 선택 결과는 브라우저에 저장됩니다.
+반도체와 M7 목록에서 관심 종목을 골라 볼 수 있습니다. 선택한 종목의 추정 가격과 원화 환산 가격, 추정 시가총액, 정규장 마감 추정가 대비 등락률이 카드로 표시됩니다. 선택 결과는 브라우저에 저장됩니다.
 
 ## 아키텍처
 
 ![CHIP THRONE 배포와 운영 아키텍처](docs/images/chipthrone-architecture.png)
 
-GitHub Actions에서 테스트와 빌드를 마친 이미지는 GHCR에 저장됩니다. EC2의 systemd timer는 60초마다 새 이미지를 확인하고 비활성 슬롯에 먼저 실행합니다. Readiness 검증을 통과한 뒤에만 Nginx를 전환하고, 기존 슬롯은 SSE 연결이 끝날 때까지 유지합니다. 전환 뒤 후보가 연속으로 실패하면 이전 슬롯으로 자동 롤백합니다.
+GitHub Actions에서 만든 이미지는 GHCR에 저장됩니다. EC2의 systemd timer는 60초마다 새 이미지를 확인하고 비활성 슬롯에 먼저 실행합니다. Readiness 검증을 통과한 뒤에만 Nginx를 전환하고, 기존 슬롯은 남은 SSE 연결을 최대 310초 동안 처리합니다. 전환 뒤 후보가 연속으로 실패하면 이전 슬롯으로 자동 롤백합니다.
 
 ## CI/CD
 
 PR과 `main` 반영 시 인프라 스크립트를 검사하고 백엔드 빌드와 테스트, 프론트엔드 빌드를 실행합니다. `main`에 백엔드 변경이 반영되면 Docker 이미지를 만들고 `latest`와 커밋 SHA 태그를 붙여 GHCR에 저장합니다.
 
-- [CI 워크플로에서 검증 과정 보기](https://github.com/ppupy1209/chipthrone/blob/main/.github/workflows/ci.yml)
-- [배포 워크플로에서 이미지 빌드 과정 보기](https://github.com/ppupy1209/chipthrone/blob/main/.github/workflows/deploy-backend.yml)
+- [CI: 테스트와 빌드 (ci.yml)](https://github.com/ppupy1209/chipthrone/blob/main/.github/workflows/ci.yml)
+- [CD: 이미지 빌드와 GHCR 저장 (deploy-backend.yml)](https://github.com/ppupy1209/chipthrone/blob/main/.github/workflows/deploy-backend.yml)
 
 ## SSH 접속 없이 자동 배포하기
 
@@ -52,19 +52,6 @@ PR과 `main` 반영 시 인프라 스크립트를 검사하고 백엔드 빌드�
 새 이미지는 blue와 green 중 비활성 슬롯에 올라갑니다. Readiness가 확인되면 Nginx를 새 슬롯으로 전환하고, 기존 SSE 연결은 이전 슬롯에서 최대 310초 동안 마저 처리합니다. 후보가 전환 후 연속 3회 응답하지 않으면 Nginx를 이전 슬롯으로 되돌립니다. 실패한 이미지 ID는 기록해 같은 이미지를 60초마다 다시 배포하지 않습니다.
 
 이 방식으로 22번 포트는 계속 개인 IP에만 허용할 수 있고, 배포 과정에서 SSH 키와 러너 IP를 별도로 관리하지 않습니다.
-
-## SSE worker 고갈 로컬 검증
-
-동기식 장기 SSE 200개가 Tomcat worker 200개를 모두 점유하면 일반 API와 Prometheus 수집까지 멈추는 상황을 localhost에서 재현했습니다. 현재 `SseEmitter` 경로는 SSE 400개를 유지하면서도 worker가 반환되고 Health API가 정상 응답하는지 Prometheus와 Grafana로 함께 측정했습니다.
-
-- [재현 방법과 실측 결과](docs/09-sse-thread-starvation.md)
-- [원본 측정값](docs/sse-capacity-load-results.json)
-
-## 배포 중 메모리 검증
-
-슬롯 배포는 JVM 두 개를 최대 310초 겹쳐 띄웁니다. 운영 t3.micro(swap 없음)에서 SSE 400개를 유지한 채 배포하자 호스트가 61분 동안 응답하지 못했습니다. JVM 상주 메모리를 줄이고 배포 스크립트에 가용 메모리 가드를 넣은 뒤 같은 조건에서 Health 실패 0회로 배포됐습니다.
-
-- [재현, 원인 분석, 해결과 검증](docs/10-deploy-memory.md)
 
 ## 로컬 실행
 
@@ -92,7 +79,7 @@ docker compose ps
 ### 3. 접속하기
 
 - 웹 화면: `http://localhost:5173`
-- API: `http://localhost:8080`
+- API 상태 확인: `http://localhost:8080/api/health`
 
 ### 4. 종료하기
 
@@ -102,4 +89,4 @@ docker compose down
 
 ## 이용 안내
 
-CHIPTHRONE은 시세 비교를 위한 정보 서비스이며 투자 권유나 자문을 제공하지 않습니다.
+CHIP THRONE은 시세 비교를 위한 정보 서비스이며 투자 권유나 자문을 제공하지 않습니다.
