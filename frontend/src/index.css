@@ -1,11 +1,12 @@
 @import "tailwindcss";
+@import "./dashboard.css";
 
 /* 다크모드를 OS 설정(media)이 아니라 .dark 클래스 토글로 제어 */
 @custom-variant dark (&:where(.dark, .dark *));
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
 }
 
 /* 라이트/다크 전환을 부드럽게 (색상 속성만 transition) */

@@ -84,3 +84,13 @@ export function compareMarketCap(a: Company, b: Company): Comparison | null {
     reversalPrice,
   }
 }
+
+/** 상대 기업의 가격을 고정하고 도전자의 상승률만 바꾸는 화면용 가정이다. */
+export function simulateReversal(comparison: Comparison, increasePct: number) {
+  const price = comparison.challenger.price * (1 + increasePct / 100)
+  const cap = price * comparison.challenger.sharesOutstanding
+  const gap = comparison.leaderCap - cap
+  // 조 단위 금액의 부동소수점 오차를 동률로 처리한다. 같은 시총을 역전으로 표시하지 않는다.
+  const status = Math.abs(gap) < 1 ? 'tied' : gap > 0 ? 'behind' : 'ahead'
+  return { price, cap, gap, status }
+}

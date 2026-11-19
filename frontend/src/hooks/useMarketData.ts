@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Company, MarketSnapshot } from '../types'
+import type { Company, MarketSnapshot, StreamConnection } from '../types'
 import { emptySnapshot } from '../data/mockMarket'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
@@ -53,17 +53,21 @@ function toCompany(stock: BackendStock, index: number): Company {
   }
 }
 
-export function useMarketData(symbols: string[]): { snapshot: MarketSnapshot } {
+export function useMarketData(symbols: string[]): { snapshot: MarketSnapshot; connection: StreamConnection } {
   const [snapshot, setSnapshot] = useState<MarketSnapshot>(emptySnapshot)
+  const [connection, setConnection] = useState<StreamConnection>('connecting')
   const symbolKey = symbols.join(',')
 
   useEffect(() => {
     if (!symbolKey) return
     const selectedCodes = symbolKey.split(',')
     const es = new EventSource(`${API_BASE}/api/stream?symbols=${encodeURIComponent(symbolKey)}`)
+    es.onopen = () => setConnection('connecting')
+    es.onerror = () => setConnection('reconnecting')
     const onQuotes = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data) as BackendSnapshot
+        setConnection('connected')
         setSnapshot((previous) => {
           const merged = new Map(previous.stocks.map((stock) => [stock.code, stock]))
           data.stocks.forEach((stock, index) => merged.set(stock.code, toCompany(stock, index)))
@@ -81,5 +85,5 @@ export function useMarketData(symbols: string[]): { snapshot: MarketSnapshot } {
     return () => es.close()
   }, [symbolKey])
 
-  return { snapshot }
+  return { snapshot, connection }
 }

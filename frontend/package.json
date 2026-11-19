@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test": "node --test src/lib/watchlist.test.mjs",
+    "test": "node --experimental-strip-types --test src/lib/watchlist.test.mjs src/lib/dashboard.test.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

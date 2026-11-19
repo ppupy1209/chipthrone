@@ -1,5 +1,5 @@
 /**
- * 미국 카드 상단 스트립에 쓰는 종목별 시그니처 색.
+ * 기업명, 시가총액, 티커 라벨에 쓰는 종목별 시그니처 색.
  *
  * light는 각 사의 대표 색, dark는 어두운 배경에서 대비를 확보한 변형이다.
  * 애플처럼 대표 색이 검정인 종목은 다크 모드에서 그대로 쓰면 배경에 묻히므로
@@ -8,6 +8,8 @@
 export type BrandColor = { light: string; dark: string }
 
 const BRAND: Record<string, BrandColor> = {
+  '005930': { light: '#1428A0', dark: '#8FA7FF' }, // 삼성 블루
+  '000660': { light: '#D90A36', dark: '#FF7190' }, // 하이닉스 레드
   SNDK: { light: '#E31B23', dark: '#FF5A61' }, // 샌디스크 레드
   MU: { light: '#0072CE', dark: '#4FA8E8' }, // 마이크론 블루
   AVGO: { light: '#CC0000', dark: '#F05252' }, // 브로드컴 레드
@@ -29,4 +31,18 @@ const FALLBACK: BrandColor = { light: '#525252', dark: '#A3A3A3' }
 
 export function brandColor(code: string): BrandColor {
   return BRAND[code] ?? FALLBACK
+}
+
+/** 밝은 녹색·주황색 라벨에도 충분한 글자 대비가 나도록 전경색을 고른다. */
+export function brandForeground(background: string): string {
+  const luminance = (hex: string) => {
+    const channels = [1, 3, 5].map((offset) => {
+      const value = parseInt(hex.slice(offset, offset + 2), 16) / 255
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+    })
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
+  }
+  const value = luminance(background)
+  const dark = '#191f28'
+  return (1.05 / (value + 0.05)) >= ((value + 0.05) / (luminance(dark) + 0.05)) ? '#ffffff' : dark
 }

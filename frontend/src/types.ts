@@ -1,4 +1,6 @@
 export type MarketMode = 'REGULAR' | 'NXT' | 'PREMARKET' | 'ESTIMATE'
+export type QuoteCurrency = 'USD' | 'KRW'
+export type StreamConnection = 'connecting' | 'connected' | 'reconnecting'
 
 export type Company = {
   code: string
