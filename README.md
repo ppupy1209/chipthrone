@@ -4,7 +4,7 @@
 
 [chipthrone.com](https://www.chipthrone.com)
 
-![CHIP THRONE 카드형 대시보드](docs/images/chipthrone-dashboard.png)
+![CHIP THRONE 대시보드](docs/images/chipthrone-dashboard.jpg)
 
 ## 주요 기능
 
